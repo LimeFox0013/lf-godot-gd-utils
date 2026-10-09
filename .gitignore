@@ -1,0 +1,12 @@
+# Godot
+.godot/
+*.translation
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local assistant state
+.claude/

@@ -1,0 +1,50 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+env:
+  GODOT_VERSION: 4.7.2
+
+jobs:
+  gut:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    # The ci/*.sh scripts are bash: on Windows that is Git Bash, which the runner has.
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Godot (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          echo "GODOT=$PWD/Godot_v${GODOT_VERSION}-stable_linux.x86_64" >> "$GITHUB_ENV"
+      - name: Install Godot (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_macos.universal.zip"
+          unzip -q godot.zip
+          echo "GODOT=$PWD/Godot.app/Contents/MacOS/Godot" >> "$GITHUB_ENV"
+      - name: Install Godot (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_win64.exe.zip"
+          python -m zipfile -e godot.zip .
+          # The console build writes to stdout, which the scripts read; the plain .exe does not.
+          echo "GODOT=$PWD/Godot_v${GODOT_VERSION}-stable_win64_console.exe" >> "$GITHUB_ENV"
+      - name: Run the GUT suite
+        run: ci/run_tests.sh
+      - name: Check a clean install
+        run: ci/check_install.sh
+      - name: HTTP smoke test
+        run: ci/http_smoke.sh

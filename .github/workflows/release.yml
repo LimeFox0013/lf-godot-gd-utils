@@ -1,0 +1,26 @@
+name: release
+
+# Pushing a tag like v1.0.0 publishes a GitHub release with <repository>-v1.0.0.zip
+# attached: the library under addons/<repository>/, ready to unzip into a project's root.
+# The folder name comes from the repository, so nothing here names where it is installed.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the archive
+        run: |
+          NAME="${GITHUB_REPOSITORY#*/}"
+          git archive --format=zip --prefix="addons/$NAME/" -o "$NAME-$GITHUB_REF_NAME.zip" HEAD
+          echo "ARCHIVE=$NAME-$GITHUB_REF_NAME.zip" >> "$GITHUB_ENV"
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$ARCHIVE" --title "$GITHUB_REF_NAME" --generate-notes

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2j7dmxlyjwia"]
+
+[ext_resource type="Script" uid="uid://cai8c5mofucp" path="lf_infinite_scroll_sprite.gd" id="1_ebj65"]
+
+[node name="LFInfiniteScrollSprite" type="Sprite2D"]
+texture_repeat = 2
+region_enabled = true
+script = ExtResource("1_ebj65")

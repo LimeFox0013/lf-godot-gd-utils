@@ -1,0 +1,14 @@
+# Text files use LF line endings on every platform.
+* text=auto eol=lf
+
+# Left out of release zips and GitHub source archives (the Asset Library downloads one):
+# a project that installs LF gets the library, its docs and the agent skill, without the
+# GUT tests (they need GUT) or the repository tooling.
+/.github export-ignore
+/.github/** export-ignore
+/ci export-ignore
+/ci/** export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+**/tests export-ignore
+**/tests/** export-ignore

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://78b1b6773em6"]
+
+[ext_resource type="Script" uid="uid://dyowg0dquv7tr" path="lf_background_controller.gd" id="1_44b6v"]
+
+[node name="LFBackgroundController" type="Node2D"]
+script = ExtResource("1_44b6v")
