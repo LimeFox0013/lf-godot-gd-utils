@@ -111,3 +111,104 @@ func test_an_async_handler_can_be_awaited_through_the_shared_emitter():
 		await get_tree().process_frame
 		return value * 2)
 	assert_eq(await LFEventBus.emitter.emit("bus-async", 21), [42])
+
+
+class Owner:
+	extends RefCounted
+	var calls := 0
+
+	func bump() -> void:
+		calls += 1
+
+	## Registers a lambda that uses `self`, which cannot be named again for `off`.
+	func listen(event: String) -> void:
+		LFEventBus.on(event, func(): calls += 1)
+
+	func listen_once(event: String) -> void:
+		LFEventBus.once(event, func(): calls += 1)
+
+
+func test_off_owner_removes_a_lambda_that_captures_self():
+	var owner := Owner.new()
+	owner.listen("owner-lambda")
+	LFEventBus.emit_sync("owner-lambda")
+	assert_eq(owner.calls, 1)
+	assert_eq(LFEventBus.off_owner(owner), 1)
+	LFEventBus.emit_sync("owner-lambda")
+	assert_eq(owner.calls, 1)
+	assert_false(LFEventBus.emitter.has_handlers("owner-lambda"))
+
+
+func test_off_owner_removes_methods_across_events_and_returns_the_count():
+	var owner := Owner.new()
+	LFEventBus.on("owner-a", owner.bump)
+	LFEventBus.on("owner-a", owner.bump)
+	LFEventBus.once("owner-b", owner.bump)
+	assert_eq(LFEventBus.off_owner(owner), 3)
+	LFEventBus.emit_sync("owner-a")
+	LFEventBus.emit_sync("owner-b")
+	assert_eq(owner.calls, 0)
+
+
+func test_off_owner_leaves_other_owners_and_ownerless_handlers_alone():
+	var mine := Owner.new()
+	var other := Owner.new()
+	var plain := [0]
+	LFEventBus.on("owner-keep", mine.bump)
+	LFEventBus.on("owner-keep", other.bump)
+	LFEventBus.on("owner-keep", func(): plain[0] += 1)
+	LFEventBus.off_owner(mine)
+	LFEventBus.emit_sync("owner-keep")
+	assert_eq([mine.calls, other.calls, plain[0]], [0, 1, 1])
+
+
+func test_off_owner_skips_a_one_shot_that_already_fired():
+	var owner := Owner.new()
+	owner.listen_once("owner-once")
+	LFEventBus.emit_sync("owner-once")
+	assert_eq(LFEventBus.off_owner(owner), 0)
+	assert_eq(owner.calls, 1)
+
+
+func test_off_owner_of_an_owner_with_nothing_registered_is_zero():
+	assert_eq(LFEventBus.off_owner(Owner.new()), 0)
+
+
+func test_off_owner_with_null_reports_an_error():
+	assert_eq(LFEventBus.off_owner(null), 0)
+	assert_push_error("no owner")
+
+
+func test_off_and_clear_event_keep_the_owner_records_in_step():
+	var owner := Owner.new()
+	LFEventBus.on("owner-x", owner.bump)
+	LFEventBus.on("owner-y", owner.bump)
+	LFEventBus.off("owner-x", owner.bump)
+	assert_eq(LFEventBus.off_owner(owner), 1, 'only owner-y was left')
+	LFEventBus.on("owner-z", owner.bump)
+	LFEventBus.clear_event("owner-z")
+	assert_eq(LFEventBus.off_owner(owner), 0)
+
+
+func test_clear_forgets_every_owner():
+	var owner := Owner.new()
+	LFEventBus.on("owner-c", owner.bump)
+	LFEventBus.clear()
+	LFEventBus.on("owner-c", owner.bump)
+	assert_eq(LFEventBus.off_owner(owner), 1)
+
+
+func test_a_node_owner_is_removed_by_its_method_handlers():
+	var node := Node.new()
+	LFEventBus.on("owner-node", node.queue_free)
+	assert_eq(LFEventBus.off_owner(node), 1)
+	node.free()
+	assert_false(LFEventBus.emitter.has_handlers("owner-node"))
+
+
+func test_records_of_freed_owners_are_swept_as_new_owners_arrive():
+	for i in 200:
+		var node := Node.new()
+		LFEventBus.on("owner-sweep", node.queue_free)
+		node.free()
+	assert_lt(LFEventBus._owned.size(), 200, 'freed owners were forgotten')

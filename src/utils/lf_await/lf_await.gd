@@ -14,6 +14,13 @@
 ## and reports an error.
 class_name LFAwait
 
+## The `backoff` of `retry` when none is given: every wait is as long as the first.
+const DEFAULT_RETRY_BACKOFF := 1.0
+## The delay `retry` uses in place of a NaN `delay_ms` or `backoff` (after reporting it).
+const FALLBACK_RETRY_DELAY_MS := 0.0
+
+static var _log := LFLogger.new()
+
 
 ## Emitted with the results once every callable has finished (or, under `any`, on the
 ## first finish).
@@ -102,6 +109,46 @@ static func any(fns: Array) -> Variant:
 	return awaiter._winner
 
 
+## Coroutine. Calls `fn` (which may `await`) until it gives a result `accept` takes, and
+## resolves with that result; `null` when the last attempt fails too. Without `accept` (an
+## empty Callable) a result is taken when it is not `null`; with one, `accept.call(result)`
+## must return `true`. At most `attempts` calls are made, and `attempts` of 0 or less
+## means no limit (it retries until one succeeds, so give it a way out). Between two
+## attempts it waits `delay_ms` milliseconds of game time (like `LFUtils.timeout`), and
+## each later wait is the previous one times `backoff` (2.0 doubles it; 1.0 keeps it
+## constant). There is no wait after the last attempt. A negative `delay_ms` or `backoff`
+## counts as 0. A NaN `delay_ms` or `backoff` is reported through `LFLogger` as an error
+## and replaced by `FALLBACK_RETRY_DELAY_MS` / `DEFAULT_RETRY_BACKOFF`. An invalid `fn`
+## (empty, or its object freed) is reported and resolves `null` without a call; an
+## `accept` that is set but invalid is reported and likewise resolves `null` without a call.
+static func retry(fn: Callable, attempts: int, delay_ms: float, backoff := DEFAULT_RETRY_BACKOFF, accept := Callable()) -> Variant:
+	if not fn.is_valid():
+		_log.error("LFAwait.retry: the callable is not valid")
+		return null
+	if not accept.is_null() and not accept.is_valid():
+		_log.error("LFAwait.retry: the accept callable is not valid")
+		return null
+	if is_nan(delay_ms):
+		_log.error("LFAwait.retry: delay_ms is NaN; using %s" % FALLBACK_RETRY_DELAY_MS)
+		delay_ms = FALLBACK_RETRY_DELAY_MS
+	if is_nan(backoff):
+		_log.error("LFAwait.retry: backoff is NaN; using %s" % DEFAULT_RETRY_BACKOFF)
+		backoff = DEFAULT_RETRY_BACKOFF
+	var wait_ms := maxf(delay_ms, 0.0)
+	var growth := maxf(backoff, 0.0)
+	var attempt := 0
+	while attempts <= 0 or attempt < attempts:
+		attempt += 1
+		var result: Variant = await fn.call()
+		if _retry_accepts(result, accept):
+			return result
+		if attempts > 0 and attempt >= attempts:
+			break
+		await LFUtils.timeout(wait_ms)
+		wait_ms *= growth
+	return null
+
+
 ## The scene tree's `process_frame` signal: `await LFAwait.next_tick` waits one frame.
 ## Needs a running SceneTree.
 static var next_tick: Signal:
@@ -131,3 +178,9 @@ func _run(fn: Callable, index: int, generation: int) -> void:
 		_complete = true
 		awaited.emit(_results)
 		_settled.emit()
+
+
+static func _retry_accepts(result: Variant, accept: Callable) -> bool:
+	if accept.is_null():
+		return result != null
+	return accept.call(result) == true

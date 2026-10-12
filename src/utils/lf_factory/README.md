@@ -81,6 +81,9 @@ Everything the class offers; you only need the rows used above to get started.
 | `container` | `var container: Node` | Default parent of fresh entities. |
 | `set_container` | `set_container(new_container: Node) -> void` | Sets the parent of fresh entities. Replacing a different live container reports an error. |
 | `register` | `register(key: Variant, create_fn: Callable, on_acquire: Callable = Callable(), on_release: Callable = Callable(), on_created: Callable = Callable()) -> void` | Defines a key. `create_fn` takes no arguments and returns a new Node. Hooks get the entity; they are called, never awaited. Registering again replaces it: idle pooled entities are freed, ones handed out under the old definition are freed when released. |
+| `dormant_hooks` | `static dormant_hooks() -> Dictionary` | `{on_acquire: LFFactory.wake, on_release: LFFactory.sleep}` (keys `DORMANT_ON_ACQUIRE`, `DORMANT_ON_RELEASE`), to pass to `register`. |
+| `sleep` | `static sleep(node: Variant) -> void` | Hides a CanvasItem or Node3D, sets `process_mode` to disabled, zeroes `collision_layer`/`collision_mask` and switches `monitoring` off (each where the node has it), remembering the originals in node meta. `monitoring` changes via `set_deferred`, so it lands at the end of the frame. Ignores a node already asleep, null or freed. |
+| `wake` | `static wake(node: Variant) -> void` | Restores exactly what `sleep` saved (process mode, visibility, collision layer and mask, monitoring). Ignores a node that is not asleep. |
 | `is_registered` | `is_registered(key: Variant) -> bool` | Whether `key` has a registration. |
 | `acquire` | `acquire(key: Variant) -> Node` | Synchronous: a pooled entity, or a fresh one created and added to the container in this call. Null with an error for an unknown key, no (or a freed) container, or a creation function that is invalid (empty, or its object freed), returns no Node, or returns a Node that is already tracked or in the tree. See "Where to call acquire and release". |
 | `acquire_async` | `acquire_async(key: Variant) -> Node` | Coroutine (a function that can wait; call it with `await`). A pooled entity comes back at once, without waiting a frame. Otherwise awaits the creation function, runs `on_created`, then adds the entity with a deferred `add_child` plus one frame. Null if `reset()`, a re-register or the container being freed happened meanwhile (the entity is freed), or, with an error, if the creation function returns no Node (or one already tracked or in the tree). |
@@ -104,7 +107,10 @@ var _pool := LFFactory.new()
 
 func _ready() -> void:
 	_pool.set_container(self)  # fresh bullets become children of this node
-	_pool.register(&"bullet", BULLET_SCENE.instantiate, _on_bullet_acquired, _on_bullet_released)
+	# dormant_hooks(): hide + stop processing + switch off collision while pooled,
+	# and put it all back (as it was) when handed out again.
+	var hooks := LFFactory.dormant_hooks()
+	_pool.register(&"bullet", BULLET_SCENE.instantiate, hooks.on_acquire, hooks.on_release)
 
 
 func fire(from: Vector2) -> void:
@@ -114,23 +120,15 @@ func fire(from: Vector2) -> void:
 
 func bullet_hit(bullet: Node2D) -> void:
 	_pool.release(bullet)  # back into the pool instead of queue_free()
-
-
-func _on_bullet_acquired(bullet: Node2D) -> void:
-	bullet.show()
-	bullet.process_mode = Node.PROCESS_MODE_INHERIT
-
-
-func _on_bullet_released(bullet: Node2D) -> void:
-	bullet.hide()
-	bullet.process_mode = Node.PROCESS_MODE_DISABLED
 ```
+
+To run your own code as well, call `LFFactory.sleep(bullet)` / `LFFactory.wake(bullet)` from your hooks.
 
 ## Notes
 
 - Hook order: `on_created` once per fresh entity (before it is parented), `on_acquire` on
   every hand-out, `on_release` on every release that pools it.
-- A released entity stays in the tree. Hide it and stop its processing in `on_release`, and
+- A released entity stays in the tree. Hide it and stop its processing in `on_release` (`dormant_hooks()` does this, and also switches collision off), and
   reset its state in `on_acquire`.
 - An entity is never handed out twice without a release in between, and never handed out
   freed.

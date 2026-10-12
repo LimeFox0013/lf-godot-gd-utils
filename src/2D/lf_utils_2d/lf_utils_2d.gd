@@ -4,12 +4,22 @@
 ## frame, switches a node between idle and physics processing to match a camera, finds
 ## where a ray from a rect's centre meets its border, picks random points in a circle or
 ## around a rect, measures how far apart a set of points spreads, and sizes a sprite or reads
-## a collision shape's size. All functions are static: call them on the class
+## a collision shape's size, builds a click mask from a texture's alpha, and steers a character
+## or rigid body toward a direction. All functions are static: call them on the class
 ## (`LFUtils2D.camera_ready(camera)`), never create an instance.
 class_name LFUtils2D
 
 ## The default `scale_range` of `random_point_outside_rect`: the border 10% to 40% larger than the rect.
 const DEFAULT_OUTSIDE_SCALE_RANGE := Vector2(1.1, 1.4)
+
+## The alpha at or below which `alpha_click_mask` counts a pixel as transparent (not clickable).
+const DEFAULT_ALPHA_THRESHOLD := 0.1
+## The share of `speed` per second that `steer` accelerates a CharacterBody2D by: 0.7 reaches
+## full speed in a little over a second.
+const DEFAULT_STEER_ACCELERATION_RATIO := 0.7
+## How strongly `steer` pushes a RigidBody2D toward its wanted velocity: the force is the
+## velocity gap times the body's mass times this, so the gap closes in about 1 / this seconds.
+const DEFAULT_STEER_FORCE_GAIN := 10.0
 
 static var _log := LFLogger.new()
 
@@ -209,6 +219,76 @@ static func shape_size(shape_node: CollisionShape2D) -> Vector2:
 		_log.error('LFUtils2D.shape_size: no collision shape')
 		return Vector2.ZERO
 	return shape_node.shape.get_rect().size
+
+
+## A click mask for `texture`: a `BitMap` that is set where the pixel's alpha is above
+## `threshold` (0.0 to 1.0, `DEFAULT_ALPHA_THRESHOLD`), so only the visible part of a
+## sprite takes clicks. A compressed texture is decompressed first, on a copy of its image
+## (the texture itself is not changed). Null, with an error through `LFLogger`, for a null
+## texture, one without an image, a NaN threshold, or an image that cannot be decompressed.
+## The mask has the size of the image, in pixels.
+static func alpha_click_mask(texture: Texture2D, threshold := DEFAULT_ALPHA_THRESHOLD) -> BitMap:
+	if texture == null:
+		_log.error('LFUtils2D.alpha_click_mask: no texture')
+		return null
+	if is_nan(threshold):
+		_log.error('LFUtils2D.alpha_click_mask: the threshold is NaN')
+		return null
+	var image: Image = texture.get_image()
+	if image == null or image.is_empty():
+		_log.error('LFUtils2D.alpha_click_mask: the texture has no image')
+		return null
+	if image.is_compressed():
+		image = image.duplicate() # some textures hand out their own image, so never decompress it in place
+		if image.decompress() != OK:
+			_log.error('LFUtils2D.alpha_click_mask: the image could not be decompressed')
+			return null
+	var mask := BitMap.new()
+	mask.create_from_image_alpha(image, threshold)
+	return mask
+
+
+## Makes `button` take clicks only on the visible pixels of its `texture_normal`: sets
+## `texture_click_mask` to `alpha_click_mask(button.texture_normal, threshold)`. Returns
+## false (and an error through `LFLogger`) for a null button or one without a
+## `texture_normal`, leaving the button as it was. Call it again after changing the texture.
+static func apply_alpha_click_mask(button: TextureButton, threshold := DEFAULT_ALPHA_THRESHOLD) -> bool:
+	if button == null:
+		_log.error('LFUtils2D.apply_alpha_click_mask: no button')
+		return false
+	var mask := alpha_click_mask(button.texture_normal, threshold)
+	if mask == null:
+		return false
+	button.texture_click_mask = mask
+	return true
+
+
+## Accelerates `body` toward `direction` (any length: only its angle counts; a zero
+## direction brakes toward standstill) at `speed` pixels per second, once per physics
+## frame. A CharacterBody2D has its `velocity` moved toward the wanted velocity by
+## `speed * acceleration_ratio * delta` and, when `slide` is true, then calls
+## `move_and_slide()` (pass false to do your own move). A RigidBody2D gets a force of
+## (wanted velocity - `linear_velocity`) * `mass` * `force_gain` applied with `apply_force`
+## (`delta` is not used; call it from `_physics_process`). A negative `speed` counts as 0.
+## Returns false, reporting an error through `LFLogger` and changing nothing, for a null or
+## other kind of body, or a direction, speed, `delta`, ratio or gain that is NaN or infinite.
+static func steer(body: Node2D, direction: Vector2, speed: float, delta: float, acceleration_ratio := DEFAULT_STEER_ACCELERATION_RATIO, force_gain := DEFAULT_STEER_FORCE_GAIN, slide := true) -> bool:
+	if not (body is CharacterBody2D or body is RigidBody2D):
+		_log.error('LFUtils2D.steer: expected a CharacterBody2D or RigidBody2D, got %s' % (body.get_class() if body != null else 'null'))
+		return false
+	if not (direction.is_finite() and is_finite(speed) and is_finite(delta) and is_finite(acceleration_ratio) and is_finite(force_gain)):
+		_log.error('LFUtils2D.steer: direction, speed, delta, acceleration_ratio and force_gain must be finite numbers')
+		return false
+	var wanted: Vector2 = direction.normalized() * maxf(0.0, speed)
+	if body is CharacterBody2D:
+		var character := body as CharacterBody2D
+		character.velocity = character.velocity.move_toward(wanted, maxf(0.0, speed) * acceleration_ratio * delta)
+		if slide:
+			character.move_and_slide()
+	else:
+		var rigid := body as RigidBody2D
+		rigid.apply_force((wanted - rigid.linear_velocity) * rigid.mass * force_gain)
+	return true
 
 
 # Andrew's monotone chain over points already sorted by x then y: the hull without its

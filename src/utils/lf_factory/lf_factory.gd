@@ -12,6 +12,26 @@
 ## `on_acquire` on every hand-out, `on_release` on every release that pools it.
 class_name LFFactory
 
+## Key of the `on_acquire` callable in the dictionary `dormant_hooks` returns.
+const DORMANT_ON_ACQUIRE := &"on_acquire"
+## Key of the `on_release` callable in the dictionary `dormant_hooks` returns.
+const DORMANT_ON_RELEASE := &"on_release"
+## Node meta holding what `sleep` replaced, so `wake` can put it back.
+const _DORMANT_META := &"_lf_dormant"
+## Name of the static method that is the wake-up hook `dormant_hooks` returns.
+const _WAKE_METHOD := &"wake"
+## Name of the static method that is the sleep hook `dormant_hooks` returns.
+const _SLEEP_METHOD := &"sleep"
+## Properties `sleep` sets to zero and `wake` restores, where the node has them (the
+## collision layer and mask of a physics body, an Area or a TileMap).
+const _ZEROED_PROPERTIES: Array[StringName] = [&"collision_layer", &"collision_mask"]
+## Property `sleep` switches off and `wake` restores (an Area2D or Area3D).
+const _MONITORING_PROPERTY := &"monitoring"
+## Meta entry for the original `process_mode`.
+const _KEY_PROCESS_MODE := &"process_mode"
+## Meta entry for the original visibility.
+const _KEY_VISIBLE := &"visible"
+
 ## Fewest fresh entities created between two sweeps of the records of entities freed
 ## without `release` (see the README's Notes).
 const _SWEEP_MIN_INTERVAL := 32
@@ -72,6 +92,67 @@ func register(key: Variant, create_fn: Callable, on_acquire: Callable = Callable
 	kind.on_release = on_release
 	kind.on_created = on_created
 	_kinds[key] = kind
+
+
+## The two hooks that make a pooled node dormant: `{on_acquire: wake, on_release: sleep}`
+## (keys `DORMANT_ON_ACQUIRE` and `DORMANT_ON_RELEASE`), for `register`:
+## `register(key, create, hooks.on_acquire, hooks.on_release)`. Call your own code from a
+## wrapper when you need more than this; see `sleep` and `wake` for exactly what they do.
+static func dormant_hooks() -> Dictionary:
+	return {
+		DORMANT_ON_ACQUIRE: Callable(LFFactory, _WAKE_METHOD),
+		DORMANT_ON_RELEASE: Callable(LFFactory, _SLEEP_METHOD),
+	}
+
+
+## Puts `node` to sleep, remembering what it changes so `wake` can undo it: hides it (a
+## CanvasItem or Node3D), sets its `process_mode` to `PROCESS_MODE_DISABLED`, sets
+## `collision_layer` and `collision_mask` to 0 and turns `monitoring` off, each where the
+## node has that property. `monitoring` is changed with `set_deferred` (Godot refuses to
+## change it while physics queries flush), so it takes effect at the end of the frame. A
+## node already asleep, a null or a freed one is left alone.
+static func sleep(node: Variant) -> void:
+	if not is_instance_valid(node) or not node is Node:
+		return
+	var target := node as Node
+	if target.has_meta(_DORMANT_META):
+		return
+	var saved := {_KEY_PROCESS_MODE: target.process_mode}
+	target.process_mode = Node.PROCESS_MODE_DISABLED
+	if target is CanvasItem or target is Node3D:
+		saved[_KEY_VISIBLE] = target.visible
+		target.visible = false
+	for property in _ZEROED_PROPERTIES:
+		if property in target:
+			saved[property] = target.get(property)
+			target.set(property, 0)
+	if _MONITORING_PROPERTY in target:
+		saved[_MONITORING_PROPERTY] = target.get(_MONITORING_PROPERTY)
+		target.set_deferred(_MONITORING_PROPERTY, false)
+	target.set_meta(_DORMANT_META, saved)
+
+
+## Undoes `sleep`: restores the `process_mode`, visibility, collision layer and mask, and
+## `monitoring` the node had when it was put to sleep (not fixed defaults, so a node that
+## started paused or hidden goes back to that). `monitoring` is restored with
+## `set_deferred`, in order with `sleep`'s own. Does nothing for a node that is not
+## asleep, null or freed.
+static func wake(node: Variant) -> void:
+	if not is_instance_valid(node) or not node is Node:
+		return
+	var target := node as Node
+	if not target.has_meta(_DORMANT_META):
+		return
+	var saved: Dictionary = target.get_meta(_DORMANT_META)
+	target.remove_meta(_DORMANT_META)
+	target.process_mode = saved[_KEY_PROCESS_MODE]
+	if saved.has(_KEY_VISIBLE):
+		target.visible = saved[_KEY_VISIBLE]
+	for property in _ZEROED_PROPERTIES:
+		if saved.has(property):
+			target.set(property, saved[property])
+	if saved.has(_MONITORING_PROPERTY):
+		target.set_deferred(_MONITORING_PROPERTY, saved[_MONITORING_PROPERTY])
 
 
 ## Whether `key` has a registration.

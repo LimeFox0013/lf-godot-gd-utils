@@ -53,13 +53,51 @@ static var tree_root: SceneTree:
 	get(): return main_loop as SceneTree
 
 
-## Returns a deep copy of `target_array` with every array in `arrays` appended in order.
-## The inputs are not changed; appended elements are shared, not copied.
+## Returns a copy of `target_array` with every array in `arrays` appended in order. The
+## inputs are not changed; appended elements are shared, not copied. The copy of
+## `target_array` is `duplicate(true)`: arrays and dictionaries nested in it are copied
+## recursively, but an Object in it (a Resource, a Node) is the very same instance in the
+## result, not a copy; use `merge_arrays_deep` to copy Resources too.
 static func merge_arrays(target_array: Array, ...arrays: Array) -> Array:
 	var target := target_array.duplicate(true)
 	for array: Array in arrays:
 		target.append_array(array)
 	return target
+
+
+## `merge_arrays`, except that the Resources in `target_array` (at any depth of nested
+## arrays and dictionaries) are copied too, using
+## `duplicate_deep(Resource.DEEP_DUPLICATE_INTERNAL)`. Every Resource that is an element is
+## copied, whether or not it has a file path; of the sub-resources inside it, those built
+## into it or without a path are copied and those saved in their own file (a texture, a
+## shared `.tres`) stay shared, so file-backed assets are not duplicated. Nodes are never
+## copied. Appended elements are shared, as in `merge_arrays`.
+static func merge_arrays_deep(target_array: Array, ...arrays: Array) -> Array:
+	var target := target_array.duplicate_deep(Resource.DEEP_DUPLICATE_INTERNAL)
+	for array: Array in arrays:
+		target.append_array(array)
+	return target
+
+
+## Returns a new array: `base` followed by each item of `extra` that no item before it
+## equals. Items are compared with `deep_equal` (arrays and dictionaries by content, an int
+## equals the float of the same number, NaN equals NaN; Objects, Resources included, by
+## identity). Items of `extra` that repeat each other are added once; duplicates already
+## inside `base` are kept. Neither input is changed; `base` is copied as `merge_arrays` copies
+## its first array (`duplicate(true)`), and the added items are shared, not copied. It
+## compares every added item with every kept one, so it suits arrays of up to a few
+## thousand items.
+static func append_unique(base: Array, extra: Array) -> Array:
+	var result := base.duplicate(true)
+	for item: Variant in extra:
+		var found := false
+		for kept: Variant in result:
+			if deep_equal(kept, item):
+				found = true
+				break
+		if not found:
+			result.append(item)
+	return result
 
 
 ## Returns a deep duplicate of `target_object` with every key/value of each dictionary in
@@ -238,23 +276,33 @@ static func _floats_equal(a: float, b: float) -> bool:
 ## step, and returns once it has happened; `node.owner` becomes `new_parent` unless
 ## `set_owner` is false. If either is freed meanwhile the move does not happen (`node`
 ## stays where it was); when several moves of one node are requested in a
-## frame, the last one wins. A no-op when `new_parent` already is the parent.
-static func move_node(node: Node, new_parent: Node, set_owner := true) -> void:
+## frame, the last one wins. A no-op when `new_parent` already is the parent, unless
+## `global_position` is given.
+##
+## `global_position` (null for none) is a world position, applied right after the
+## reparent: a Vector2 for a Node2D or Control, a Vector3 for a Node3D. Setting a position
+## before the move would be read against the old parent; setting it after places the node
+## in the world even when the new parent is moved, rotated or scaled. It is also applied
+## when the node is already a child of `new_parent`. A value of the wrong type for the node
+## is reported through `LFLogger` and ignored (the move still happens). A move that is
+## refused (under itself) applies no position.
+static func move_node(node: Node, new_parent: Node, set_owner := true, global_position: Variant = null) -> void:
 	if not is_instance_valid(node) or not is_instance_valid(new_parent):
 		return
 	var ticket: int = node.get_meta(_MOVE_TICKET_META, 0) + 1
 	node.set_meta(_MOVE_TICKET_META, ticket)
-	Callable(LFUtils, _APPLY_MOVE_METHOD).call_deferred(node, new_parent, set_owner, ticket)
+	Callable(LFUtils, _APPLY_MOVE_METHOD).call_deferred(node, new_parent, set_owner, ticket, global_position)
 	await tree_root.process_frame
 
 
-static func _apply_move(node: Variant, new_parent: Variant, set_owner: bool, ticket: int) -> void:
+static func _apply_move(node: Variant, new_parent: Variant, set_owner: bool, ticket: int, global_position: Variant) -> void:
 	if not is_instance_valid(node) or not is_instance_valid(new_parent):
 		return
 	if node.get_meta(_MOVE_TICKET_META, 0) != ticket:
 		return
 	node.remove_meta(_MOVE_TICKET_META)
 	if node.get_parent() == new_parent:
+		_apply_global_position(node, global_position)
 		return
 	if node == new_parent or node.is_ancestor_of(new_parent):
 		_log.error('LFUtils.move_node: a node cannot be moved under itself or its own descendant; it stays where it was')
@@ -265,6 +313,19 @@ static func _apply_move(node: Variant, new_parent: Variant, set_owner: bool, tic
 	new_parent.add_child(node)
 	if set_owner:
 		node.owner = new_parent
+	_apply_global_position(node, global_position)
+
+
+# Sets `node`'s world position when `position` is given and fits the node's kind.
+static func _apply_global_position(node: Node, position: Variant) -> void:
+	if position == null:
+		return
+	var fits: bool = (typeof(position) == TYPE_VECTOR2 and (node is Node2D or node is Control)) \
+		or (typeof(position) == TYPE_VECTOR3 and node is Node3D)
+	if not fits:
+		_log.error('LFUtils.move_node: a %s global_position does not fit a %s; not applied' % [type_string(typeof(position)), node.get_class()])
+		return
+	node.global_position = position
 
 
 ## The project's configured viewport width and height (Project Settings > Display >

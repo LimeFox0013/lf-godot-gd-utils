@@ -324,3 +324,148 @@ func test_shape_size_without_a_shape_is_zero_and_reported():
 	assert_eq(LFUtils2D.shape_size(node), Vector2.ZERO)
 	assert_eq(LFUtils2D.shape_size(null), Vector2.ZERO)
 	assert_push_error_count(2)
+
+
+func _half_transparent_texture(format := Image.FORMAT_RGBA8) -> ImageTexture:
+	var image := Image.create(4, 2, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1, 1, 1, 1))
+	for y in 2:
+		image.set_pixel(3, y, Color(1, 1, 1, 0.0)) # the right column is transparent
+	image.set_pixel(0, 0, Color(1, 1, 1, 0.05)) # below the default threshold
+	if format != Image.FORMAT_RGBA8:
+		image.convert(format)
+	return ImageTexture.create_from_image(image)
+
+
+func test_alpha_click_mask_is_set_where_alpha_passes_the_threshold():
+	var mask := LFUtils2D.alpha_click_mask(_half_transparent_texture())
+	assert_eq(mask.get_size(), Vector2i(4, 2))
+	assert_true(mask.get_bitv(Vector2i(1, 0)))
+	assert_true(mask.get_bitv(Vector2i(2, 1)))
+	assert_false(mask.get_bitv(Vector2i(3, 0)), 'transparent')
+	assert_false(mask.get_bitv(Vector2i(0, 0)), 'alpha 0.05 is under the default 0.1')
+
+
+func test_alpha_click_mask_threshold_is_adjustable():
+	var mask := LFUtils2D.alpha_click_mask(_half_transparent_texture(), 0.01)
+	assert_true(mask.get_bitv(Vector2i(0, 0)), 'alpha 0.05 passes 0.01')
+
+
+func test_alpha_click_mask_reads_a_compressed_texture_through_a_decompressed_copy():
+	var image := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	image.fill(Color(1, 1, 1, 1))
+	if image.compress(Image.COMPRESS_S3TC) != OK:
+		pending('S3TC compression is not available in this build')
+		return
+	var texture := ImageTexture.create_from_image(image)
+	assert_true(texture.get_image().is_compressed(), 'the source really is compressed')
+	var mask := LFUtils2D.alpha_click_mask(texture)
+	assert_not_null(mask)
+	assert_true(mask.get_bitv(Vector2i(2, 2)))
+	assert_true(texture.get_image().is_compressed(), 'the texture itself is untouched')
+
+
+func test_alpha_click_mask_of_an_opaque_format_is_fully_set():
+	var mask := LFUtils2D.alpha_click_mask(_half_transparent_texture(Image.FORMAT_RGB8))
+	assert_not_null(mask)
+	assert_true(mask.get_bitv(Vector2i(3, 0)))
+
+
+func test_alpha_click_mask_without_a_texture_reports_and_returns_null():
+	assert_null(LFUtils2D.alpha_click_mask(null))
+	assert_push_error("no texture")
+
+
+func test_alpha_click_mask_rejects_a_nan_threshold():
+	assert_null(LFUtils2D.alpha_click_mask(_half_transparent_texture(), NAN))
+	assert_push_error("NaN")
+
+
+func test_alpha_click_mask_of_a_texture_without_an_image_reports_and_returns_null():
+	assert_null(LFUtils2D.alpha_click_mask(PlaceholderTexture2D.new()))
+	assert_push_error("no image")
+
+
+func test_apply_alpha_click_mask_sets_the_buttons_click_mask():
+	var button := TextureButton.new()
+	autofree(button)
+	button.texture_normal = _half_transparent_texture()
+	assert_true(LFUtils2D.apply_alpha_click_mask(button))
+	assert_not_null(button.texture_click_mask)
+	assert_false(button.texture_click_mask.get_bitv(Vector2i(3, 1)))
+
+
+func test_apply_alpha_click_mask_without_a_texture_leaves_the_button_alone():
+	var button := TextureButton.new()
+	autofree(button)
+	assert_false(LFUtils2D.apply_alpha_click_mask(button))
+	assert_push_error("no texture")
+	assert_null(button.texture_click_mask)
+	assert_false(LFUtils2D.apply_alpha_click_mask(null))
+	assert_push_error("no button")
+
+
+func test_steer_accelerates_a_character_body_toward_the_direction_by_a_share_of_speed():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	assert_true(LFUtils2D.steer(body, Vector2(5, 0), 100.0, 0.1, 0.5, 10.0, false))
+	assert_almost_eq(body.velocity, Vector2(5, 0), Vector2(0.001, 0.001), '100 * 0.5 * 0.1')
+
+
+func test_steer_stops_at_the_wanted_velocity():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	for i in 100:
+		LFUtils2D.steer(body, Vector2.DOWN * 3.0, 80.0, 0.1, 0.7, 10.0, false)
+	assert_almost_eq(body.velocity, Vector2(0, 80), Vector2(0.001, 0.001))
+
+
+func test_steer_with_a_zero_direction_brakes():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	body.velocity = Vector2(50, 0)
+	LFUtils2D.steer(body, Vector2.ZERO, 100.0, 0.1, 0.5, 10.0, false)
+	assert_almost_eq(body.velocity, Vector2(45, 0), Vector2(0.001, 0.001))
+
+
+func test_steer_uses_the_documented_default_ratio():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	LFUtils2D.steer(body, Vector2.RIGHT, 100.0, 0.1, LFUtils2D.DEFAULT_STEER_ACCELERATION_RATIO, 10.0, false)
+	assert_almost_eq(body.velocity.x, 7.0, 0.001)
+
+
+func test_steer_slides_a_character_body_unless_told_not_to():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	LFUtils2D.steer(body, Vector2.RIGHT, 1000.0, 1.0)
+	assert_gt(body.position.x, 0.0, 'move_and_slide moved it')
+	var still: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	LFUtils2D.steer(still, Vector2.RIGHT, 1000.0, 1.0, 0.7, 10.0, false)
+	assert_eq(still.position, Vector2.ZERO)
+
+
+func test_steer_negative_speed_counts_as_zero():
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	LFUtils2D.steer(body, Vector2.RIGHT, -50.0, 0.1, 0.5, 10.0, false)
+	assert_eq(body.velocity, Vector2.ZERO)
+
+
+func test_steer_pushes_a_rigid_body_with_a_force_scaled_by_mass_and_gain():
+	var body := RigidBody2D.new()
+	body.mass = 2.0
+	body.gravity_scale = 0.0
+	add_child_autofree(body)
+	assert_true(LFUtils2D.steer(body, Vector2.RIGHT, 10.0, 1.0 / 60.0, 0.7, 5.0))
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	assert_gt(body.linear_velocity.x, 0.0, 'force of (10 - 0) * 2 * 5 moved it')
+
+
+func test_steer_rejects_other_nodes_and_non_finite_numbers():
+	var plain: Node2D = add_child_autofree(Node2D.new())
+	assert_false(LFUtils2D.steer(plain, Vector2.RIGHT, 1.0, 0.1))
+	assert_push_error("expected a CharacterBody2D")
+	assert_false(LFUtils2D.steer(null, Vector2.RIGHT, 1.0, 0.1))
+	assert_push_error("null")
+	var body: CharacterBody2D = add_child_autofree(CharacterBody2D.new())
+	assert_false(LFUtils2D.steer(body, Vector2.RIGHT, NAN, 0.1, 0.7, 10.0, false))
+	assert_push_error("finite")
+	assert_false(LFUtils2D.steer(body, Vector2(INF, 0), 1.0, 0.1, 0.7, 10.0, false))
+	assert_push_error("finite")
+	assert_eq(body.velocity, Vector2.ZERO)
