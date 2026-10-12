@@ -94,6 +94,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_crowd_body`](src/3D/lf_crowd_body/README.md) | experimental | large, game-shaped surface (crowds) |
 | [`lf_directional_sprite`](src/3D/lf_directional_sprite/README.md) | experimental | rendering; tests cannot judge how it looks |
 | [`lf_floating_text_3d`](src/3D/lf_floating_text_3d/README.md) | stable | - |
+| [`lf_multimesh_scatter`](src/3D/lf_multimesh_scatter/README.md) | experimental | newer, extracted from a game |
 | [`lf_heightmap`](src/3D/lf_heightmap/README.md) | experimental | rendering and physics geometry |
 | [`lf_orbit_camera`](src/3D/lf_orbit_camera/README.md) | experimental | input feel; tests cannot judge it |
 | [`lf_shaker`](src/3D/lf_shaker/README.md) | experimental | camera feel; tests cannot judge it |
@@ -109,6 +110,11 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_await`](src/utils/lf_await/README.md) | stable | - |
 | [`lf_capped_level_tracker`](src/utils/lf_capped_level_tracker/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
 | [`lf_cooldown`](src/utils/lf_cooldown/README.md) | stable | - |
+| [`lf_jump_physics`](src/utils/lf_jump_physics/README.md) | experimental | newer, extracted from a game |
+| [`lf_ratchet_follow`](src/utils/lf_ratchet_follow/README.md) | experimental | newer, extracted from a game |
+| [`lf_grade_combo`](src/utils/lf_grade_combo/README.md) | experimental | newer, extracted from a game |
+| [`lf_particle_pool`](src/utils/lf_particle_pool/README.md) | experimental | newer, extracted from a game |
+| [`lf_chunk_stream`](src/utils/lf_chunk_stream/README.md) | experimental | newer, extracted from a game |
 | [`lf_debounce`](src/utils/lf_debounce/README.md) | stable | - |
 | [`lf_dictionary`](src/utils/lf_dictionary/README.md) | stable | - |
 | [`lf_drag_tracker`](src/utils/lf_drag_tracker/README.md) | stable | - |

@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**82 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**88 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-82 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+88 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -185,6 +185,7 @@ game; read their pages before adopting them:
 | `lf_floating_text_3d` | Damage numbers and pop-up text that rise, fade and disappear |
 | `lf_heightmap` | Hills and terrain (mesh and collision) from a height formula |
 | `lf_orbit_camera` | A strategy-game camera: pan, zoom and orbit |
+| `lf_multimesh_scatter` | Scatter grass, pebbles or flowers over a flat area with one cheap draw call |
 | `lf_shaker` | Screen shake (and shaking anything else) for hits and explosions |
 | `lf_utils_3d` | Click on the 3D world, find screen positions of 3D points, and ground-plane math |
 | `lf_viewport_leave_3d` | The 3D version of `lf_viewport_leave` |
@@ -196,8 +197,8 @@ game; read their pages before adopting them:
 | Everyday helpers | `lf_utils` (wait, find the closest, clear children…), `lf_dictionary` (read nested data, with a default when a key is missing), `lf_json`, `lf_text` (plurals, countdown clocks), `lf_graph` (tree layouts), `lf_uuid` (random ids, UUID v4), `lf_logger` (tidy log messages) |
 | Input | `lf_drag_tracker` (tell a click from a drag), `lf_input_keys` (keyboard as a gamepad, button names for hints) |
 | Timing and events | `lf_await` (wait for several things), `lf_debounce` and `lf_throttle` (limit how often something runs), `lf_cooldown`, `lf_interval_timer` (every N seconds), `lf_turn_cycle` (timed turns), `lf_thread` (run heavy work on a worker thread), `lf_animate` (simple animations), `lf_event_emitter` and `lf_event_bus` (send messages between parts of the game) |
-| Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |
-| Gameplay systems | `lf_state_machine` (enemy modes like patrol and chase), `lf_status_effects` (buffs, poison), `lf_procs` (chance-on-hit effects), `lf_layered_stats` (base stats plus bonuses), `lf_modifier_levels`, `lf_capped_level_tracker` and `lf_modifier_grant_service` (upgrades with limits), `lf_unlock_tree` (skill trees), `lf_loot_table`, `lf_tier_roller` (rarity), `lf_pity_tracker` (bad-luck protection), `lf_weighted_pick`, `lf_random` (repeatable randomness), `lf_grid_2d`, `lf_flow_field` (move big crowds to a goal) |
+| Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_particle_pool` (reuse one particle effect, recoloured per copy), `lf_chunk_stream` (an endless level of equal pieces, built around the player), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |
+| Gameplay systems | `lf_state_machine` (enemy modes like patrol and chase), `lf_grade_combo` (Good / Great / Perfect streaks into a multiplier), `lf_jump_physics` (platformer jump feel), `lf_ratchet_follow` (a camera that follows a climb), `lf_status_effects` (buffs, poison), `lf_procs` (chance-on-hit effects), `lf_layered_stats` (base stats plus bonuses), `lf_modifier_levels`, `lf_capped_level_tracker` and `lf_modifier_grant_service` (upgrades with limits), `lf_unlock_tree` (skill trees), `lf_loot_table`, `lf_tier_roller` (rarity), `lf_pity_tracker` (bad-luck protection), `lf_weighted_pick`, `lf_random` (repeatable randomness), `lf_grid_2d`, `lf_flow_field` (move big crowds to a goal) |
 | Files | `lf_file` (read and save files; a save writes a checked temporary file, then renames it over the old one), `lf_file_observer` (settings that save themselves), `lf_zip` (unzip mods and downloads) |
 | Network and system | `lf_http` (talk to web servers), `lf_socket` and `lf_socket_server` (live online connections), `lf_url`, `lf_os` (system info, launch a server), `lf_process` (run other programs) |
 | Online services | `lf_llm` (call a language model that can use tools, e.g. for AI players), `lf_accounts` (player log-in), `lf_strike_guard` (lock out repeated failed log-ins), `lf_replication` (keep online players in sync) |
