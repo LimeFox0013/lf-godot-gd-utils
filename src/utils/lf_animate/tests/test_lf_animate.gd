@@ -816,3 +816,257 @@ func test_a_node_and_its_duplicate_replace_only_their_own_tweens_over_several_ca
 	assert_true(second.is_valid(), "another path replaces nothing")
 	for tween in [second, copy_second, position]:
 		tween.kill()
+
+
+# --- awaiting control's result -----------------------------------------------
+
+func test_awaiting_control_is_safe_for_a_zero_duration_a_node_outside_the_tree_and_a_missing_property():
+	var in_tree: Control = add_child_autofree(Control.new())
+	var outside: Control = autofree(Control.new())
+
+	await LFAnimate.control(in_tree, "position:x", 5.0, 0.0).finished
+	await LFAnimate.control(in_tree, "position:x", 6.0, -1.0).finished
+	await LFAnimate.control(outside, "position:x", 7.0, 0.3).finished
+	await LFAnimate.control(in_tree, "no_such_property", 1.0, 0.3).finished
+	assert_engine_error("no_such_property")
+
+	assert_eq(in_tree.position.x, 6.0)
+	assert_eq(outside.position.x, 7.0)
+
+
+func test_a_control_tween_that_another_helper_replaced_never_finishes():
+	var node: Control = add_child_autofree(Control.new())
+	var finished := [false]
+	var first := LFAnimate.control(node, "position:x", 100.0, 0.2)
+	first.finished.connect(func() -> void: finished[0] = true)
+
+	LFAnimate.control(node, "position:x", 0.0, 0.0)
+	await wait_seconds(0.4)
+
+	assert_false(first.is_valid())
+	assert_false(finished[0], "a killed tween does not emit finished, so awaiting it would hang")
+
+
+# --- slide_in / slide_out ------------------------------------------------------
+
+func test_slide_in_shows_the_node_and_moves_it_from_the_offset_to_its_rest_position():
+	var node: Control = add_child_autofree(Control.new())
+	node.position = Vector2(50, 60)
+	node.visible = false
+
+	var result := [null]
+	var run := func() -> void: result[0] = await LFAnimate.slide_in(node, Vector2(-20, 100), 0.2)
+	run.call()
+
+	assert_true(node.visible, "shown before the slide starts")
+	assert_eq(node.position, Vector2(30, 160), "starts at rest + offset")
+	assert_eq(node.modulate.a, 0.0)
+	assert_true(await _until(func() -> bool: return result[0] != null))
+	assert_true(result[0])
+	assert_eq(node.position, Vector2(50, 60))
+	assert_almost_eq(node.modulate.a, 1.0, 0.001)
+	assert_true(node.visible)
+
+
+func test_slide_out_hides_the_node_and_restores_its_rest_position_and_opacity():
+	var node: Node2D = add_child_autofree(Node2D.new())
+	node.position = Vector2(50, 60)
+	node.modulate.a = 0.5
+	var lowest := [0.0]
+	var watch := func() -> void:
+		while is_instance_valid(node) and node.visible:
+			lowest[0] = maxf(lowest[0], node.position.y)
+			await get_tree().process_frame
+	watch.call()
+
+	assert_true(await LFAnimate.slide_out(node, Vector2(0, 80), 0.1))
+
+	assert_gt(lowest[0], 60.0, "it moved toward the offset")
+	assert_false(node.visible)
+	assert_eq(node.position, Vector2(50, 60))
+	assert_eq(node.modulate.a, 0.5)
+	assert_false(node.has_meta(&"lf_animate_slide"), "the remembered rest is cleared")
+
+
+func test_a_slide_out_during_a_slide_in_slides_back_to_the_first_rest_position():
+	var node: Control = add_child_autofree(Control.new())
+	node.position = Vector2(10, 10)
+	var results := [null, null]
+	var enter := func() -> void: results[0] = await LFAnimate.slide_in(node, Vector2(0, 50), 0.3)
+	enter.call()
+	await wait_process_frames(2)
+	var leave := func() -> void: results[1] = await LFAnimate.slide_out(node, Vector2(0, 50), 0.05)
+	leave.call()
+
+	assert_true(await _until(func() -> bool: return results[1] != null))
+
+	assert_false(results[0], "the slide-in was replaced")
+	assert_true(results[1])
+	assert_eq(node.position, Vector2(10, 10), "not the mid-slide position")
+	assert_false(node.visible)
+
+
+func test_a_slide_returns_false_for_a_freed_null_3d_or_detached_node():
+	var freed := Control.new()
+	freed.free()
+	var node_3d: Node3D = add_child_autofree(Node3D.new())
+
+	assert_false(await LFAnimate.slide_in(null, Vector2.ONE))
+	assert_false(await LFAnimate.slide_in(freed, Vector2.ONE))
+	assert_false(await LFAnimate.slide_out(node_3d, Vector2.ONE))
+	assert_false(await LFAnimate.slide_out(autofree(Control.new()), Vector2.ONE), "outside the tree")
+
+
+func test_a_slide_returns_false_when_the_node_is_freed_meanwhile():
+	var node := Control.new()
+	add_child(node)
+	var result := [null]
+	var run := func() -> void: result[0] = await LFAnimate.slide_out(node, Vector2(0, 50), 1.0)
+	run.call()
+	await wait_process_frames(2)
+
+	node.queue_free()
+
+	assert_true(await _until(func() -> bool: return result[0] != null))
+	assert_false(result[0])
+
+
+func test_a_zero_duration_slide_completes_at_once():
+	var node: Control = add_child_autofree(Control.new())
+	node.position = Vector2(3, 4)
+
+	assert_true(await LFAnimate.slide_out(node, Vector2(9, 9), 0.0))
+
+	assert_false(node.visible)
+	assert_eq(node.position, Vector2(3, 4))
+
+
+# --- pulse ---------------------------------------------------------------------
+
+func test_pulse_rises_to_the_peak_then_returns_to_rest():
+	var light: OmniLight3D = add_child_autofree(OmniLight3D.new())
+	light.omni_range = 5.0
+
+	var tween := LFAnimate.pulse(light, "omni_range", 25.0, 5.0, 0.1, 0.2)
+	tween.pause()
+	tween.custom_step(0.1)
+	assert_almost_eq(light.omni_range, 25.0, 0.01, "at the peak after the rise")
+	tween.custom_step(0.2)
+	assert_almost_eq(light.omni_range, 5.0, 0.01, "back at rest")
+	assert_false(tween.is_running())
+
+
+func test_pulse_works_on_a_part_of_a_property_and_applies_the_transition_and_ease():
+	var node: Control = add_child_autofree(Control.new())
+	node.modulate.a = 0.0
+
+	var tween := LFAnimate.pulse(node, "modulate:a", 1.0, 0.0, 0.2, 0.2, Tween.TRANS_QUAD, Tween.EASE_IN)
+	tween.pause()
+	tween.custom_step(0.1)
+
+	assert_almost_eq(node.modulate.a, 0.25, 0.01, "quad ease-in: a quarter at half the rise")
+	tween.kill()
+
+
+func test_pulse_replaces_an_earlier_tween_on_the_same_property():
+	var node: Control = add_child_autofree(Control.new())
+	var fade := LFAnimate.control(node, "modulate:a", 0.0, 0.4)
+
+	var tween := LFAnimate.pulse(node, "modulate:a", 1.0, 0.5, 0.05, 0.05)
+
+	assert_false(fade.is_valid())
+	await tween.finished
+	assert_almost_eq(node.modulate.a, 0.5, 0.001)
+
+
+func test_pulse_on_a_node_outside_the_tree_sets_the_rest_value_and_can_be_awaited():
+	var node: Control = autofree(Control.new())
+
+	await LFAnimate.pulse(node, "modulate:a", 1.0, 0.25, 0.1, 0.1).finished
+
+	assert_almost_eq(node.modulate.a, 0.25, 0.001)
+
+
+func test_pulse_on_a_missing_property_gives_a_finished_tween():
+	var node: Control = add_child_autofree(Control.new())
+
+	var tween := LFAnimate.pulse(node, "no_such_property", 1.0, 0.0)
+
+	assert_not_null(tween)
+	await tween.finished
+	assert_engine_error("no_such_property")
+
+
+# --- arc_hop ---------------------------------------------------------------------
+
+func test_arc_hop_lands_on_the_target_after_rising_above_the_line():
+	var node: Node2D = add_child_autofree(Node2D.new())
+	node.global_position = Vector2(0, 100)
+	var highest := [0.0]
+	var watch := func() -> void:
+		while is_instance_valid(node) and node.global_position.x < 99.0:
+			highest[0] = maxf(highest[0], 100.0 - node.global_position.y)
+			await get_tree().process_frame
+	watch.call()
+
+	assert_true(await LFAnimate.arc_hop(node, Vector2(100, 100), 30.0, 0.2))
+
+	assert_eq(node.global_position, Vector2(100, 100), "lands exactly")
+	assert_gt(highest[0], 5.0, "it rose above the straight line (y is smaller up the screen)")
+	assert_lte(highest[0], 30.0 + 0.001)
+
+
+func test_arc_hop_midpoint_is_on_the_line_plus_the_height():
+	var node: Node2D = add_child_autofree(Node2D.new())
+	LFAnimate._hop_step.call(0.5, node, Vector2.ZERO, Vector2(10, 0), 8.0)
+
+	assert_almost_eq(node.global_position, Vector2(5, -8), Vector2(0.001, 0.001))
+
+
+func test_arc_hop_moves_a_node3d_along_x_and_up():
+	var node: Node3D = add_child_autofree(Node3D.new())
+	LFAnimate._hop_step.call(0.5, node, Vector3.ZERO, Vector3(10, 0, 0), 2.0)
+
+	assert_almost_eq(node.global_position, Vector3(5, 2, 0), Vector3(0.001, 0.001, 0.001))
+	assert_true(await LFAnimate.arc_hop(node, Vector3(4, 0, 4), 1.0, 0.05))
+	assert_eq(node.global_position, Vector3(4, 0, 4))
+
+
+func test_arc_hop_refuses_the_wrong_target_type_a_wrong_node_and_a_detached_node():
+	var node_2d: Node2D = add_child_autofree(Node2D.new())
+	var node_3d: Node3D = add_child_autofree(Node3D.new())
+	var plain: Node = add_child_autofree(Node.new())
+
+	assert_false(await LFAnimate.arc_hop(node_2d, Vector3.ONE))
+	assert_false(await LFAnimate.arc_hop(node_3d, Vector2.ONE))
+	assert_false(await LFAnimate.arc_hop(plain, Vector2.ONE))
+	assert_false(await LFAnimate.arc_hop(null, Vector2.ONE))
+	assert_false(await LFAnimate.arc_hop(autofree(Node2D.new()), Vector2.ONE), "outside the tree")
+
+
+func test_arc_hop_aborts_cleanly_when_the_node_is_freed_mid_hop():
+	var node := Node2D.new()
+	add_child(node)
+	var result := [null]
+	var run := func() -> void: result[0] = await LFAnimate.arc_hop(node, Vector2(500, 0), 30.0, 1.0)
+	run.call()
+	await wait_process_frames(2)
+
+	node.queue_free()
+
+	assert_true(await _until(func() -> bool: return result[0] != null))
+	assert_false(result[0])
+
+
+func test_a_later_position_tween_replaces_an_arc_hop():
+	var node: Node2D = add_child_autofree(Node2D.new())
+	var result := [null]
+	var run := func() -> void: result[0] = await LFAnimate.arc_hop(node, Vector2(500, 0), 30.0, 1.0)
+	run.call()
+	await wait_process_frames(2)
+
+	LFAnimate.control(node, "position", Vector2(7, 7), 0.0)
+
+	assert_true(await _until(func() -> bool: return result[0] != null))
+	assert_false(result[0])
+	assert_eq(node.position, Vector2(7, 7))

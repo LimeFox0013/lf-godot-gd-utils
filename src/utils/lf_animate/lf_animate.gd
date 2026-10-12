@@ -3,8 +3,9 @@
 ## Call everything on the class. It offers a property tween that replaces the previous one
 ## these helpers started on the same property (so two of them don't fight), a scale punch,
 ## an animate-then-free one-shot for floating labels and bursts, and canned "comic pop in",
-## "fall out" and "paper fall" animations for Control/Node2D nodes. Every tween that
-## animates is created on its node: it pauses with it and dies with it.
+## "fall out" and "paper fall" animations for Control/Node2D nodes, a slide in and out, a
+## property pulse and an arc hop. Every tween that animates is created on its node: it
+## pauses with it and dies with it. For a never-ending drift see `LFIdleDrift`.
 class_name LFAnimate
 
 ## Node meta holding the position a node had before its first pop-in, so repeated pop-ins
@@ -47,10 +48,30 @@ const DEFAULT_PAPER_ROTATION_AMPLITUDE := 15.0
 ## `fall_paper` default: screen pixels past the bottom of the visible area the fall ends at.
 const DEFAULT_PAPER_EXTRA_VERTICAL_MARGIN := 100.0
 
+## Node meta holding {"node", "position", "alpha"}: the owner's instance id and the rest
+## position and opacity of a node whose slide_in or slide_out is running or was cut short.
+const _SLIDE_META := &"lf_animate_slide"
+
+## `slide_in` and `slide_out` default: seconds the slide takes.
+const DEFAULT_SLIDE_DURATION := 0.14
+## `pulse` default: seconds the property takes to rise to its peak.
+const DEFAULT_PULSE_UP_SECONDS := 0.12
+## `pulse` default: seconds the property takes to fall back to its rest value.
+const DEFAULT_PULSE_DOWN_SECONDS := 1.0
+## `arc_hop` default: how far the node rises above the straight line at the middle of the
+## hop, in the position's units (pixels in 2D).
+const DEFAULT_HOP_HEIGHT := 30.0
+## `arc_hop` default: seconds the hop takes.
+const DEFAULT_HOP_SECONDS := 0.3
+
 ## Key of the owner's instance id in the punch and tween metas.
 const _KEY_NODE := "node"
 ## Key of the running tween in the punch meta.
 const _KEY_TWEEN := "tween"
+## Key of the rest position in the slide meta.
+const _KEY_POSITION := "position"
+## Key of the rest opacity in the slide meta.
+const _KEY_ALPHA := "alpha"
 ## Key of the rest scale in the punch meta.
 const _KEY_REST := "rest"
 ## Key of the property path -> tween map in the tweens meta.
@@ -70,6 +91,10 @@ const _PROP_ROTATION := "rotation"
 const _PROP_ROTATION_DEGREES := "rotation_degrees"
 ## Animated property: position.
 const _PROP_POSITION := "position"
+## Animated property path: the opacity.
+const _PROP_ALPHA := "modulate:a"
+## Animated property: the global position.
+const _PROP_GLOBAL_POSITION := "global_position"
 ## Animated property path: the global x position.
 const _PROP_GLOBAL_X := "global_position:x"
 ## Animated property path: the global y position.
@@ -393,10 +418,145 @@ static func fall_paper(
 	return true
 
 
+## Coroutine. Slides `node` (a Control or Node2D) in: shows it, puts it at its rest position
+## plus `offset` and fully transparent, then moves it to the rest position while fading it
+## to its rest opacity over `duration` seconds. The rest position and opacity are what the
+## node had before the first slide (a slide_in or slide_out that cut another short reuses
+## the first one's). Returns `true` once done; `false` if `node` is not a Control/Node2D
+## inside the tree (freed, null, 3D, outside the tree), or the slide was cut short (the node
+## left the tree or was freed, or a later helper call replaced its tweens): the node then
+## stays where it is. A slide claims `position` and `modulate:a`. If a different helper
+## cuts a slide short, the remembered rest stays until the next slide finishes.
+static func slide_in(node: Variant, offset: Vector2, duration := DEFAULT_SLIDE_DURATION) -> bool:
+	return await _slide(node, offset, duration, true)
+
+
+## Coroutine. Slides `node` (a Control or Node2D) out: moves it from where it is to its
+## rest position plus `offset` while fading it to transparent over `duration` seconds,
+## then hides it and puts it back at its rest position and rest opacity, ready for the
+## next `slide_in`. `slide_in(node, offset)` and `slide_out(node, offset)` with the same
+## `offset` mirror each other. Returns `true` once done; `false` if `node` is not a
+## Control/Node2D inside the tree, or the slide was cut short (see `slide_in`): the node
+## then stays where it is, still visible.
+static func slide_out(node: Variant, offset: Vector2, duration := DEFAULT_SLIDE_DURATION) -> bool:
+	return await _slide(node, offset, duration, false)
+
+
+## Tweens `node`'s property `property` to `peak` over `up_seconds`, then back to `rest`
+## over `down_seconds`, and returns the tween, bound to `node`: a punch for any property
+## (a light's energy, a tint, a size). Both legs use `tween_trans` and `tween_ease`. The
+## property starts from its current value, not from `rest`. The pulse replaces a tween
+## these helpers started on an overlapping property path, as `control` does. A node outside
+## the tree, or a property the node lacks (reported by the engine), gives the empty tween
+## `control` returns, and a node outside the tree gets `rest` at once. Awaiting `finished`
+## is safe unless another helper replaces the pulse: a killed tween never finishes.
+static func pulse(
+	node: Node,
+	property: NodePath,
+	peak: Variant,
+	rest: Variant,
+	up_seconds := DEFAULT_PULSE_UP_SECONDS,
+	down_seconds := DEFAULT_PULSE_DOWN_SECONDS,
+	tween_trans := Tween.TRANS_QUAD,
+	tween_ease := Tween.EASE_OUT,
+) -> Tween:
+	if not node.is_inside_tree():
+		_claim_path(node, String(property), null)
+		node.set_indexed(property, rest)
+		return _finished_tween()
+	var tween := node.create_tween()
+	tween.set_trans(tween_trans).set_ease(tween_ease)
+	if tween.tween_property(node, property, peak, up_seconds) == null: # the engine reported the missing property
+		tween.kill()
+		return _finished_tween()
+	tween.tween_property(node, property, rest, down_seconds)
+	_claim_path(node, String(property), tween)
+	return tween
+
+
+## Coroutine. Moves `node` from its global position to `to` (a Vector2 for a Control or
+## Node2D, a Vector3 for a Node3D) along a sine arc: on top of the straight line, the node
+## rises `height` at the middle of the hop and lands exactly on `to`. The rise is up on the
+## screen in 2D (negative y) and along +y in 3D. `tween_trans` and `tween_ease` shape the
+## progress along the line (the default is a quick start). Returns `true` once landed;
+## `false` if `node` is not a Control/Node2D/Node3D inside the tree, `to` is the wrong
+## type, or the hop was cut short (the node was freed or left the tree, or a later helper
+## call replaced it: the hop then stops where it is). Claims `global_position`.
+static func arc_hop(
+	node: Variant,
+	to: Variant,
+	height := DEFAULT_HOP_HEIGHT,
+	seconds := DEFAULT_HOP_SECONDS,
+	tween_trans := Tween.TRANS_SINE,
+	tween_ease := Tween.EASE_OUT,
+) -> bool:
+	if node == null or not is_instance_valid(node) or not node.is_inside_tree():
+		return false
+	var is_3d: bool = node is Node3D
+	if not (is_3d or node is Control or node is Node2D):
+		return false
+	if typeof(to) != (TYPE_VECTOR3 if is_3d else TYPE_VECTOR2):
+		return false
+	var tween: Tween = node.create_tween()
+	tween.tween_method(_hop_step.bind(node, node.global_position, to, height), 0.0, 1.0, seconds)\
+		.set_trans(tween_trans).set_ease(tween_ease)
+	_claim_path(node, _PROP_GLOBAL_POSITION, tween)
+	if not await _finished_or_gone(node, [tween]):
+		return false
+	node.global_position = to
+	return true
+
+
 static func _is_2d_in_tree(node: Variant) -> bool:
 	if node == null or not is_instance_valid(node):
 		return false
 	return (node is Control or node is Node2D) and node.is_inside_tree()
+
+
+## One frame of `arc_hop`: `progress` (0 to 1) along the line from `start` to `to`, plus
+## the arc.
+static func _hop_step(progress: float, node: Variant, start: Variant, to: Variant, height: float) -> void:
+	if not is_instance_valid(node):
+		return
+	var lift: Variant = Vector2.UP
+	if node is Node3D:
+		lift = Vector3.UP
+	node.global_position = start.lerp(to, progress) + lift * (height * sin(PI * progress))
+
+
+## The shared body of `slide_in` (`entering`) and `slide_out`.
+static func _slide(node: Variant, offset: Vector2, duration: float, entering: bool) -> bool:
+	if not _is_2d_in_tree(node):
+		return false
+	var record: Dictionary = node.get_meta(_SLIDE_META, _no_record)
+	if record.get(_KEY_NODE) != node.get_instance_id():
+		record = {_KEY_NODE: node.get_instance_id(), _KEY_POSITION: node.position, _KEY_ALPHA: node.modulate.a}
+		node.set_meta(_SLIDE_META, record)
+	var rest_position: Vector2 = record[_KEY_POSITION]
+	var rest_alpha: float = record[_KEY_ALPHA]
+	var hidden_position := rest_position + offset
+	var target_position := rest_position
+	var target_alpha := rest_alpha
+	if entering:
+		node.position = hidden_position
+		node.modulate.a = 0.0
+		node.visible = true
+	else:
+		target_position = hidden_position
+		target_alpha = 0.0
+	var tween: Tween = node.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(node, _PROP_POSITION, target_position, duration)
+	tween.tween_property(node, _PROP_ALPHA, target_alpha, duration)
+	_claim(node, [_PROP_POSITION, _PROP_ALPHA], tween)
+	if not await _finished_or_gone(node, [tween]):
+		return false
+	if not entering:
+		node.visible = false
+		node.position = rest_position
+		node.modulate.a = rest_alpha
+	node.remove_meta(_SLIDE_META)
+	return true
 
 
 ## The rest scale of the punch_scale running on `node`, or null when none is.

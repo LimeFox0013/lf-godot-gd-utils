@@ -1,12 +1,12 @@
 # LFAnimate
 
-> Ready-made tweens for UI and effects: a property tween that replaces the previous one on the same property, a scale punch, an animate-then-free one-shot, and canned "comic pop in", "fall out" and "paper fall" animations on Control/Node2D.
+> Ready-made tweens for UI and effects: a property tween that replaces the previous one on the same property, a scale punch, an animate-then-free one-shot, and canned "comic pop in", "fall out" and "paper fall" animations on Control/Node2D, a slide in and out, a property pulse, an arc hop, and an endless idle drift (`LFIdleDrift`).
 
 | | |
 |---|---|
 | **Kind** | [Static](../../../README.md#how-lf-classes-work): call it on the class name |
-| **Files** | `lf_animate.gd` |
-| **Tests** | `tests/test_lf_animate.gd` (in the repository; the release zip leaves tests out) |
+| **Files** | `lf_animate.gd` (static helpers), `lf_idle_drift.gd` (`LFIdleDrift`, a `Node` that drifts its parent) |
+| **Tests** | `tests/test_lf_animate.gd`, `tests/test_lf_idle_drift.gd` (in the repository; the release zip leaves tests out) |
 | **Depends on** | `LFUtils` (`tree_root`) |
 
 ## When to use it
@@ -84,6 +84,11 @@ Everything the class offers; you only need the rows used above to get started.
 | `DEFAULT_PAPER_SWAY_AMPLITUDE` | `100.0` — `fall_paper`'s default sideways sway in px. |
 | `DEFAULT_PAPER_ROTATION_AMPLITUDE` | `15.0` — `fall_paper`'s default wobble in degrees. |
 | `DEFAULT_PAPER_EXTRA_VERTICAL_MARGIN` | `100.0` — `fall_paper`'s default screen px past the bottom of the visible area. |
+| `DEFAULT_SLIDE_DURATION` | `0.14` — `slide_in`'s and `slide_out`'s default length in seconds. |
+| `DEFAULT_PULSE_UP_SECONDS` | `0.12` — `pulse`'s default rise time in seconds. |
+| `DEFAULT_PULSE_DOWN_SECONDS` | `1.0` — `pulse`'s default fall-back time in seconds. |
+| `DEFAULT_HOP_HEIGHT` | `30.0` — `arc_hop`'s default rise at the middle of the hop, in position units. |
+| `DEFAULT_HOP_SECONDS` | `0.3` — `arc_hop`'s default length in seconds. |
 
 ### Methods
 
@@ -95,6 +100,29 @@ Everything the class offers; you only need the rows used above to get started.
 | `comics_pop_appear` | `static comics_pop_appear(node: Variant, duration := DEFAULT_POP_DURATION, overshoot := DEFAULT_POP_OVERSHOOT, drift := DEFAULT_POP_DRIFT, tilt_degrees := DEFAULT_POP_TILT_DEGREES, rng: RandomNumberGenerator = null, center_pivot := true) -> bool` (0.35, 1.2, 60.0, 20.0) | Coroutine. Scales from 0 to `overshoot` × rest while fading in to full opacity in the node's own tint, tilts by a random angle within ±`tilt_degrees` (from `rng` when given; without one, Godot's global generator, with no error, since the tilt is cosmetic), drifts `drift` px up from its pre-pop position, then settles to the rest scale. Replaces a pop still running on the node; a pop during a `punch_scale` settles at the punch's rest scale, not its peak. `true` once done; `false` if not a Control/Node2D in the tree, or cut short. |
 | `comics_pop_disappear` | `static comics_pop_disappear(node: Variant, duration := DEFAULT_FALL_DURATION, fall_distance := DEFAULT_FALL_DISTANCE) -> bool` (0.55, 300.0) | Coroutine. Stops a running pop-in, drops `node` by `fall_distance` while fading its alpha to 0 (tint kept), then puts it back at its pre-pop position and rest scale. `true` once done; `false` if not a Control/Node2D in the tree, or cut short. |
 | `fall_paper` | `static fall_paper(node: Variant, duration: float = DEFAULT_PAPER_DURATION, sway_amplitude: float = DEFAULT_PAPER_SWAY_AMPLITUDE, rotation_amplitude: float = DEFAULT_PAPER_ROTATION_AMPLITUDE, extra_vertical_margin: float = DEFAULT_PAPER_EXTRA_VERTICAL_MARGIN) -> bool` (2.0, 100.0, 15.0, 100.0) | Coroutine. A Control or Node2D falls to `extra_vertical_margin` screen px below the visible area with an x sway and a rotation wobble (−amplitude, then +amplitude), then is `queue_free()`d (`true`). `false` for a freed node, a node outside the tree, one that leaves the tree mid-fall, or one whose fall a later helper call replaced (its tweens are killed, it returns at once, and the node is not freed). Claims `global_position:y` (the fall), `global_position:x` (the sway) and `rotation_degrees` (the wobble). |
+| `slide_in` | `static slide_in(node: Variant, offset: Vector2, duration := DEFAULT_SLIDE_DURATION) -> bool` (0.14) | Coroutine. Shows a Control or Node2D, puts it at rest position + `offset` and fully transparent, then moves it to its rest position while fading it to its rest opacity. Rest = what the node had before the first slide. `true` once done; `false` if not a Control/Node2D in the tree, or cut short (the node stays where it is). Claims `position` and `modulate:a`. |
+| `slide_out` | `static slide_out(node: Variant, offset: Vector2, duration := DEFAULT_SLIDE_DURATION) -> bool` (0.14) | Coroutine. The mirror of `slide_in` with the same `offset`: moves the node to rest + `offset` while fading to transparent, then hides it and restores its rest position and opacity. `true` once done; `false` as for `slide_in`. |
+| `pulse` | `static pulse(node: Node, property: NodePath, peak: Variant, rest: Variant, up_seconds := DEFAULT_PULSE_UP_SECONDS, down_seconds := DEFAULT_PULSE_DOWN_SECONDS, tween_trans := Tween.TRANS_QUAD, tween_ease := Tween.EASE_OUT) -> Tween` (0.12, 1.0) | Tweens any property path (`"omni_range"`, `"modulate:a"`, `"light_energy"`) from its current value up to `peak`, then back to `rest`; a `punch_scale` for any property. Replaces an earlier helper tween on an overlapping path. Node outside the tree: sets `rest` at once and returns the empty tween `control` returns; a missing property gives the same. Returns the tween, bound to `node`. |
+| `arc_hop` | `static arc_hop(node: Variant, to: Variant, height := DEFAULT_HOP_HEIGHT, seconds := DEFAULT_HOP_SECONDS, tween_trans := Tween.TRANS_SINE, tween_ease := Tween.EASE_OUT) -> bool` (30.0, 0.3) | Coroutine. Moves the node's global position to `to` along the straight line plus a sine arc that rises `height` at the middle (up the screen in 2D, `+y` in 3D) and lands exactly on `to`. Control and Node2D take a `Vector2`, Node3D a `Vector3`. `true` once landed; `false` for another node type, a `to` of the wrong type, a node outside the tree, or a hop cut short (freed, left the tree, or replaced by a later helper call: it stops where it is). Claims `global_position`. |
+
+### LFIdleDrift
+
+A `Node` (file `lf_idle_drift.gd`) that moves its parent in an endless, gentle, Lissajous-style drift around a base position: `x = sin(t·2π·speed)·amplitude.x`, `y = sin(t·2π·speed·0.73 + phase)·amplitude.y`. Control and Node2D only (2D). It is a child of the node it moves, so it pauses with it and is freed with it.
+
+| Member | Signature | Description |
+|---|---|---|
+| `DEFAULT_AMPLITUDE` | `Vector2(6.0, 8.0)` | `start`'s default largest distance from the base position along each axis, in pixels. |
+| `DEFAULT_SPEED` | `0.25` | `start`'s default full x swings per second. |
+| `Y_SPEED_RATIO` | `0.73` | The y swing's speed as a multiple of the x swing's. |
+| `start` | `static start(node: Variant, drift_amplitude := DEFAULT_AMPLITUDE, drift_speed := DEFAULT_SPEED, rng: RandomNumberGenerator = null) -> LFIdleDrift` | Adds a drift to `node` around its current position and returns it; `null` if `node` is not a Control/Node2D. `rng` draws the random starting `phase` (Godot's global generator without one). |
+| `target` | `var target: Variant` | The node being moved. |
+| `base_position` | `var base_position: Vector2` | The point the node drifts around. Move the node by setting this, not its `position`. |
+| `amplitude`, `speed`, `phase` | `var`s | Largest offset per axis (px), x swings per second, and the y swing's starting angle (radians). Change them while it runs. |
+| `paused` | `var paused: bool` | While true the node stays where it is and the drift's clock stands still (set it while the node is hovered). |
+| `elapsed` | `var elapsed: float` | Seconds of drift played so far, excluding paused time. |
+| `step` | `step(delta: float) -> void` | Advances the drift and moves the node; called every frame, or call it yourself. Does nothing while `paused`. |
+| `offset_at` | `offset_at(seconds: float) -> Vector2` | The offset from `base_position` after `seconds` of drift. |
+| `stop` | `stop(restore := true) -> void` | Stops and frees the drift; with `restore` the node goes back to `base_position`, otherwise it stays where it is. |
 
 ## Usage
 
@@ -136,6 +164,40 @@ func show_damage(amount: int) -> void:
 	# On a Label3D fade `transparency`, not `modulate:a`: it fades the outline too.
 	LFAnimate.one_shot(label, {"position:y": label.position.y + 1.0, "transparency": 1.0}, 0.8)
 ```
+
+```gdscript
+# A panel that slides in from the left and back out, a light that flashes, a pickup that hops
+# and a bubble that floats until the mouse is over it.
+extends Control
+
+@onready var panel: Control = $Panel
+@onready var flash: OmniLight3D = $"../Lamp"
+@onready var bubble: Control = $Bubble
+var drift: LFIdleDrift
+
+func _ready() -> void:
+	drift = LFIdleDrift.start(bubble, Vector2(4, 6), 0.3)
+	bubble.mouse_entered.connect(func() -> void: drift.paused = true)
+	bubble.mouse_exited.connect(func() -> void: drift.paused = false)
+
+func toggle_panel(open: bool) -> void:
+	if open:
+		await LFAnimate.slide_in(panel, Vector2(-120, 0))    # starts 120 px left of where it sits
+	else:
+		await LFAnimate.slide_out(panel, Vector2(-120, 0))   # hides again and goes back to its place
+
+func boom() -> void:
+	LFAnimate.pulse(flash, "omni_range", 25.0, 5.0, 0.12, 1.0)   # up fast, back slowly
+
+func drop(coin: Node2D, landing: Vector2) -> void:
+	await LFAnimate.arc_hop(coin, landing, 30.0, 0.3)   # a 30 px high arc; a Node3D takes a Vector3
+```
+
+## What is safe to await
+
+- `await LFAnimate.control(...).finished` is safe when `control` sets the value at once: `duration <= 0`, a node outside the tree, or a property the node lacks. It then returns an empty tween on the SceneTree that emits `finished` on the next frame. It returns `null` only without a running SceneTree, and awaiting `null.finished` is an error. `pulse` has the first two of these cases (it has no `duration`).
+- A running tween emits `finished` only when it runs to its end. If a later helper call replaces it (`replace`), it is killed and never finishes, and so does a tween whose node is freed: the awaiting code waits forever. Where that can happen, use the coroutine helpers (`slide_in`, `comics_pop_appear` and the others), which return `false` instead.
+- `slide_in`, `slide_out`, `arc_hop`, the pops and `fall_paper` can be awaited in every case: they return `true` or `false`.
 
 ## Notes
 - Every tween that animates is bound to its node (the empty tween `control` returns when it sets a value at once is not): it pauses when the node isn't processing (pausing the game freezes a pop mid-way, and it finishes after unpausing), it follows `Engine.time_scale` (the game's speed setting), and it ends when the node is freed.
