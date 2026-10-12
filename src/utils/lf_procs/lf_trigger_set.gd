@@ -93,6 +93,36 @@ func fire(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> 
 	return fired
 
 
+## Fires every proc under `key` like `fire` (same order, same rolls) and returns the values
+## their actions returned, one per proc that fired, in firing order (empty for a key with no
+## procs or when none fired). An action that returns nothing contributes null. Use it when
+## the caller needs what the reactions answered, for example to combine them yourself;
+## `fire_any` is the shortcut for "did any of them say yes".
+func fire_all(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> Array:
+	var results: Array = []
+	var bucket: Variant = _buckets.get(key)
+	if bucket == null:
+		return results
+	_firing += 1
+	for proc: LFProc in bucket:
+		proc.fire_collect(rng, results, context)
+	_firing -= 1
+	return results
+
+
+## Fires every proc under `key` like `fire` (none is skipped once one answers, unlike
+## `fire_until_handled`) and returns true when at least one fired action returned exactly
+## `true` (a truthy non-bool such as `1` does not count). False for a key with no procs or
+## when none answered true. For "run every matching reaction; the hit is evaded if any says so".
+func fire_any(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> bool:
+	var answered := false
+	for result: Variant in fire_all(key, rng, context):
+		# Compared by type first: `==` between an int and a bool is a script error.
+		if typeof(result) == TYPE_BOOL and result:
+			answered = true
+	return answered
+
+
 ## Fires the procs under `key` in order until one fires and its action returns exactly
 ## `true` (a truthy non-bool such as `1` does not count); later procs are not checked (no
 ## rolls). A proc whose action is not valid is skipped without checking its gates. Returns

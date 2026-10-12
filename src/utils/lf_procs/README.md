@@ -75,6 +75,7 @@ Everything the class offers; you only need the rows used above to get started. `
 | `is_spent` | `is_spent() -> bool` | Whether the charges are used up. |
 | `check` | `check(rng: RandomNumberGenerator, context: Variant = null) -> bool` | Every gate, then commit (charge, cooldown) without running the action. |
 | `fire` | `fire(rng: RandomNumberGenerator, context: Variant = null) -> bool` | `check`, then the action. True when it fired; a proc whose action is not valid (empty, or its object freed) does not fire and spends nothing. |
+| `fire_collect` | `fire_collect(rng: RandomNumberGenerator, results: Array, context: Variant = null) -> bool` | Like `fire`, and appends the action's return value to `results` when the proc fires (nothing when it does not). |
 
 ### LFTriggerSet
 
@@ -87,6 +88,8 @@ Everything the class offers; you only need the rows used above to get started. `
 | `procs_for` | `procs_for(key: Variant) -> Array[LFProc]` | A copy, in firing order. |
 | `clear` | `clear() -> void` | Unregisters every proc. |
 | `fire` | `fire(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> int` | Every proc under `key`; returns how many fired. |
+| `fire_all` | `fire_all(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> Array` | Every proc under `key` (like `fire`); returns the values the fired actions returned, in order (an action returning nothing gives null). |
+| `fire_any` | `fire_any(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> bool` | Every proc under `key` runs; true if at least one action returned exactly `true`. Unlike `fire_until_handled`, none is skipped. |
 | `fire_until_handled` | `fire_until_handled(key: Variant, rng: RandomNumberGenerator, context: Variant = null) -> bool` | Stops at the first proc that fires and whose action returns exactly `true` (a truthy non-bool such as `1` does not count). |
 
 ## Usage
@@ -148,6 +151,7 @@ func _survive(_hero: Node) -> bool:
 
 ## Notes
 
+- **Which fire to use**: `fire` counts what fired; `fire_all` returns what each fired action answered (combine them as you like: any, all, sum); `fire_any` is `fire_all` reduced to "did any action return exactly `true`", and runs every proc; `fire_until_handled` stops at the first `true` and spends no rolls on the rest. All of them check gates in the same order and spend the same rolls for the procs they reach.
 - **Gate order** is fixed: spent → condition → cooldown → chance → commit → action. A gate
   that fails spends nothing after it, so the rolls a seeded generator spends are
   determined by the procs and their order alone. A chance at or above 1 (or at or below

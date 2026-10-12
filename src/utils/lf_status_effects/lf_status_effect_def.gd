@@ -70,6 +70,15 @@ var tick_interval: float = DEFAULT_TICK_INTERVAL:
 ## `func(owner: Variant, stack: LFStatusStack) -> void`, called once per elapsed tick of
 ## each stack. A stack applied with its own `on_tick` uses that one instead.
 var on_tick: Callable
+## `func(stack: LFStatusStack) -> float`: chooses the seconds until this stack's next tick,
+## asked once when the stack is applied (for the first tick) and again each time it ticks,
+## so an effect can re-roll a random interval at every fire. A result of 0 or less, INF or
+## NaN (a NaN is also reported through `LFLogger`) ends the ticking of that stack; a
+## positive result below `LFStatusEffects.MIN_TICK_INTERVAL` is raised to it. It needs a
+## tick callback to have any effect. Precedence, strongest first: the `interval_fn` passed
+## to `LFStatusEffects.apply()`, the `tick_interval` passed there, this field, then
+## `tick_interval`. While it is empty (the default) the fixed `tick_interval` rules.
+var interval_fn: Callable
 
 ## id -> { policy key: definition }, for `shared()`.
 static var _log := LFLogger.new()

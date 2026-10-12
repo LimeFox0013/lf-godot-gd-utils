@@ -735,3 +735,137 @@ func test_a_tiny_tick_interval_is_raised_to_the_minimum_so_a_tick_always_ends():
 	assert_eq(stack.tick_interval, LFStatusEffects.MIN_TICK_INTERVAL)
 	effects.tick(1.0)
 	assert_almost_eq(float(ticks[0]), 1.0 / LFStatusEffects.MIN_TICK_INTERVAL, 1.0)
+
+
+func _interval_def(duration := 100.0) -> LFStatusEffectDef:
+	return LFStatusEffectDef.new(&'effect_a', LFStatusEffectDef.Accumulation.INDEPENDENT, duration)
+
+
+func test_an_interval_fn_chooses_a_new_interval_after_every_tick():
+	var intervals: Array[float] = [2.0, 5.0, 1.0]
+	var asked := [0]
+	var times: Array[float] = []
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): times.append(effects.now())
+	def.interval_fn = func(_stack):
+		asked[0] += 1
+		return intervals[mini(asked[0] - 1, intervals.size() - 1)]
+	effects.apply(def)
+	assert_eq(asked[0], 1, 'asked once at apply for the first tick')
+	for i in 10:
+		effects.tick(1.0)
+	assert_eq(times, [2.0, 7.0, 8.0, 9.0, 10.0] as Array[float], 'last interval repeats')
+
+
+func test_an_interval_fn_receives_the_stack_and_its_payload():
+	var seen := []
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): pass
+	def.interval_fn = func(stack): seen.append(stack.data); return 1.0
+	effects.apply(def, FROM_DEF, FROM_DEF, FROM_DEF_CAP, Callable(), 'payload')
+	assert_eq(seen, ['payload'])
+
+
+func test_an_interval_fn_ticks_even_when_the_fixed_interval_is_zero():
+	var ticks := [0]
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	def.interval_fn = func(_stack): return 1.0
+	assert_eq(def.tick_interval, 0.0)
+	effects.apply(def)
+	effects.tick(3.0)
+	assert_eq(ticks[0], 3)
+
+
+func test_the_definition_interval_fn_beats_its_fixed_interval():
+	var ticks := [0]
+	var def := _interval_def()
+	def.tick_interval = 1.0
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	def.interval_fn = func(_stack): return 4.0
+	effects.apply(def)
+	effects.tick(8.0)
+	assert_eq(ticks[0], 2)
+
+
+func test_an_explicit_tick_interval_in_apply_beats_the_definition_interval_fn():
+	var ticks := [0]
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	def.interval_fn = func(_stack): return 4.0
+	effects.apply(def, FROM_DEF, 1.0)
+	assert_false(effects.stacks(&'effect_a')[0].interval_fn.is_valid())
+	effects.tick(8.0)
+	assert_eq(ticks[0], 8)
+
+
+func test_the_interval_fn_in_apply_beats_everything():
+	var ticks := [0]
+	var def := _interval_def()
+	def.tick_interval = 1.0
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	def.interval_fn = func(_stack): return 4.0
+	effects.apply(def, FROM_DEF, 2.0, FROM_DEF_CAP, Callable(), null, null, func(_stack): return 3.0)
+	effects.tick(9.0)
+	assert_eq(ticks[0], 3)
+
+
+func test_an_interval_fn_without_a_tick_callback_never_ticks_and_is_never_asked():
+	var asked := [0]
+	var def := _interval_def()
+	def.interval_fn = func(_stack): asked[0] += 1; return 1.0
+	effects.apply(def)
+	effects.tick(5.0)
+	assert_eq(asked[0], 0)
+	assert_eq(effects.stacks(&'effect_a')[0].tick_interval, 0.0)
+
+
+func test_a_non_positive_or_infinite_result_ends_the_ticking():
+	var results := [1.0, 0.0]
+	var ticks := [0]
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	def.interval_fn = func(_stack): return results.pop_front() if !results.is_empty() else INF
+	effects.apply(def)
+	effects.tick(50.0)
+	assert_eq(ticks[0], 1, 'the second answer (0) stopped it')
+	assert_true(effects.has(&'effect_a'), 'the effect itself lasts its duration')
+
+
+func test_a_nan_result_is_reported_and_ends_the_ticking():
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): pass
+	def.interval_fn = func(_stack): return NAN
+	effects.apply(def)
+	assert_push_error('NaN')
+	assert_eq(effects.stacks(&'effect_a')[0].next_tick_at, INF)
+
+
+func test_a_result_that_is_not_a_number_is_reported_and_ends_the_ticking():
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): pass
+	def.interval_fn = func(_stack): return 'soon'
+	effects.apply(def)
+	assert_push_error('number')
+	assert_eq(effects.stacks(&'effect_a')[0].next_tick_at, INF)
+
+
+func test_a_tiny_interval_fn_result_is_raised_to_the_minimum():
+	var def := _interval_def()
+	def.on_tick = func(_owner, _stack): pass
+	def.interval_fn = func(_stack): return 1e-300
+	effects.apply(def)
+	assert_eq(effects.stacks(&'effect_a')[0].tick_interval, LFStatusEffects.MIN_TICK_INTERVAL)
+
+
+func test_every_stack_rerolls_on_its_own():
+	var ticks := [0]
+	var def := _interval_def()
+	def.max_stacks = 2
+	def.on_tick = func(_owner, _stack): ticks[0] += 1
+	var delays := [1.0, 3.0]
+	def.interval_fn = func(_stack): return delays.pop_front() if !delays.is_empty() else 100.0
+	effects.apply(def)
+	effects.apply(def)
+	effects.tick(3.0)
+	assert_eq(ticks[0], 2, 'the 1 s stack and the 3 s stack each ticked once')

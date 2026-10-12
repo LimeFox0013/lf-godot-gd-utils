@@ -258,3 +258,56 @@ func test_a_fire_from_inside_a_fire_runs_the_same_bucket_again():
 	_nested_log.clear()
 	procs.fire(&'event_a', rng)
 	assert_eq(_nested_log, ['outer', 'added'], 'it counts from the next fire')
+
+
+func test_fire_all_returns_the_results_of_the_procs_that_fired_in_order():
+	procs.add(&'event_a', LFProc.new(func(_c): return 1))
+	procs.add(&'event_a', LFProc.new(func(_c): return 2).with_chance(0.0))
+	procs.add(&'event_a', LFProc.new(func(_c): pass))
+	procs.add(&'event_a', LFProc.new(func(c): return c))
+	assert_eq(procs.fire_all(&'event_a', rng, 'ctx'), [1, null, 'ctx'])
+
+
+func test_fire_all_of_an_unknown_key_is_empty_and_rolls_nothing():
+	var before := rng.state
+	assert_eq(procs.fire_all(&'nothing', rng), [])
+	assert_eq(rng.state, before)
+
+
+func test_fire_all_spends_the_same_rolls_as_fire():
+	var other := LFRandom.new(9)
+	var other_procs := LFTriggerSet.new()
+	for set: LFTriggerSet in [procs, other_procs]:
+		set.add(&'event_a', LFProc.new(func(_c): return true).with_chance(0.5))
+		set.add(&'event_a', LFProc.new(func(_c): return true).with_chance(0.5))
+	for i in 5:
+		assert_eq(procs.fire_all(&'event_a', rng).size(), other_procs.fire(&'event_a', other))
+	assert_eq(rng.state, other.state)
+
+
+func test_fire_any_runs_every_proc_even_after_one_answers_true():
+	var log := []
+	procs.add(&'event_a', _logging(log, 'a', true))
+	procs.add(&'event_a', _logging(log, 'b', false))
+	assert_true(procs.fire_any(&'event_a', rng))
+	assert_eq(log.size(), 2)
+
+
+func test_fire_any_is_false_without_an_exact_true():
+	procs.add(&'event_a', LFProc.new(func(_c): return 1))
+	procs.add(&'event_a', LFProc.new(func(_c): return false))
+	procs.add(&'event_a', LFProc.new(func(_c): pass))
+	assert_false(procs.fire_any(&'event_a', rng))
+	assert_false(procs.fire_any(&'nothing', rng))
+
+
+func test_fire_any_ignores_a_true_from_a_proc_that_did_not_fire():
+	procs.add(&'event_a', LFProc.new(func(_c): return true).with_chance(0.0))
+	assert_false(procs.fire_any(&'event_a', rng))
+
+
+func test_changing_the_set_while_fire_all_runs_takes_effect_next_time():
+	var late := LFProc.new(func(_c): return 'late')
+	procs.add(&'event_a', LFProc.new(func(_c): procs.add(&'event_a', late); return 'first'))
+	assert_eq(procs.fire_all(&'event_a', rng), ['first'])
+	assert_eq(procs.fire_all(&'event_a', rng), ['first', 'late'])

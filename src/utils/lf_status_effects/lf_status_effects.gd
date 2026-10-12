@@ -76,6 +76,12 @@ class _Entry:
 ## - INDEPENDENT at or above the cap: DROP ignores the application (no `changed`);
 ##   REPLACE_OLDEST removes exactly one stack, the soonest-expiring, to make room.
 ##
+## `interval_fn` (`func(stack: LFStatusStack) -> float`) chooses the seconds until each
+## tick instead of a fixed interval, asked once now for the first tick and again after every
+## tick (see `LFStatusEffectDef.interval_fn`). Precedence, strongest first: this
+## `interval_fn`, a non-negative `tick_interval` here, the definition's `interval_fn`, the
+## definition's `tick_interval`.
+##
 ## `source` is recorded on the stack. With `cap_per_source` on the definition, an
 ## INDEPENDENT application's cap (and its replacement) counts only stacks from the same
 ## `source`; `count()` stays the total. A null `def` is reported and applies nothing
@@ -88,6 +94,7 @@ func apply(
 	on_tick := Callable(),
 	data: Variant = null,
 	source: Variant = null,
+	interval_fn := Callable(),
 ) -> int:
 	if def == null:
 		_log.error("LFStatusEffects.apply: def is null; nothing applied")
@@ -120,15 +127,22 @@ func apply(
 		entry = _Entry.new(def)
 		_entries[def.id] = entry
 
-	var interval := tick_interval if tick_interval >= 0.0 else governing.tick_interval
-	var ticks := is_finite(interval) and interval > 0.0 and (on_tick.is_valid() or governing.on_tick.is_valid())
-	if !ticks:
-		interval = 0.0
-	else:
-		interval = maxf(interval, MIN_TICK_INTERVAL)
-	var next_tick_at := _now + interval if ticks else INF
-	var stack := LFStatusStack.new(_now + lifetime, interval, next_tick_at, data, on_tick)
+	var chooser := interval_fn
+	if !chooser.is_valid() and tick_interval < 0.0:
+		chooser = governing.interval_fn
+	var has_callback := on_tick.is_valid() or governing.on_tick.is_valid()
+	var stack := LFStatusStack.new(_now + lifetime, 0.0, INF, data, on_tick)
 	stack.source = source
+	if chooser.is_valid():
+		if has_callback:
+			stack.interval_fn = chooser
+			stack.tick_interval = _choose_interval(stack)
+	else:
+		var interval := tick_interval if tick_interval >= 0.0 else governing.tick_interval
+		if is_finite(interval) and interval > 0.0 and has_callback:
+			stack.tick_interval = maxf(interval, MIN_TICK_INTERVAL)
+	var next_tick_at := _now + stack.tick_interval if stack.tick_interval > 0.0 else INF
+	stack.next_tick_at = next_tick_at
 	var at := entry.stacks.bsearch_custom(stack, _expires_before, false)
 	entry.stacks.insert(at, stack)
 
@@ -301,7 +315,9 @@ func _fire_due_ticks(entry: _Entry, expired: Array[LFStatusStack], owner: Varian
 			continue
 		var callback: Callable = stack.on_tick if stack.on_tick.is_valid() else entry.def.on_tick
 		while stack.next_tick_at <= _now and stack.next_tick_at <= stack.expires_at:
-			stack.next_tick_at += stack.tick_interval
+			if stack.interval_fn.is_valid():
+				stack.tick_interval = _choose_interval(stack)
+			stack.next_tick_at += stack.tick_interval if stack.tick_interval > 0.0 else INF
 			if callback.is_valid():
 				callback.call(owner, stack)
 			if _epoch != epoch or entry.removed:
@@ -309,6 +325,23 @@ func _fire_due_ticks(entry: _Entry, expired: Array[LFStatusStack], owner: Varian
 			# The callback may have evicted this stack (e.g. a REPLACE_OLDEST re-apply).
 			if stack._removed:
 				break
+
+
+## Asks `stack.interval_fn` for the next interval: the result raised to
+## `MIN_TICK_INTERVAL`, or 0 (stop ticking) for a result of 0 or less, INF or NaN. A NaN or
+## a result that is not a number is reported.
+func _choose_interval(stack: LFStatusStack) -> float:
+	var chosen: Variant = stack.interval_fn.call(stack)
+	if typeof(chosen) != TYPE_FLOAT and typeof(chosen) != TYPE_INT:
+		_log.error("LFStatusEffects: interval_fn must return a number; ticking ends")
+		return 0.0
+	var seconds := float(chosen)
+	if is_nan(seconds):
+		_log.error("LFStatusEffects: interval_fn returned NaN; ticking ends")
+		return 0.0
+	if !is_finite(seconds) or seconds <= 0.0:
+		return 0.0
+	return maxf(seconds, MIN_TICK_INTERVAL)
 
 
 ## Recomputes `entry`'s due-time bounds from its stacks.

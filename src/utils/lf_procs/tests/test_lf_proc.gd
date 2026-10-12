@@ -235,3 +235,23 @@ func test_with_cooldown_null_removes_the_cooldown():
 	proc.fire(null)
 	proc.with_cooldown(null)
 	assert_true(proc.fire(null))
+
+
+func test_fire_collect_appends_the_action_result_when_it_fires():
+	var results := ['kept']
+	var proc := LFProc.new(func(ctx): return ctx + 1)
+	assert_true(proc.fire_collect(LFRandom.new(1), results, 4))
+	assert_eq(results, ['kept', 5], 'appended, not cleared')
+
+
+func test_fire_collect_appends_null_for_an_action_returning_nothing():
+	var results := []
+	assert_true(LFProc.new(func(_c): pass).fire_collect(LFRandom.new(1), results))
+	assert_eq(results, [null])
+
+
+func test_fire_collect_appends_nothing_when_a_gate_fails():
+	var results := []
+	var proc := LFProc.new(func(_c): return 1).with_charges(0)
+	assert_false(proc.fire_collect(LFRandom.new(1), results))
+	assert_eq(results, [])
