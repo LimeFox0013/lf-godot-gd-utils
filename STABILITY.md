@@ -60,6 +60,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 
 | Module | Stability | Why |
 |---|---|---|
+| [`lf_auto_size_text_edit`](src/components/lf_auto_size_text_edit/README.md) | experimental | layout; tests cannot judge how it looks |
 | [`lf_bar_chart`](src/components/lf_bar_chart/README.md) | stable | - |
 | [`lf_build`](src/components/lf_build/README.md) | stable | - |
 | [`lf_carousel`](src/components/lf_carousel/README.md) | stable | - |
@@ -83,6 +84,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | Module | Stability | Why |
 |---|---|---|
 | [`lf_infinite_scroll_sprite`](src/2D/lf_infinite_scroll_sprite/README.md) | experimental | rendering; tests cannot judge how it looks |
+| [`lf_group_camera_2d`](src/2D/lf_group_camera_2d/README.md) | experimental | camera feel; tests cannot judge it |
 | [`lf_utils_2d`](src/2D/lf_utils_2d/README.md) | stable | - |
 | [`lf_viewport_leave`](src/2D/lf_viewport_leave/README.md) | stable | - |
 | [`lf_virtual_grid`](src/2D/lf_virtual_grid/README.md) | experimental | newer, view-dependent |
@@ -121,6 +123,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_event_bus`](src/utils/lf_event_bus/README.md) | stable | - |
 | [`lf_event_emitter`](src/utils/lf_event_emitter/README.md) | stable | - |
 | [`lf_factory`](src/utils/lf_factory/README.md) | stable | - |
+| [`lf_experience_levels`](src/utils/lf_experience_levels/README.md) | experimental | newer, extracted from a game |
 | [`lf_file`](src/utils/lf_file/README.md) | stable | - |
 | [`lf_file_observer`](src/utils/lf_file_observer/README.md) | stable | - |
 | [`lf_flow_field`](src/utils/lf_flow_field/README.md) | experimental | large, game-shaped surface (crowds); thresholds are tuned by feel |
@@ -133,6 +136,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_json`](src/utils/lf_json/README.md) | stable | - |
 | [`lf_layered_stats`](src/utils/lf_layered_stats/README.md) | stable | - |
 | [`lf_llm`](src/utils/lf_llm/README.md) | experimental | talks to third-party model APIs that change; under active review |
+| [`lf_local_service`](src/utils/lf_local_service/README.md) | experimental | platform-dependent; starts and stops programs; tested on macOS only |
 | [`lf_logger`](src/utils/lf_logger/README.md) | stable | - |
 | [`lf_loot_table`](src/utils/lf_loot_table/README.md) | stable | - |
 | [`lf_modifier_grant_service`](src/utils/lf_modifier_grant_service/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
@@ -164,4 +168,4 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_weighted_pick`](src/utils/lf_weighted_pick/README.md) | stable | - |
 | [`lf_zip`](src/utils/lf_zip/README.md) | experimental | threads plus untrusted archives |
 
-52 modules are stable and 30 are experimental.
+52 modules are stable and 40 are experimental.

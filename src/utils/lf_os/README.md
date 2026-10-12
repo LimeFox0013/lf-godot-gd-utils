@@ -173,6 +173,7 @@ if path.is_empty():
 
 ## Notes
 
+- There is no `detect_os` or `detect_arch`: the engine already answers both. `OS.get_name().to_lower()` gives `windows`, `macos`, `linux`, `android`, `ios` or `web` for those platforms (the strings `select_backend` compares), and `Engine.get_architecture_name()` names the CPU the build was made for (`arm64` on an Apple-silicon Mac). To pick a per-platform helper binary, build its file name from those two.
 - `select_backend` is a simple naming rule, not a check of what the computer can really do: it returns `metal` on any macOS (even when Godot renders through OpenGL) and `cuda` from the vendor string alone, without probing for a CUDA runtime.
 - `'vulkan'` means Godot itself renders through Vulkan; a GPU that supports Vulkan while Godot uses D3D12 or OpenGL gives `'cpu'`.
 - Under `--headless` the GPU vendor is empty, but the driver name still reflects the configured renderer (e.g. `metal` on macOS), so the result there follows the OS and driver, not the hardware.

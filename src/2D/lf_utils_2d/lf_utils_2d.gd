@@ -1,10 +1,15 @@
-## Small helpers for nodes that follow a Camera2D, plus one piece of screen geometry.
+## Small helpers for nodes that follow a Camera2D, plus some 2D geometry and sprite sizing.
 ##
 ## Answers whether a camera can be read, the centre and world rect of what it shows this
-## frame, switches a node between idle and physics processing to match a camera, and
-## finds where a ray from a rect's centre meets its border. All functions are static:
-## call them on the class (`LFUtils2D.camera_ready(camera)`), never create an instance.
+## frame, switches a node between idle and physics processing to match a camera, finds
+## where a ray from a rect's centre meets its border, picks random points in a circle or
+## around a rect, measures how far apart a set of points spreads, and sizes a sprite or reads
+## a collision shape's size. All functions are static: call them on the class
+## (`LFUtils2D.camera_ready(camera)`), never create an instance.
 class_name LFUtils2D
+
+## The default `scale_range` of `random_point_outside_rect`: the border 10% to 40% larger than the rect.
+const DEFAULT_OUTSIDE_SCALE_RANGE := Vector2(1.1, 1.4)
 
 static var _log := LFLogger.new()
 
@@ -117,3 +122,114 @@ static func rect_edge_point(rect: Rect2, direction: Vector2) -> Vector2:
 	if distance == INF:
 		return center
 	return center + unit * distance
+
+
+## A uniformly random point in the disc of `radius` around `center` (uniform by area, so
+## points do not bunch up near the centre). Rolls from `rng` when given (a seeded caller's
+## own generator), else the global one. A zero radius returns `center`.
+static func random_point_in_circle(center: Vector2, radius: float, rng: RandomNumberGenerator = null) -> Vector2:
+	var angle := rng.randf_range(0.0, TAU) if rng != null else randf_range(0.0, TAU)
+	var distance := sqrt(rng.randf() if rng != null else randf()) * radius
+	return center + Vector2.from_angle(angle) * distance
+
+
+## A random point on the border of `rect` scaled about its centre by a factor drawn
+## uniformly from `scale_range` (min, max), for example to spawn enemies just outside the
+## screen: pass `LFUtils2D.camera_world_rect(camera)`. One of the four sides is chosen with
+## equal probability whatever its length, then a point along it. A factor above 1 puts the
+## point outside `rect`, below 1 inside. A negative-size rect is read as the same area with
+## a positive size. Rolls from `rng` when given, else the global generator.
+static func random_point_outside_rect(rect: Rect2, scale_range: Vector2 = DEFAULT_OUTSIDE_SCALE_RANGE, rng: RandomNumberGenerator = null) -> Vector2:
+	var factor := rng.randf_range(scale_range.x, scale_range.y) if rng != null else randf_range(scale_range.x, scale_range.y)
+	var side := rng.randi_range(0, 3) if rng != null else randi_range(0, 3)
+	var along := rng.randf() if rng != null else randf()
+	var area: Rect2 = rect.abs()
+	var half: Vector2 = area.size * 0.5 * factor
+	var center: Vector2 = area.get_center()
+	match side:
+		0:
+			return Vector2(center.x + lerpf(-half.x, half.x, along), center.y - half.y)
+		1:
+			return Vector2(center.x + half.x, center.y + lerpf(-half.y, half.y, along))
+		2:
+			return Vector2(center.x + lerpf(half.x, -half.x, along), center.y + half.y)
+	return Vector2(center.x - half.x, center.y + lerpf(half.y, -half.y, along))
+
+
+## The largest distance between any two of `points` (their diameter): 0.0 for fewer than two
+## points. Points with a NaN or infinite coordinate are ignored. It builds the convex hull
+## (the outline that wraps all the points), then compares every pair of points on it: the
+## farthest pair is always on the hull, so interior points are never compared.
+static func max_pairwise_distance(points: PackedVector2Array) -> float:
+	var sorted: Array[Vector2] = []
+	for point in points:
+		if point.is_finite():
+			sorted.append(point)
+	if sorted.size() < 2:
+		return 0.0
+	sorted.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.y < b.y if a.x == b.x else a.x < b.x)
+	var hull := _convex_hull(sorted)
+	var widest_squared := 0.0
+	for i in hull.size():
+		for j in range(i + 1, hull.size()):
+			widest_squared = maxf(widest_squared, hull[i].distance_squared_to(hull[j]))
+	return sqrt(widest_squared)
+
+
+## Scales `sprite` so its texture shows at `size` in pixels (the visible region, for a
+## sprite sheet or a region): sets `scale`, keeping the sign of each axis, so a sprite
+## flipped with a negative scale stays flipped. Returns false, reports an error through
+## `LFLogger` and changes nothing for a null sprite, one without a texture, or one whose
+## texture is empty. `size` is the on-screen size before any parent scale.
+static func fit_sprite_to_size(sprite: Sprite2D, size: Vector2) -> bool:
+	if sprite == null:
+		_log.error('LFUtils2D.fit_sprite_to_size: no sprite')
+		return false
+	if sprite.texture == null:
+		_log.error('LFUtils2D.fit_sprite_to_size: the sprite has no texture to measure')
+		return false
+	var texture_size: Vector2 = sprite.get_rect().size
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		_log.error('LFUtils2D.fit_sprite_to_size: the sprite shows an empty area')
+		return false
+	var wanted: Vector2 = size / texture_size
+	sprite.scale = Vector2(
+		-absf(wanted.x) if sprite.scale.x < 0.0 else absf(wanted.x),
+		-absf(wanted.y) if sprite.scale.y < 0.0 else absf(wanted.y),
+	)
+	return true
+
+
+## The width and height of the box around `shape_node`'s shape, in the shape's own units
+## (the node's scale is not applied): a circle is 2 x radius on both axes, a rectangle is
+## its size, a capsule is 2 x radius by height. `Vector2.ZERO`, with an error through
+## `LFLogger`, for a null node or one without a shape.
+static func shape_size(shape_node: CollisionShape2D) -> Vector2:
+	if shape_node == null or shape_node.shape == null:
+		_log.error('LFUtils2D.shape_size: no collision shape')
+		return Vector2.ZERO
+	return shape_node.shape.get_rect().size
+
+
+# Andrew's monotone chain over points already sorted by x then y: the hull without its
+# collinear points, in order.
+static func _convex_hull(sorted: Array[Vector2]) -> Array[Vector2]:
+	var lower: Array[Vector2] = []
+	for point in sorted:
+		while lower.size() >= 2 and _cross(lower[-2], lower[-1], point) <= 0.0:
+			lower.pop_back()
+		lower.append(point)
+	var upper: Array[Vector2] = []
+	for i in range(sorted.size() - 1, -1, -1):
+		var point := sorted[i]
+		while upper.size() >= 2 and _cross(upper[-2], upper[-1], point) <= 0.0:
+			upper.pop_back()
+		upper.append(point)
+	lower.pop_back()
+	upper.pop_back()
+	return lower + upper
+
+
+# Twice the signed area of the triangle (origin, a, b): positive when b is left of origin -> a.
+static func _cross(origin: Vector2, a: Vector2, b: Vector2) -> float:
+	return (a - origin).cross(b - origin)
