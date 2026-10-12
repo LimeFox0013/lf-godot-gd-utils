@@ -225,6 +225,7 @@ instead) and the tests of refused connections are skipped or adjusted (see below
 - `lf_socket`, `lf_socket_server`: desktop (Windows, macOS, Linux) only, not a web export.
 - `lf_http`: tested on desktop only; in a browser export the browser makes the request.
 - Windows, refused connections: in the Windows CI run Godot 4.7.2 never reported a refused loopback connection (still connecting after 25 s). `lf_socket` then reports no `error` and schedules no reconnect, and `lf_http` ends such a request with `Connect timeout` instead of `Cannot connect`. The tests of the refusal behaviour are skipped (`lf_socket`) or adjusted (`lf_http`) on Windows.
+- macOS 26, refused connections: with Godot 4.7.2 on macOS 26.7.1 (a local run; the CI run above used GitHub's `macos-latest` runner), dialling a closed loopback port makes the engine itself log `Unable to set TCP no delay option`, and `lf_http` reports such a request as `Connection lost` rather than `Cannot connect`. The tests that dial closed ports accept the engine message and that text on macOS only; the library's own behaviour is unchanged.
 - `lf_thread`, `lf_zip`: on a build without thread support (a web export with *Thread
   Support* off) there is no worker thread; the work runs on the main thread and blocks it.
   `lf_zip` is tested on macOS desktop; `lf_thread` in the editor on desktop.

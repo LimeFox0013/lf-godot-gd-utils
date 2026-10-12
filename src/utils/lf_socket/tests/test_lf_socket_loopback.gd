@@ -16,6 +16,23 @@ func _refusal_unreported() -> bool:
 	return OS.get_name() == "Windows"
 
 
+## What Godot on macOS 26 logs when a connection is refused: it fails to set TCP_NODELAY on the
+## refused socket. It comes from the engine, not from the library, and GUT would count it as a
+## failure of every test that dials a closed port.
+const _MACOS_REFUSAL_NOISE := "Unable to set TCP no delay option"
+
+
+## Marks that message as expected on macOS. A test that dials a closed port calls it as its last
+## line (GUT counts engine errors before `after_each` runs); on other platforms, or for any other
+## message, nothing is excused.
+func _tolerate_macos_refusal_noise() -> void:
+	if OS.get_name() != "macOS":
+		return
+	for error in get_errors():
+		if error.contains_text(_MACOS_REFUSAL_NOISE):
+			error.handled = true
+
+
 func before_each():
 	server = LFSocketServer.new()
 	assert_eq(server.listen(0, '127.0.0.1'), OK)
@@ -88,6 +105,7 @@ func test_messages_queued_while_the_server_is_down_arrive_in_order_after_a_real_
 
 	assert_eq(received, [0.0, 1.0, 2.0])
 	assert_eq(socket.get_queue_size(), 0)
+	_tolerate_macos_refusal_noise()
 
 
 func test_events_sent_with_send_to_reach_the_right_listeners():
@@ -203,6 +221,7 @@ func test_the_reconnect_attempt_count_starts_over_after_a_connection_opens():
 	assert_true(await _wait_ms(func(): return !attempts.is_empty()), 'reached before the timeout')
 
 	assert_eq(attempts[0], 1, 'the second outage counts from 1 again')
+	_tolerate_macos_refusal_noise()
 
 
 ## A matched response goes only to the waiting request, never to `"*"` or `"response"`
@@ -326,6 +345,7 @@ func test_a_reconnect_interval_of_zero_still_waits_between_dials():
 	await _wait_ms(func(): return false, 600)
 
 	assert_lt(attempts[0], 20, 'about one dial per 40 ms at most, not one per frame')
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_nan_decay_does_not_collapse_the_wait_to_zero():
@@ -341,6 +361,7 @@ func test_a_nan_decay_does_not_collapse_the_wait_to_zero():
 	await _wait_ms(func(): return false, 600)
 
 	assert_lt(attempts[0], 9, 'waits stay near 100 ms')
+	_tolerate_macos_refusal_noise()
 
 
 func test_the_first_reconnect_wait_is_capped_by_the_maximum():
@@ -358,6 +379,7 @@ func test_the_first_reconnect_wait_is_capped_by_the_maximum():
 	socket.connect_to_server(_closed_port_url(), options)
 
 	assert_true(await _wait_ms(func(): return attempts[0] >= 2, 2000), 'a second dial happens within the cap')
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_non_positive_buffer_size_falls_back_to_the_default():

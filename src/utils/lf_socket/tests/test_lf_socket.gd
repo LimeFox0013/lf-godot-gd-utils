@@ -15,6 +15,23 @@ func _refusal_unreported() -> bool:
 	return OS.get_name() == "Windows"
 
 
+## What Godot on macOS 26 logs when a connection is refused: it fails to set TCP_NODELAY on the
+## refused socket. It comes from the engine, not from the library, and GUT would count it as a
+## failure of every test that dials a closed port.
+const _MACOS_REFUSAL_NOISE := "Unable to set TCP no delay option"
+
+
+## Marks that message as expected on macOS. A test that dials a closed port calls it as its last
+## line (GUT counts engine errors before `after_each` runs); on other platforms, or for any other
+## message, nothing is excused.
+func _tolerate_macos_refusal_noise() -> void:
+	if OS.get_name() != "macOS":
+		return
+	for error in get_errors():
+		if error.contains_text(_MACOS_REFUSAL_NOISE):
+			error.handled = true
+
+
 func before_each():
 	sock = LFSocket.new()
 	sock._options = LFSocketOptions.new()
@@ -247,6 +264,7 @@ func test_a_refused_first_attempt_schedules_a_reconnect():
 
 	assert_eq(sock._reconnect_attempts, 1)
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 ## A bare WebSocket server that accepts connections but never answers pings
@@ -337,6 +355,7 @@ func test_connecting_again_after_a_plain_disconnect_rearms_auto_reconnect():
 	sock.connect_to_server('ws://127.0.0.1:1', LFSocketOptions.new())
 	assert_true(sock._should_reconnect, "a new connect_to_server must re-arm auto-reconnect")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_disconnect_with_the_default_does_not_schedule_a_reconnect():
@@ -548,6 +567,7 @@ func test_reconnecting_carries_the_attempt_number_after_a_refused_connection():
 
 	assert_eq(attempts, [1])
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_disconnecting_a_socket_that_never_opened_emits_nothing():
@@ -669,6 +689,7 @@ func test_a_refused_connection_with_reconnecting_off_emits_error():
 
 	assert_eq(errors.size(), 1, 'an attempt that never opens is reported')
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_connecting_again_after_the_attempt_limit_starts_a_fresh_budget():
@@ -693,6 +714,7 @@ func test_connecting_again_after_the_attempt_limit_starts_a_fresh_budget():
 	assert_eq(attempts, [1], 'a new connect may reconnect again')
 	sock.disconnect_from_server()
 	assert_push_error('Max reconnection attempts reached')
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_listener_removing_itself_does_not_make_the_next_one_miss_the_event():
@@ -903,6 +925,7 @@ func test_reconnect_scheduling_uses_the_options_generator():
 
 	assert_ne(options.rng.state, state_before, "the jitter came from the given generator")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 # ---- status and oversized frames (real server)
@@ -1203,6 +1226,7 @@ func test_force_reconnect_after_a_plain_disconnect_turns_reconnecting_back_on():
 
 	assert_eq(attempts, [1], "the refused attempt schedules a reconnect")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_queue_size_of_zero_queues_nothing():
