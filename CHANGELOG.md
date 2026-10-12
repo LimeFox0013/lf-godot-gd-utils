@@ -12,6 +12,9 @@ Six new modules, all experimental: `lf_grade_combo`, `lf_chunk_stream`, `lf_ratc
 Four more new modules, all experimental: `lf_experience_levels`, `lf_group_camera_2d`,
 `lf_local_service` and `lf_auto_size_text_edit`.
 
+Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_momentum`, `lf_hit_boxes`,
+`lf_magnet_pull`, `lf_magnet_pull_3d`, `lf_confirm`, `lf_prompt_dialog` and `lf_hud_bars`.
+
 ### Added
 
 - **(experimental)** `LFExperienceLevels`: an experience track with per-step thresholds,
@@ -28,9 +31,28 @@ Four more new modules, all experimental: `lf_experience_levels`, `lf_group_camer
   `ws://` addresses. Tested on macOS only.
 - **(experimental)** `LFAutoSizeTextEdit`: a `TextEdit` that sets its own minimum size from its
   text, between `min_size` and `max_size`.
+- **(experimental)** `LFHealth`: a clamped health pool with `damage`, `heal`, `set_max`, `reset`, `ratio` and `percent`, and `damaged`, `healed`, `died` and `max_changed` signals.
+- **(experimental)** `LFCountdown`: a countdown driven by `tick(delta)` with start, pause, resume, stop and restart, `ticked` and `finished` signals, and `text()` through `LFText.clock`.
+- **(experimental)** `LFMomentum`: a bump-built value with caller-driven decay (`step(delta, slowing)`), `penalize` floored at the base, and `ratio()`.
+- **(experimental)** `LFHurtBox2D` and `LFHitBox2D` (`lf_hit_boxes`): area-based damage with an invulnerability gate, once-per-target or repeated hits, and untyped payloads.
+- **(experimental)** `LFMagnetPull2D`, `LFMagnetPullCore` and `LFMagnetPull3D` (`lf_magnet_pull`, `lf_magnet_pull_3d`): velocity pulled toward attractors with a power each.
+- **(experimental)** `LFConfirm`, `LFPromptDialog`, `LFTimerIcon` and `LFValueBar` (`lf_confirm`, `lf_prompt_dialog`, `lf_hud_bars`): an awaitable yes/no popup, an awaitable text prompt, a timer-driven icon and a current/max bar.
+- **(experimental)** `LFAnimate.slide_in` / `slide_out`, `LFAnimate.pulse` and `LFAnimate.arc_hop`, and `LFIdleDrift`, an endless pausable drift around a base position; the README now says what is safe to await on `LFAnimate.control` and `pulse`.
+- `LFFactory.dormant_hooks()`, `sleep(node)` and `wake(node)`: pooled nodes are hidden, set to `PROCESS_MODE_DISABLED` and have collision and `monitoring` switched off; acquiring restores the original values.
+- `LFAwait.retry(fn, attempts, delay_ms, backoff, accept)`.
+- `LFEventBus.off_owner(owner)`: removes everything an object registered, self-capturing lambdas included.
+- `LFUtils.append_unique` and `LFUtils.merge_arrays_deep`; `LFUtils.move_node` takes an optional `global_position` applied after the reparent; the `merge_arrays` docs now state that Resources and other Objects in the first array are shared, not copied.
+- `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
+- `LFStatusEffectDef.interval_fn`, `LFStatusStack.interval_fn` and a new last `interval_fn` parameter of `LFStatusEffects.apply`: choose each tick's delay by callback. The fixed `tick_interval` is unchanged.
+- `LFProc.fire_collect`, `LFTriggerSet.fire_all` and `LFTriggerSet.fire_any`: read and combine the values reactions return.
+- `LFLogView.line_scene` and `line_factory` for custom line controls.
 - `LFOS` README: a note that the engine already answers the operating system and CPU
   architecture (`OS.get_name()`, `Engine.get_architecture_name()`), so there is no
   `detect_os` or `detect_arch`.
+
+### Changed
+
+- **Breaking:** `LFLogView.append` returns `Control` instead of `Label` (a custom line can be any control). Write `log.append(text) as Label` where a typed `Label` is needed.
 
 ## 1.0.0 - 2026-10-09
 

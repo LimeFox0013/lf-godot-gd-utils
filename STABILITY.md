@@ -62,6 +62,9 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 |---|---|---|
 | [`lf_auto_size_text_edit`](src/components/lf_auto_size_text_edit/README.md) | experimental | layout; tests cannot judge how it looks |
 | [`lf_bar_chart`](src/components/lf_bar_chart/README.md) | stable | - |
+| [`lf_confirm`](src/components/lf_confirm/README.md) | experimental | UI layout; tests cannot judge how it looks, API new |
+| [`lf_hud_bars`](src/components/lf_hud_bars/README.md) | experimental | UI look and easing are not judged by headless tests, API new |
+| [`lf_prompt_dialog`](src/components/lf_prompt_dialog/README.md) | experimental | UI layout; tests cannot judge how it looks, API new |
 | [`lf_build`](src/components/lf_build/README.md) | stable | - |
 | [`lf_carousel`](src/components/lf_carousel/README.md) | stable | - |
 | [`lf_components`](src/components/lf_components/README.md) | stable | - |
@@ -85,6 +88,8 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 |---|---|---|
 | [`lf_infinite_scroll_sprite`](src/2D/lf_infinite_scroll_sprite/README.md) | experimental | rendering; tests cannot judge how it looks |
 | [`lf_group_camera_2d`](src/2D/lf_group_camera_2d/README.md) | experimental | camera feel; tests cannot judge it |
+| [`lf_hit_boxes`](src/2D/lf_hit_boxes/README.md) | experimental | new module; the gate and hit-box semantics were extracted from one game and may change |
+| [`lf_magnet_pull`](src/2D/lf_magnet_pull/README.md) | experimental | new module; API unproven outside one game |
 | [`lf_utils_2d`](src/2D/lf_utils_2d/README.md) | stable | - |
 | [`lf_viewport_leave`](src/2D/lf_viewport_leave/README.md) | stable | - |
 | [`lf_virtual_grid`](src/2D/lf_virtual_grid/README.md) | experimental | newer, view-dependent |
@@ -98,6 +103,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_floating_text_3d`](src/3D/lf_floating_text_3d/README.md) | stable | - |
 | [`lf_multimesh_scatter`](src/3D/lf_multimesh_scatter/README.md) | experimental | newer, extracted from a game |
 | [`lf_heightmap`](src/3D/lf_heightmap/README.md) | experimental | rendering and physics geometry |
+| [`lf_magnet_pull_3d`](src/3D/lf_magnet_pull_3d/README.md) | experimental | new module; API unproven outside one game |
 | [`lf_orbit_camera`](src/3D/lf_orbit_camera/README.md) | experimental | input feel; tests cannot judge it |
 | [`lf_shaker`](src/3D/lf_shaker/README.md) | experimental | camera feel; tests cannot judge it |
 | [`lf_utils_3d`](src/3D/lf_utils_3d/README.md) | stable | - |
@@ -112,6 +118,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_await`](src/utils/lf_await/README.md) | stable | - |
 | [`lf_capped_level_tracker`](src/utils/lf_capped_level_tracker/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
 | [`lf_cooldown`](src/utils/lf_cooldown/README.md) | stable | - |
+| [`lf_countdown`](src/utils/lf_countdown/README.md) | experimental | new module; the `ticked` / `finished` ordering and the `State` set may change after real use |
 | [`lf_jump_physics`](src/utils/lf_jump_physics/README.md) | experimental | newer, extracted from a game |
 | [`lf_ratchet_follow`](src/utils/lf_ratchet_follow/README.md) | experimental | newer, extracted from a game |
 | [`lf_grade_combo`](src/utils/lf_grade_combo/README.md) | experimental | newer, extracted from a game |
@@ -128,6 +135,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_file_observer`](src/utils/lf_file_observer/README.md) | stable | - |
 | [`lf_flow_field`](src/utils/lf_flow_field/README.md) | experimental | large, game-shaped surface (crowds); thresholds are tuned by feel |
 | [`lf_graph`](src/utils/lf_graph/README.md) | stable | - |
+| [`lf_health`](src/utils/lf_health/README.md) | experimental | new module; the dead-pool behavior (ignores damage and heal until `reset`) and the signal payloads may change after real use |
 | [`lf_grid_2d`](src/utils/lf_grid_2d/README.md) | stable | - |
 | [`lf_http`](src/utils/lf_http/README.md) | experimental | network client; under active review |
 | [`lf_input_keys`](src/utils/lf_input_keys/README.md) | stable | - |
@@ -138,6 +146,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_llm`](src/utils/lf_llm/README.md) | experimental | talks to third-party model APIs that change; under active review |
 | [`lf_local_service`](src/utils/lf_local_service/README.md) | experimental | platform-dependent; starts and stops programs; tested on macOS only |
 | [`lf_logger`](src/utils/lf_logger/README.md) | stable | - |
+| [`lf_momentum`](src/utils/lf_momentum/README.md) | experimental | new module; the penalty rule (a fraction of the whole value, floored at the base) may change after real use |
 | [`lf_loot_table`](src/utils/lf_loot_table/README.md) | stable | - |
 | [`lf_modifier_grant_service`](src/utils/lf_modifier_grant_service/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
 | [`lf_modifier_levels`](src/utils/lf_modifier_levels/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
