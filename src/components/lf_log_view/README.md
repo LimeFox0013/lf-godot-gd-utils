@@ -79,11 +79,13 @@ Everything the class offers; you only need the rows used above to get started. (
 | `max_lines` | `@export var max_lines := DEFAULT_MAX_LINES` (100) | Most lines kept; appending past it drops the oldest. 0 or less keeps all. A lowered value trims at the next append. |
 | `follow` | `@export var follow := true` | Scrolls to the bottom whenever the scroll range changes (see Notes). |
 | `font_size` | `@export var font_size := 0` | Font size of new lines; 0 keeps the theme's. |
-| `lines` | `var lines: VBoxContainer` | One Label per line, oldest first. |
-| `append` | `append(text: String, color: Variant = null) -> Label` | Adds the newest line (word-wrapped), in `color` when given. Returns its Label. |
+| `line_scene` | `@export var line_scene: PackedScene` | Makes each line from this scene (root must be a Control). The text goes to the root's `text` property when it has one; `color` applies to a Label root only. Null keeps the plain Label. |
+| `line_factory` | `var line_factory := Callable()` | `func(text: String, color: Variant) -> Control`: makes each line yourself (a chat bubble, say). Beats `line_scene`. `font_size` is not applied to it. A result that is not a Control is an error through `LFLogger` and a Label is used. |
+| `lines` | `var lines: VBoxContainer` | One control per line (a Label by default), oldest first. |
+| `append` | `append(text: String, color: Variant = null) -> Control` | Adds the newest line (a word-wrapped Label by default), in `color` when given. Returns its control. |
 | `clear` | `clear() -> void` | Removes every line at once. |
 | `line_count` | `line_count() -> int` | Lines shown. |
-| `line_text` | `line_text(index: int) -> String` | Text of line `index` (0 = oldest); `''` out of range. |
+| `line_text` | `line_text(index: int) -> String` | Text line `index` (0 = oldest) was appended with; `''` out of range. |
 
 ### LFChatBox
 
@@ -145,6 +147,7 @@ func _on_chat_received(from: String, text: String) -> void:
 
 ## Notes
 
+- **Custom lines.** Set `line_scene` (a scene whose root is a Control with a `text` property, such as a chat bubble script with `var text`) or `line_factory` (a Callable you write) before the first `append`; lines already added keep their look. Either way the cap, `follow` and `clear` work as for Labels. Example: `log_view.line_factory = func(text, color): var bubble := ChatBubble.new(); bubble.text = text; return bubble`. `append` returns a `Control` (it was a `Label`): cast it, `append(...) as Label`, if you style the default line.
 - Lines past `max_lines` are removed from the tree at once (and freed later), so `line_count()` is exact right after `append`.
 - `follow` scrolls to the bottom whenever the scroll range changes (lines added or removed, or the view resized), also when the reader scrolled up. Turn it off while the reader browses if that matters.
 - The chat box never sends anything itself; it only emits. Show your own lines when the server echoes them (or call `add_line` right after emitting), not both.
