@@ -21,7 +21,7 @@ border of a rect, such as an arrow at the screen edge pointing at an off-screen 
 point just outside the screen (give it `camera_world_rect`); `max_pairwise_distance` tells how
 far apart a group is (to zoom a camera out); `fit_sprite_to_size` and `shape_size` size a
 sprite to a wanted size and read a collision shape's width and height.
-`alpha_click_mask` / `apply_alpha_click_mask` make a `TextureButton` clickable only where its picture is not transparent, and `steer` accelerates a `CharacterBody2D` or `RigidBody2D` toward a direction.
+`alpha_click_mask` / `apply_alpha_click_mask` make a `TextureButton` clickable only where its picture is not transparent, `steer` accelerates a `CharacterBody2D` or `RigidBody2D` toward a direction, and `knock_back` pushes a `RigidBody2D` away from a point.
 To track a 3D target on the HUD, `LFTracker` already does the whole job; the scrolling
 background and row-list cases are covered by `LFInfiniteScrollSprite` and
 `LFVirtualGrid`.
@@ -81,6 +81,7 @@ Everything the class offers; you only need the rows used above to get started.
 | `alpha_click_mask` | `static alpha_click_mask(texture: Texture2D, threshold := DEFAULT_ALPHA_THRESHOLD) -> BitMap` | A `BitMap` of the image's size, set where the pixel's alpha is above `threshold`. A compressed image is decompressed on a copy first; the texture is not changed. Null with an error for a null texture, one without an image, a NaN threshold or an image that cannot be decompressed. |
 | `apply_alpha_click_mask` | `static apply_alpha_click_mask(button: TextureButton, threshold := DEFAULT_ALPHA_THRESHOLD) -> bool` | Sets `button.texture_click_mask` from its `texture_normal` so only visible pixels take clicks. False (with an error) for a null button or no texture; the button is left alone then. |
 | `steer` | `static steer(body: Node2D, direction: Vector2, speed: float, delta: float, acceleration_ratio := DEFAULT_STEER_ACCELERATION_RATIO, force_gain := DEFAULT_STEER_FORCE_GAIN, slide := true) -> bool` | Accelerates a CharacterBody2D (its `velocity` moves toward `direction.normalized() * speed` by `speed * acceleration_ratio * delta`, then `move_and_slide()` unless `slide` is false) or a RigidBody2D (`apply_force((wanted - linear_velocity) * mass * force_gain)`; `delta` unused). Zero direction brakes; negative speed counts as 0. False with an error for another kind of node or a non-finite number. |
+| `knock_back` | `static knock_back(body: Node2D, source_position: Vector2, strength: float) -> bool` | One impulse of `strength` on a `RigidBody2D`, away from `source_position` (negative pulls). False for a body on the point; false with an error for another kind of body or a non-finite number. |
 | `DEFAULT_ALPHA_THRESHOLD` | `const 0.1` | The default alpha threshold of `alpha_click_mask`. |
 | `DEFAULT_STEER_ACCELERATION_RATIO` | `const 0.7` | Share of `speed` per second a CharacterBody2D gains in `steer`. |
 | `DEFAULT_STEER_FORCE_GAIN` | `const 10.0` | Multiplier of the velocity gap times mass for a RigidBody2D in `steer`. |

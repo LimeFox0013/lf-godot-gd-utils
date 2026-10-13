@@ -15,6 +15,8 @@ Four more new modules, all experimental: `lf_experience_levels`, `lf_group_camer
 Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_momentum`, `lf_hit_boxes`,
 `lf_magnet_pull`, `lf_magnet_pull_3d`, `lf_confirm`, `lf_prompt_dialog` and `lf_hud_bars`.
 
+One more, also experimental: `lf_shaders_2d`.
+
 ### Added
 
 - **(experimental)** `LFExperienceLevels`: an experience track with per-step thresholds,
@@ -42,7 +44,9 @@ Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_moment
 - `LFAwait.retry(fn, attempts, delay_ms, backoff, accept)`.
 - `LFEventBus.off_owner(owner)`: removes everything an object registered, self-capturing lambdas included.
 - `LFUtils.append_unique` and `LFUtils.merge_arrays_deep`; `LFUtils.move_node` takes an optional `global_position` applied after the reparent; the `merge_arrays` docs now state that Resources and other Objects in the first array are shared, not copied.
+- **(experimental)** `LFShaders2D` with four shaders: sprite outline, screen outline, dissolve and darken.
 - `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
+- `LFUtils2D.knock_back`: an instant impulse on a `RigidBody2D` away from a point.
 - `LFStatusEffectDef.interval_fn`, `LFStatusStack.interval_fn` and a new last `interval_fn` parameter of `LFStatusEffects.apply`: choose each tick's delay by callback. The fixed `tick_interval` is unchanged.
 - `LFProc.fire_collect`, `LFTriggerSet.fire_all` and `LFTriggerSet.fire_any`: read and combine the values reactions return.
 - `LFLogView.line_scene` and `line_factory` for custom line controls.

@@ -469,3 +469,55 @@ func test_steer_rejects_other_nodes_and_non_finite_numbers():
 	assert_false(LFUtils2D.steer(body, Vector2(INF, 0), 1.0, 0.1, 0.7, 10.0, false))
 	assert_push_error("finite")
 	assert_eq(body.velocity, Vector2.ZERO)
+
+
+func _knockable(at: Vector2) -> RigidBody2D:
+	var body := RigidBody2D.new()
+	body.gravity_scale = 0.0
+	body.linear_damp_mode = RigidBody2D.DAMP_MODE_REPLACE
+	body.linear_damp = 0.0
+	add_child_autofree(body)
+	body.global_position = at
+	return body
+
+
+## The body's velocity once the physics server has applied what was queued.
+func _settled_velocity(body: RigidBody2D) -> Vector2:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	return body.linear_velocity
+
+
+func test_knock_back_pushes_a_rigid_body_away_from_the_point():
+	var body := _knockable(Vector2(0, 30))
+	assert_true(LFUtils2D.knock_back(body, Vector2(0, 10), 40.0))
+	assert_almost_eq(await _settled_velocity(body), Vector2(0, 40), Vector2(0.001, 0.001), 'away from the point')
+
+
+func test_knock_back_with_a_negative_strength_pulls_toward_the_point():
+	var body := _knockable(Vector2(20, 0))
+	assert_true(LFUtils2D.knock_back(body, Vector2.ZERO, -5.0))
+	assert_almost_eq(await _settled_velocity(body), Vector2(-5, 0), Vector2(0.001, 0.001))
+
+
+func test_knock_back_leaves_a_body_on_the_point_alone():
+	var body := _knockable(Vector2(7, 7))
+	assert_false(LFUtils2D.knock_back(body, Vector2(7, 7), 40.0))
+	assert_eq(await _settled_velocity(body), Vector2.ZERO)
+
+
+func test_knock_back_rejects_a_body_that_is_not_a_rigid_body():
+	var body: Node2D = add_child_autofree(CharacterBody2D.new())
+	assert_false(LFUtils2D.knock_back(body, Vector2.ZERO, 10.0))
+	assert_push_error("expected a RigidBody2D")
+	assert_false(LFUtils2D.knock_back(null, Vector2.ZERO, 10.0))
+	assert_push_error("expected a RigidBody2D")
+
+
+func test_knock_back_rejects_a_non_finite_strength_or_position():
+	var body := _knockable(Vector2(5, 0))
+	assert_false(LFUtils2D.knock_back(body, Vector2.ZERO, NAN))
+	assert_push_error("must be finite")
+	assert_false(LFUtils2D.knock_back(body, Vector2(INF, 0), 5.0))
+	assert_push_error("must be finite")
+	assert_eq(await _settled_velocity(body), Vector2.ZERO)

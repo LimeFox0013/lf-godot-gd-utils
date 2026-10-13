@@ -4,8 +4,8 @@
 ## frame, switches a node between idle and physics processing to match a camera, finds
 ## where a ray from a rect's centre meets its border, picks random points in a circle or
 ## around a rect, measures how far apart a set of points spreads, and sizes a sprite or reads
-## a collision shape's size, builds a click mask from a texture's alpha, and steers a character
-## or rigid body toward a direction. All functions are static: call them on the class
+## a collision shape's size, builds a click mask from a texture's alpha, steers a character
+## or rigid body toward a direction, and knocks a rigid body away from a point. All functions are static: call them on the class
 ## (`LFUtils2D.camera_ready(camera)`), never create an instance.
 class_name LFUtils2D
 
@@ -288,6 +288,23 @@ static func steer(body: Node2D, direction: Vector2, speed: float, delta: float, 
 	else:
 		var rigid := body as RigidBody2D
 		rigid.apply_force((wanted - rigid.linear_velocity) * rigid.mass * force_gain)
+	return true
+
+
+## Gives a RigidBody2D one impulse of `strength` away from `source_position` (a negative
+## `strength` pulls it toward the point). False, with an error, for any other body or a
+## non-finite number; false too for a body exactly on the point.
+static func knock_back(body: Node2D, source_position: Vector2, strength: float) -> bool:
+	if not body is RigidBody2D:
+		_log.error('LFUtils2D.knock_back: expected a RigidBody2D, got %s' % (body.get_class() if body != null else 'null'))
+		return false
+	if not (source_position.is_finite() and is_finite(strength)):
+		_log.error('LFUtils2D.knock_back: source_position and strength must be finite numbers')
+		return false
+	var away := body.global_position - source_position
+	if away.is_zero_approx():
+		return false
+	(body as RigidBody2D).apply_central_impulse(away.normalized() * strength)
 	return true
 
 

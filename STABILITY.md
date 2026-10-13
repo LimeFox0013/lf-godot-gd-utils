@@ -90,6 +90,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_group_camera_2d`](src/2D/lf_group_camera_2d/README.md) | experimental | camera feel; tests cannot judge it |
 | [`lf_hit_boxes`](src/2D/lf_hit_boxes/README.md) | experimental | new module; the gate and hit-box semantics were extracted from one game and may change |
 | [`lf_magnet_pull`](src/2D/lf_magnet_pull/README.md) | experimental | new module; API unproven outside one game |
+| [`lf_shaders_2d`](src/2D/lf_shaders_2d/README.md) | experimental | rendering; tests cannot judge how it looks |
 | [`lf_utils_2d`](src/2D/lf_utils_2d/README.md) | stable | - |
 | [`lf_viewport_leave`](src/2D/lf_viewport_leave/README.md) | stable | - |
 | [`lf_virtual_grid`](src/2D/lf_virtual_grid/README.md) | experimental | newer, view-dependent |
