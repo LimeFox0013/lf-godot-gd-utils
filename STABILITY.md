@@ -176,6 +176,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_utils`](src/utils/lf_utils/README.md) | stable | - |
 | [`lf_uuid`](src/utils/lf_uuid/README.md) | stable | - |
 | [`lf_weighted_pick`](src/utils/lf_weighted_pick/README.md) | stable | - |
+| [`lf_wire_message`](src/utils/lf_wire_message/README.md) | experimental | new module |
 | [`lf_zip`](src/utils/lf_zip/README.md) | experimental | threads plus untrusted archives |
 
 52 modules are stable and 40 are experimental.

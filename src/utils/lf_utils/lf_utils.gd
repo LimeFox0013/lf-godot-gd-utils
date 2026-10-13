@@ -541,3 +541,15 @@ static func lower_median(values: Array) -> Variant:
 	sorted.sort()
 	@warning_ignore("integer_division")
 	return sorted[(sorted.size() - 1) / 2]
+
+
+## The next index from `current` going `direction` (1 or -1) round `count` entries, wrapping,
+## that `accept` (`func(index) -> bool`; unset takes any) takes; -1 when none does. A
+## `current` of -1 starts before the first entry going forward and after the last going back.
+static func cycle_index(current: int, count: int, direction: int, accept := Callable()) -> int:
+	var start := current if current != -1 else (-1 if direction > 0 else count)
+	for step in range(1, count + 1):
+		var index := posmod(start + direction * step, count)
+		if not accept.is_valid() or accept.call(index):
+			return index
+	return -1

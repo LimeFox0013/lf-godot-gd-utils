@@ -47,6 +47,11 @@ One more, also experimental: `lf_shaders_2d`.
 - **(experimental)** `LFShaders2D` with four shaders: sprite outline, screen outline, dissolve and darken.
 - `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
 - `LFUtils2D.knock_back`: an instant impulse on a `RigidBody2D` away from a point.
+- `LFUtils.cycle_index`: the next accepted index round a list, wrapping.
+- `LFControl.pin`: pin a Control to an edge, corner or centre, growing inward.
+- `LFCarousel.instant`: a `slide_fn` that switches pages with no animation.
+- **(experimental)** `LFSnapshotReceiver` (in `lf_replication`): the client side of the snapshot replicator, a checkpoint replaces and a delta changes the state.
+- **(experimental)** `LFWireMessage` (`lf_wire_message`): `{type, payload}` encode and decode of typed messages, rejecting unknown or incomplete ones.
 - `LFStatusEffectDef.interval_fn`, `LFStatusStack.interval_fn` and a new last `interval_fn` parameter of `LFStatusEffects.apply`: choose each tick's delay by callback. The fixed `tick_interval` is unchanged.
 - `LFProc.fire_collect`, `LFTriggerSet.fire_all` and `LFTriggerSet.fire_any`: read and combine the values reactions return.
 - `LFLogView.line_scene` and `line_factory` for custom line controls.

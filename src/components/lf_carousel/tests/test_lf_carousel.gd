@@ -597,3 +597,21 @@ func test_a_carousel_outside_the_tree_switches_at_once():
 	assert_false(loose.is_switching)
 	assert_true(page_b.visible)
 	assert_false(page_a.visible)
+
+
+func test_instant_strategy_switches_without_waiting():
+	var carousel := LFCarousel.new()
+	carousel.auto_setup = false
+	for page_name in ["A", "B"]:
+		var page := LFCarouselPage.new()
+		page.name = page_name
+		carousel.add_child(page)
+	add_child_autofree(carousel)
+	carousel.setup("A")
+	carousel.slide_fn = LFCarousel.instant
+
+	await carousel.activate_slide("B")
+
+	assert_eq(carousel.current_slide, "B")
+	assert_true(carousel.get_node("B").visible)
+	assert_false(carousel.get_node("A").visible)

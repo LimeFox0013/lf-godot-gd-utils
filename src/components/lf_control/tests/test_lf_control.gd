@@ -387,5 +387,44 @@ func test_an_id_reused_after_all_its_holders_left_resolves_to_the_new_holder():
 	assert_same(LFControl.by_id("core-reused-after-empty"), second)
 
 
+func test_pin_to_a_right_bottom_corner_grows_inward():
+	var root: Control = add_child_autofree(Control.new())
+	root.size = Vector2(400, 300)
+	var box := _box(root, Vector2.ZERO, 'Pinned')
+	box.custom_minimum_size = Vector2(50, 20)
+
+	LFControl.pin(box, Control.PRESET_BOTTOM_RIGHT, 10)
+
+	assert_eq(box.grow_horizontal, Control.GROW_DIRECTION_BEGIN)
+	assert_eq(box.grow_vertical, Control.GROW_DIRECTION_BEGIN)
+	assert_eq(box.get_rect().end, Vector2(390, 290))
+
+
+func test_pin_centred_presets_grow_both_ways_and_left_top_grow_outward():
+	var root: Control = add_child_autofree(Control.new())
+	var centred := _box(root, Vector2.ZERO, 'Centred')
+	var corner := _box(root, Vector2.ZERO, 'Corner')
+
+	LFControl.pin(centred, Control.PRESET_CENTER)
+	LFControl.pin(corner, Control.PRESET_TOP_LEFT)
+
+	assert_eq(centred.grow_horizontal, Control.GROW_DIRECTION_BOTH)
+	assert_eq(centred.grow_vertical, Control.GROW_DIRECTION_BOTH)
+	assert_eq(corner.grow_horizontal, Control.GROW_DIRECTION_END)
+	assert_eq(corner.grow_vertical, Control.GROW_DIRECTION_END)
+
+
+func test_pin_offset_nudges_the_final_position():
+	var root: Control = add_child_autofree(Control.new())
+	root.size = Vector2(400, 300)
+	var box := _box(root, Vector2.ZERO, 'Nudged')
+	LFControl.pin(box, Control.PRESET_TOP_LEFT)
+	var before := box.position
+
+	LFControl.pin(box, Control.PRESET_TOP_LEFT, 0, Vector2(5, -3))
+
+	assert_eq(box.position, before + Vector2(5, -3))
+
+
 func _scene_dir() -> String:
 	return (get_script() as Script).resource_path.get_base_dir().get_base_dir()

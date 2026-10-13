@@ -4,8 +4,8 @@
 
 | | |
 |---|---|
-| **Files** | `lf_snapshot_replicator.gd`, `lf_interpolation_buffer.gd`, `lf_playback_clock.gd` |
-| **Tests** | `tests/test_lf_snapshot_replicator.gd`, `tests/test_lf_interpolation.gd` (in the repository; the release zip leaves tests out) |
+| **Files** | `lf_snapshot_replicator.gd`, `lf_snapshot_receiver.gd`, `lf_interpolation_buffer.gd`, `lf_playback_clock.gd` |
+| **Tests** | `tests/test_lf_snapshot_replicator.gd`, `tests/test_lf_snapshot_receiver.gd`, `tests/test_lf_interpolation.gd` (in the repository; the release zip leaves tests out) |
 | **Depends on** | `LFIntervalTimer`, `LFDictionary`, `LFLogger` (`LFInterpolationBuffer` reports a sample that is not finite) |
 
 **Classes** ([how LF classes work](../../../README.md#how-lf-classes-work)):
@@ -14,6 +14,7 @@
 |---|---|
 | `LFInterpolationBuffer` | Object: create it with `.new()` |
 | `LFPlaybackClock` | Object: create it with `.new()` |
+| `LFSnapshotReceiver` | Object: create it with `.new()` |
 | `LFSnapshotReplicator` | Object: create it with `.new()` |
 
 ## When to use it
@@ -143,6 +144,15 @@ Everything the class offers; you only need the rows used above to get started.
 | `checkpoint_now` | `checkpoint_now() -> void` | Sends a checkpoint now and restarts both clocks. |
 | `forget_peer` | `forget_peer(peer_id: Variant) -> void` | Drops a peer's baseline (call on disconnect). |
 | `has_baseline` | `has_baseline(peer_id: Variant) -> bool` | Whether the peer has seen a checkpoint. |
+
+### LFSnapshotReceiver (client)
+
+| Member | Signature | Description |
+|---|---|---|
+| `new` | `LFSnapshotReceiver.new(apply_delta_fn: Callable)` | `apply_delta_fn(snapshot, delta) -> Variant` returns the snapshot with the delta applied. |
+| `on_checkpoint` | `on_checkpoint(snapshot: Variant) -> void` | Replaces the state. |
+| `on_delta` | `on_delta(delta: Variant) -> bool` | Applies a delta; false and no change before the first checkpoint. |
+| `current` | `var current: Variant` | The newest state, null before the first checkpoint. |
 
 ### LFInterpolationBuffer (client, one per value)
 

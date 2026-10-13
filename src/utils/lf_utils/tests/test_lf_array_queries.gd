@@ -120,3 +120,20 @@ func test_max_by_skips_a_leading_nan_key():
 	var keys := {'broken': NAN, 'low': -5.0}
 	assert_eq(LFUtils.max_by(['broken', 'low'], func(item): return keys[item]), 'low')
 	assert_eq(LFUtils.max_by(['broken', 'broken'], func(_i): return NAN), 'broken', 'only NaN keys: the first item')
+
+
+func test_cycle_index_wraps_forward_and_back():
+	assert_eq(LFUtils.cycle_index(0, 3, 1), 1)
+	assert_eq(LFUtils.cycle_index(2, 3, 1), 0)
+	assert_eq(LFUtils.cycle_index(0, 3, -1), 2)
+
+
+func test_cycle_index_from_nothing_starts_at_the_first_or_last():
+	assert_eq(LFUtils.cycle_index(-1, 3, 1), 0)
+	assert_eq(LFUtils.cycle_index(-1, 3, -1), 2)
+
+
+func test_cycle_index_skips_rejected_entries_and_returns_minus_one_when_none_fit():
+	assert_eq(LFUtils.cycle_index(0, 4, 1, func(i): return i == 3), 3)
+	assert_eq(LFUtils.cycle_index(0, 4, 1, func(_i): return false), -1)
+	assert_eq(LFUtils.cycle_index(-1, 0, 1), -1)
