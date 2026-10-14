@@ -206,3 +206,29 @@ func test_anything_but_a_camera_3d_counts_as_no_camera_and_is_reported():
 	assert_false(LFUtils3D.camera_ready(42))
 	assert_push_error_count(6, 'one report per call: five for the Node3D, one for the number')
 	assert_engine_error_count(0)
+
+
+func test_ids_in_screen_rect_keeps_positions_order_and_counts_the_top_left_edge_only():
+	var project := func(point: Vector3) -> Variant: return Vector2(point.x, point.y)
+	var positions := {"c": Vector3(49, 49, 0), "a": Vector3(10, 10, 0), "far": Vector3(500, 5, 0), "b": Vector3(0, 0, 0), "edge": Vector3(50, 50, 0)}
+
+	assert_eq(LFUtils3D.ids_in_screen_rect(project, Vector2(50, 50), Vector2(0, 0), positions), ["c", "a", "b"])
+
+
+func test_ids_in_screen_rect_leaves_out_points_the_projection_hides():
+	var project := func(point: Vector3) -> Variant: return null if point.z > 0.0 else Vector2(point.x, point.y)
+	var positions := {"seen": Vector3(1, 1, 0), "hidden": Vector3(1, 1, 5)}
+
+	assert_eq(LFUtils3D.ids_in_screen_rect(project, Vector2.ZERO, Vector2(10, 10), positions), ["seen"])
+
+
+func test_ids_in_screen_rect_projects_through_a_camera():
+	var camera: Camera3D = add_child_autofree(Camera3D.new())
+	var size: Vector2 = camera.get_viewport().get_visible_rect().size
+	var positions := {"ahead": Vector3(0, 0, -10), "behind": Vector3(0, 0, 10)}
+
+	assert_eq(LFUtils3D.ids_in_screen_rect(camera, Vector2.ZERO, size, positions), ["ahead"])
+
+
+func test_ids_in_screen_rect_without_a_camera_finds_nothing():
+	assert_eq(LFUtils3D.ids_in_screen_rect(null, Vector2.ZERO, Vector2(100, 100), {"a": Vector3.ZERO}), [])

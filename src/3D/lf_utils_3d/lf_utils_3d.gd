@@ -54,6 +54,25 @@ static func world_to_canvas_position(camera: Variant, world_position: Vector3) -
 	return camera_3d.unproject_position(world_position)
 
 
+## The keys of `positions` (key to world position) whose screen position falls inside the
+## rectangle `a`-`b` (any two opposite corners; left and top edges count, right and bottom
+## do not), in `positions` order. `camera_or_project` is a camera (see
+## `world_to_canvas_position`) or a Callable mapping a world position to a screen position,
+## or null when it is not visible; points it hides are left out.
+static func ids_in_screen_rect(camera_or_project: Variant, a: Vector2, b: Vector2, positions: Dictionary) -> Array:
+	var rect := Rect2(a, Vector2.ZERO).expand(b)
+	var found := []
+	for id: Variant in positions:
+		var screen: Variant
+		if camera_or_project is Callable:
+			screen = camera_or_project.call(positions[id])
+		else:
+			screen = world_to_canvas_position(camera_or_project, positions[id])
+		if screen != null and rect.has_point(screen):
+			found.append(id)
+	return found
+
+
 ## A random point within `radius` of `center` on the XZ plane (Y unchanged from
 ## `center`), e.g. to scatter points around a centre. Points are spread evenly over the
 ## disk's *area* (the distance is sqrt-scaled; a plain `randf() * radius` would crowd

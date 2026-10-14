@@ -19,6 +19,7 @@ One more, also experimental: `lf_shaders_2d`.
 
 ### Added
 
+- `LFUtils3D.ids_in_screen_rect`: the keys of a position map that fall inside a screen rectangle.
 - `LFSpriteAtlasFrames.frame_region`: a manifest frame's atlas rect, optionally cropped to its opaque pixels.
 - `LFBuild.on_commit`, `LFBuild.margin` and `LFBuild.spin_box`.
 - `LFStyle.swatch`: a solid colour chip texture.
