@@ -15,6 +15,13 @@ class_name LFStatusEffects
 
 ## Fired whenever an effect is applied, refreshed, replaced, expires, or is removed.
 signal changed(id: StringName)
+## Fired right after `changed` when an effect that was not active becomes active.
+signal started(id: StringName)
+## Fired right after `changed` when an application hits an effect that is already active.
+signal refreshed(id: StringName)
+## Fired right after `changed` when an effect is no longer active (expiry, `remove`, `clear`).
+## Not fired when a callback re-applied the effect before the announcement.
+signal ended(id: StringName)
 
 static var _log := LFLogger.new()
 
@@ -114,8 +121,10 @@ func apply(
 			shared.count += 1
 		shared.data = data
 		changed.emit(def.id)
+		refreshed.emit(def.id)
 		return shared.count
 
+	var is_new := false
 	if entry:
 		var per_source := governing.cap_per_source
 		var held := _count_from(entry, source) if per_source else entry.stacks.size()
@@ -126,6 +135,7 @@ func apply(
 	else:
 		entry = _Entry.new(def)
 		_entries[def.id] = entry
+		is_new = true
 
 	var chooser := interval_fn
 	if !chooser.is_valid() and tick_interval < 0.0:
@@ -151,6 +161,10 @@ func apply(
 	entry.next_tick_at = minf(entry.next_tick_at, next_tick_at)
 	_next_event_at = minf(_next_event_at, due)
 	changed.emit(def.id)
+	if is_new:
+		started.emit(def.id)
+	else:
+		refreshed.emit(def.id)
 	return entry.stacks.size()
 
 
@@ -233,7 +247,7 @@ func remove(id: StringName) -> void:
 		stack._removed = true
 	entry.removed = true
 	_entries.erase(id)
-	changed.emit(id)
+	_announce(id)
 
 
 ## Removes every effect, emitting `changed` per removed id; safe to call from `on_tick`.
@@ -243,7 +257,7 @@ func clear() -> void:
 	_next_event_at = INF
 	_epoch += 1
 	for id: Variant in removed:
-		changed.emit(id)
+		_announce(id)
 
 
 # One pass over everything due, in two phases. First every due entry's expired stacks are
@@ -287,7 +301,7 @@ func _process_due(owner: Variant) -> void:
 			# A callback cleared the owner (clear() already reset the due time and announced
 			# what it removed); still announce what expired earlier in this pass.
 			for changed_id in changed_ids:
-				changed.emit(changed_id)
+				_announce(changed_id)
 			return
 		for stack in expired:
 			stack._removed = true
@@ -298,7 +312,7 @@ func _process_due(owner: Variant) -> void:
 	for id: StringName in _entries:
 		_next_event_at = minf(_next_event_at, (_entries[id] as _Entry).next_event_at)
 	for id in changed_ids:
-		changed.emit(id)
+		_announce(id)
 
 
 ## Fires the elapsed ticks of `entry`'s stacks, `expired` (already detached) first, each
@@ -342,6 +356,13 @@ func _choose_interval(stack: LFStatusStack) -> float:
 	if !is_finite(seconds) or seconds <= 0.0:
 		return 0.0
 	return maxf(seconds, MIN_TICK_INTERVAL)
+
+
+## Emits `changed` for `id`, then `ended` if nothing of it is active any more.
+func _announce(id: StringName) -> void:
+	changed.emit(id)
+	if !_entries.has(id):
+		ended.emit(id)
 
 
 ## Recomputes `entry`'s due-time bounds from its stacks.

@@ -869,3 +869,82 @@ func test_every_stack_rerolls_on_its_own():
 	effects.apply(def)
 	effects.tick(3.0)
 	assert_eq(ticks[0], 2, 'the 1 s stack and the 3 s stack each ticked once')
+
+
+func _record_lifecycle() -> Array:
+	var log := []
+	effects.changed.connect(func(id): log.append(['changed', id]))
+	effects.started.connect(func(id): log.append(['started', id]))
+	effects.refreshed.connect(func(id): log.append(['refreshed', id]))
+	effects.ended.connect(func(id): log.append(['ended', id]))
+	return log
+
+
+func test_started_follows_changed_on_the_first_application_only():
+	var log := _record_lifecycle()
+	var def := _independent()
+	effects.apply(def)
+	assert_eq(log, [['changed', &'effect_a'], ['started', &'effect_a']])
+
+
+func test_refreshed_follows_changed_on_a_shared_refresh_and_an_independent_add():
+	var log := _record_lifecycle()
+	var shared := LFStatusEffectDef.new(&'shared_a', LFStatusEffectDef.Accumulation.SHARED)
+	effects.apply(shared)
+	effects.apply(shared)
+	effects.apply(_independent())
+	effects.apply(_independent())
+	assert_eq(log, [
+		['changed', &'shared_a'], ['started', &'shared_a'],
+		['changed', &'shared_a'], ['refreshed', &'shared_a'],
+		['changed', &'effect_a'], ['started', &'effect_a'],
+		['changed', &'effect_a'], ['refreshed', &'effect_a'],
+	])
+
+
+func test_a_dropped_application_emits_nothing():
+	var def := _independent(1)
+	effects.apply(def)
+	var log := _record_lifecycle()
+	effects.apply(def)
+	assert_eq(log, [])
+
+
+func test_ended_follows_changed_on_expiry_remove_and_clear():
+	var other := LFStatusEffectDef.new(&'effect_b', LFStatusEffectDef.Accumulation.INDEPENDENT, INF)
+	effects.apply(_independent(3, LFStatusEffectDef.Overflow.DROP, 1.0))
+	effects.apply(other)
+	var log := _record_lifecycle()
+	effects.tick(1.5)
+	assert_eq(log, [['changed', &'effect_a'], ['ended', &'effect_a']])
+	log.clear()
+	effects.remove(&'effect_b')
+	assert_eq(log, [['changed', &'effect_b'], ['ended', &'effect_b']])
+	effects.apply(other)
+	log.clear()
+	effects.clear()
+	assert_eq(log, [['changed', &'effect_b'], ['ended', &'effect_b']])
+
+
+func test_an_expiring_stack_of_a_still_active_effect_does_not_end_it():
+	var def := _independent()
+	effects.apply(def)
+	effects.tick(1.0)
+	effects.apply(def)
+	var log := _record_lifecycle()
+	effects.tick(2.5)
+	assert_eq(log, [['changed', &'effect_a']])
+
+
+func test_ended_is_skipped_when_a_last_tick_reapplied_the_expired_effect():
+	var def := LFStatusEffectDef.new(&'effect_a', LFStatusEffectDef.Accumulation.INDEPENDENT, 1.0, 1, LFStatusEffectDef.Overflow.DROP, 1.0)
+	var reapplied := [false]
+	def.on_tick = func(_owner, _stack):
+		if !reapplied[0]:
+			reapplied[0] = true
+			effects.apply(def, 5.0, 0.0)
+	effects.apply(def)
+	var log := _record_lifecycle()
+	effects.tick(1.0)
+	assert_true(effects.has(&'effect_a'))
+	assert_eq(log, [['changed', &'effect_a'], ['started', &'effect_a'], ['changed', &'effect_a']])
