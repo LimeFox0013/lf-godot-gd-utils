@@ -26,6 +26,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - **(experimental)** `LFRingMarkers3D`: a pool of flat ground rings sharing one mesh and material, shown at the points you give.
 - **(experimental)** `LFAllianceGroups` (`lf_alliance_groups`): groups of allied members and an `are_allied` check.
 - **(experimental)** `LFProjectile3D` (`lf_projectile_3d`): an Area3D shot that flies straight to a fixed point, ends on the first area it enters, and returns to its pool.
+- **(experimental)** `LFDepthSteering` (`lf_depth_steering`): for a 2.5D platformer, the landing platform of a jump, the depth that clears platforms overhead, and an eased, never-overshooting depth follow.
 - `LFDictionary.lower_median_by_key`: per key, the lower median across several dictionaries (missing counts as 0).
 - `LFTierRoller.tilt_weights`: move weight out of the first tier into the others, in proportion, down to a floor (a luck bonus).
 - `LFUtils3D.ids_in_screen_rect`: the keys of a position map that fall inside a screen rectangle.
