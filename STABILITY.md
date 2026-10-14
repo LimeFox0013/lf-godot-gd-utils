@@ -183,6 +183,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_tier_roller`](src/utils/lf_tier_roller/README.md) | stable | - |
 | [`lf_turn_cycle`](src/utils/lf_turn_cycle/README.md) | stable | - |
 | [`lf_unlock_tree`](src/utils/lf_unlock_tree/README.md) | stable | - |
+| [`lf_wallet`](src/utils/lf_wallet/README.md) | experimental | new module; extracted from a game |
 | [`lf_url`](src/utils/lf_url/README.md) | experimental | URL parsing that the network modules rely on; under active review |
 | [`lf_utils`](src/utils/lf_utils/README.md) | stable | - |
 | [`lf_uuid`](src/utils/lf_uuid/README.md) | stable | - |

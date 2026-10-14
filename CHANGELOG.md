@@ -84,6 +84,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - **(experimental)** `LFSeatAssigner` (`lf_seat_assigner`): gives connecting peers the next free seat or the one they claim, swapping with its holder.
 - **(experimental)** `LFListCursor` (`lf_list_cursor`): a highlighted list row that stops at both ends, with a pointer-prefix helper.
 - **(experimental)** `LFSettingDefinition` (`lf_setting_definition`): one options-menu setting (pick-one or whole number) with `sanitize` and `display`.
+- **(experimental)** `LFWallet` (`lf_wallet`): an amount you add to and spend, with a `changed` signal.
 
 ### Changed
 
