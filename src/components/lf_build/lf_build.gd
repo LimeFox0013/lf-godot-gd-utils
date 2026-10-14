@@ -1,9 +1,10 @@
 ## One-line helpers for building UI in code instead of in the editor.
 ##
 ## Each function makes a common control and sets it up in one call: a label (parent,
-## colour, size), wrapping and outlining it, a button wired to a callback, a line edit,
-## an expanding spacer, full-rect anchoring with insets, a centred content box that
-## scrolls only when it does not fit, and a titled panel. Every builder that adds a new
+## colour, size), wrapping and outlining it, a button wired to a callback, a line edit
+## (and its commit on Enter or focus loss), a margin, a spin box, an expanding spacer,
+## full-rect anchoring with insets, a centred content box that scrolls only when it does
+## not fit, and a titled panel. Every builder that adds a new
 ## control to a parent takes that parent first. Static: call the functions on the class
 ## (`LFBuild.label(...)`), never `.new()` it.
 class_name LFBuild
@@ -21,6 +22,8 @@ const _OUTLINE_SIZE := &"outline_size"
 const _SEPARATION := &"separation"
 ## Theme stylebox of a PanelContainer.
 const _PANEL := &"panel"
+## Theme constants of a MarginContainer: one per side.
+const _MARGIN_SIDES: Array[StringName] = [&"margin_left", &"margin_top", &"margin_right", &"margin_bottom"]
 
 
 ## Returns a new Label showing `text`, added to `parent` unless it is null. `color` (a
@@ -74,6 +77,38 @@ static func line_edit(parent: Node, placeholder := '', tooltip := '', secret := 
 	made.placeholder_text = placeholder
 	made.tooltip_text = tooltip
 	made.secret = secret
+	if parent != null:
+		parent.add_child(made)
+	return made
+
+
+## Connects `on_commit` (called with no arguments) to `edit` committing its text: Enter
+## and losing focus. Returns `edit`.
+static func on_commit(edit: LineEdit, callback: Callable) -> LineEdit:
+	edit.text_submitted.connect(func(_text: String) -> void: callback.call())
+	edit.focus_exited.connect(callback)
+	return edit
+
+
+## Returns a new MarginContainer with `px` of margin on all four sides, added to `parent`
+## unless it is null.
+static func margin(parent: Node, px: int) -> MarginContainer:
+	var made := MarginContainer.new()
+	for side: StringName in _MARGIN_SIDES:
+		made.add_theme_constant_override(side, px)
+	if parent != null:
+		parent.add_child(made)
+	return made
+
+
+## Returns a new SpinBox from `min_value` to `max_value` in `step`s, showing `value`, added
+## to `parent` unless it is null.
+static func spin_box(parent: Node, min_value: float, max_value: float, step: float, value: float) -> SpinBox:
+	var made := SpinBox.new()
+	made.min_value = min_value
+	made.max_value = max_value
+	made.step = step
+	made.value = value
 	if parent != null:
 		parent.add_child(made)
 	return made

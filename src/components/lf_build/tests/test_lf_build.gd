@@ -6,6 +6,8 @@ const FONT_SIZE := 18
 const OUTLINE_SIZE := 4
 ## Wrap width, in pixels, the wrap test asks for.
 const WRAP_WIDTH := 280.0
+## Margin, in pixels, the margin tests ask for.
+const MARGIN_PX := 7
 
 
 func test_label_sets_text_colour_size_and_parent():
@@ -223,3 +225,40 @@ func test_spacer_without_a_parent_is_unparented_and_click_through():
 	assert_eq(made.mouse_filter, Control.MOUSE_FILTER_IGNORE)
 	assert_eq(made.size_flags_horizontal, Control.SIZE_EXPAND_FILL)
 	assert_eq(made.size_flags_vertical, Control.SIZE_EXPAND_FILL)
+
+
+func test_on_commit_fires_on_enter_and_on_focus_loss():
+	var edit: LineEdit = autofree(LineEdit.new())
+	var calls := []
+
+	assert_eq(LFBuild.on_commit(edit, func(): calls.append(1)), edit)
+	edit.text_submitted.emit('typed')
+	edit.focus_exited.emit()
+
+	assert_eq(calls.size(), 2)
+
+
+func test_margin_sets_all_four_sides_and_parent():
+	var parent: Control = add_child_autofree(Control.new())
+
+	var made := LFBuild.margin(parent, MARGIN_PX)
+
+	assert_eq(made.get_parent(), parent)
+	for side in [&"margin_left", &"margin_top", &"margin_right", &"margin_bottom"]:
+		assert_eq(made.get_theme_constant(side), MARGIN_PX)
+
+
+func test_margin_without_parent_is_unparented():
+	var made: MarginContainer = autofree(LFBuild.margin(null, MARGIN_PX))
+
+	assert_null(made.get_parent())
+
+
+func test_spin_box_sets_range_step_and_clamped_value():
+	var parent: Control = add_child_autofree(Control.new())
+
+	var made := LFBuild.spin_box(parent, 1.0, 10.0, 0.5, 99.0)
+
+	assert_eq(made.get_parent(), parent)
+	assert_eq([made.min_value, made.max_value, made.step], [1.0, 10.0, 0.5])
+	assert_eq(made.value, 10.0)
