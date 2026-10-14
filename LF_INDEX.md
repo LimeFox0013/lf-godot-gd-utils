@@ -93,6 +93,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | tell a tap from a drag (a click selects, click-and-move pans the camera) | [`LFDragTracker`](src/utils/lf_drag_tracker/README.md) |
 | keyboard as a virtual gamepad / filter pad presses by device | [`LFInputKeys.button_of`](src/utils/lf_input_keys/README.md) |
 | "Text  [Key]" button labels | [`LFInputKeys.hint`](src/utils/lf_input_keys/README.md) / `LFInputKeys.bind_hint` |
+| let a button press still count for a moment (jump pressed just before landing), and learn once if nothing used it | [`LFInputBuffer`](src/utils/lf_input_buffer/README.md) |
 | gamepad button names (Xbox, PlayStation, Nintendo) | [`LFInputKeys.joy_button_name`](src/utils/lf_input_keys/README.md) |
 | local multiplayer: one player on the keyboard, the others on pads | [`LFInputKeys.button_of`](src/utils/lf_input_keys/README.md) + `LFInputKeys.key_names_for` |
 | **2D** | |
@@ -431,6 +432,7 @@ When two modules look alike, this says which to take.
 |---|---|---|---|---|
 | `LFDragTracker` | [`src/utils/lf_drag_tracker`](src/utils/lf_drag_tracker/README.md) | RefCounted | Tells a tap from a drag by a pixel threshold | `new(drag_threshold := 6.0)`, `threshold`, `press(position)`, `move(position) -> bool`, `release() -> bool`, `pressed`, `dragged`, `down_position`, `DEFAULT_THRESHOLD` |
 | `LFInputKeys` | [`src/utils/lf_input_keys`](src/utils/lf_input_keys/README.md) | static | Keyboard standing in for a gamepad, and key/button names for hints | `KEYBOARD`, `KEY_NAME_OVERRIDES`, `HINT_FORMAT`, `PadStyle`, `static button_of(event, device, key_map)`, `static is_press(event, keycodes, buttons, allow_echo)`, `static key_name(keycode)`, `static joy_button_name(button, style, fallback)`, `static button_name(button, device, key_names, style, fallback)`, `static key_names_for(key_map)`, `static hint(text, keycode, format, overrides)`, `static bind_hint(button, text, keycode, format, overrides)`, `DEFAULT_FALLBACK` |
+| `LFInputBuffer` | [`src/utils/lf_input_buffer`](src/utils/lf_input_buffer/README.md) | RefCounted | Keeps a press for a short window so a later event can take it; reports once when the window runs out unused | `new(window := 0.08)`, `press()`, `take() -> bool`, `tick(delta) -> bool` (true once on expiry), `clear()`, `pending`, `window` |
 
 ## utils/ — async, timing, events
 

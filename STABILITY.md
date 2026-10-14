@@ -150,6 +150,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_grid_2d`](src/utils/lf_grid_2d/README.md) | stable | - |
 | [`lf_http`](src/utils/lf_http/README.md) | experimental | network client; under active review |
 | [`lf_input_keys`](src/utils/lf_input_keys/README.md) | stable | - |
+| [`lf_input_buffer`](src/utils/lf_input_buffer/README.md) | experimental | new module; extracted from a game |
 | [`lf_interval_timer`](src/utils/lf_interval_timer/README.md) | stable | - |
 | [`lf_invert_index`](src/utils/lf_invert_index/README.md) | experimental | under active review |
 | [`lf_json`](src/utils/lf_json/README.md) | stable | - |
