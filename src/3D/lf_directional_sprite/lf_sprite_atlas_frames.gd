@@ -200,6 +200,20 @@ static func atlas(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	return region_texture
 
 
+## Returns the atlas rect (pixels) of `frame` of `animation` facing `direction`, from a parsed
+## `manifest`; cropped to its opaque pixels when `texture` is given. Null when the manifest
+## has no such animation or direction, or no frame size.
+static func frame_region(manifest: Dictionary, animation: String, direction: String, frame := 0, texture: Texture2D = null) -> Variant:
+	var rows: Variant = manifest.get(_KEY_ANIMATIONS, {}).get(animation, {}).get(_KEY_ROWS, {})
+	if not rows is Dictionary or not rows.has(direction):
+		return null
+	if not (_is_number(manifest.get(_KEY_FRAME_WIDTH)) and _is_number(manifest.get(_KEY_FRAME_HEIGHT))):
+		return null
+	var size := Vector2(float(manifest[_KEY_FRAME_WIDTH]), float(manifest[_KEY_FRAME_HEIGHT]))
+	var region := Rect2(Vector2(frame * size.x, float(rows[direction]) * size.y), size)
+	return region if texture == null else opaque_region(texture, region)
+
+
 ## Returns `frame` (a region of `texture`, in pixels) cropped to its opaque pixels, so a
 ## character fills an icon instead of floating in the frame's empty padding. The whole
 ## `frame` when it is empty, the pixels cannot be read or the frame is fully transparent. Reads the

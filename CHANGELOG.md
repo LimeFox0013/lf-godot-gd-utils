@@ -19,6 +19,7 @@ One more, also experimental: `lf_shaders_2d`.
 
 ### Added
 
+- `LFSpriteAtlasFrames.frame_region`: a manifest frame's atlas rect, optionally cropped to its opaque pixels.
 - `LFBuild.on_commit`, `LFBuild.margin` and `LFBuild.spin_box`.
 - `LFStyle.swatch`: a solid colour chip texture.
 - **(experimental)** `LFStatusEffectIcon` (`lf_hud_bars`): an `LFTimerIcon` that drains with one `LFStatusEffects` effect.
