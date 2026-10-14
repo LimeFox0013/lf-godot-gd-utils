@@ -24,6 +24,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - **(experimental)** `LFPropertyPatch`: change an object property from a data entry (`add`, `multiply` or `set`, by dotted path, with a cap and a mirrored field).
 - **(experimental)** `LFFollowRing3D`: a pulsing ground ring that follows a `Node3D` and hides without one.
 - **(experimental)** `LFRingMarkers3D`: a pool of flat ground rings sharing one mesh and material, shown at the points you give.
+- `LFDictionary.lower_median_by_key`: per key, the lower median across several dictionaries (missing counts as 0).
 - `LFTierRoller.tilt_weights`: move weight out of the first tier into the others, in proportion, down to a floor (a luck bonus).
 - `LFUtils3D.ids_in_screen_rect`: the keys of a position map that fall inside a screen rectangle.
 - `LFSpriteAtlasFrames.frame_region`: a manifest frame's atlas rect, optionally cropped to its opaque pixels.

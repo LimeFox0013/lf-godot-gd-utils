@@ -271,3 +271,58 @@ func test_diff_reports_a_change_nested_past_the_engines_equality_limit():
 	for error in get_errors():
 		assert_string_contains(error.code, "Max recursion reached")
 		error.handled = true
+
+
+func _reference_median(sets: Array) -> Dictionary:
+	var result := {}
+	if sets.is_empty():
+		return result
+	var ids := {}
+	for levels in sets:
+		for id in levels:
+			ids[id] = true
+	for id in ids:
+		var level: int = LFUtils.lower_median(sets.map(func(levels): return int(levels.get(id, 0))))
+		if level > 0:
+			result[id] = level
+	return result
+
+
+func test_lower_median_by_key_counts_a_missing_key_as_zero_and_takes_the_lower_middle():
+	assert_eq(LFDictionary.lower_median_by_key([{"a": 3, "b": 1}, {"a": 1}, {"a": 2, "b": 4}]), {"a": 2, "b": 1})
+	assert_eq(LFDictionary.lower_median_by_key([{"a": 4}, {"a": 1}]), {"a": 1})
+
+
+func test_lower_median_by_key_drops_zero_medians_and_handles_no_input():
+	assert_eq(LFDictionary.lower_median_by_key([{"a": 4}, {}]), {})
+	assert_eq(LFDictionary.lower_median_by_key([]), {})
+	assert_eq(LFDictionary.lower_median_by_key([{}]), {})
+	assert_eq(LFDictionary.lower_median_by_key([{"a": -2}, {"a": -1}, {"a": 0}]), {}, 'negative medians are left out')
+
+
+func test_lower_median_by_key_cuts_values_to_int_and_keeps_first_seen_key_order():
+	var result := LFDictionary.lower_median_by_key([{"z": 2.9, "a": 1}, {"z": 3, "m": 5}, {"z": 7}])
+	assert_eq(result, {"z": 3})
+	assert_eq(LFDictionary.lower_median_by_key([{"z": 1, "a": 1}, {"a": 1, "z": 1}]).keys(), ["z", "a"])
+	assert_typeof(result["z"], TYPE_INT)
+
+
+func test_lower_median_by_key_matches_the_plain_loop_on_random_sets():
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for round in 60:
+		var sets := []
+		for i in rng.randi_range(0, 6):
+			var values := {}
+			for key in ["a", "b", "c", "d"]:
+				if rng.randf() < 0.6:
+					values[key] = rng.randi_range(0, 5)
+			sets.append(values)
+		assert_eq(LFDictionary.lower_median_by_key(sets), _reference_median(sets))
+		assert_eq(LFDictionary.lower_median_by_key(sets).keys(), _reference_median(sets).keys())
+
+
+func test_lower_median_by_key_does_not_change_its_input():
+	var sets := [{"a": 3}, {"a": 1}]
+	LFDictionary.lower_median_by_key(sets)
+	assert_eq(sets, [{"a": 3}, {"a": 1}])
