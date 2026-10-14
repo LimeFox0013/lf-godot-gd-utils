@@ -116,10 +116,58 @@ func test_landing_may_be_a_platform_passed_on_the_way_up() -> void:
 	assert_eq(result.footprint, passed)
 
 
-func test_landing_from_a_falling_start_uses_the_current_height_as_the_apex() -> void:
+func test_landing_for_a_falling_body_uses_its_downward_speed() -> void:
 	var platform := _platform(1.0, 0.0, 1.0)
-	var result := steering.landing(Vector3(0, 2.0, 0), -6.0, 0.0, RISE, FALL, [platform])
+	var result := steering.landing(Vector3(0, 2.0, 0), -8.0, 0.0, RISE, FALL, [platform])
+	var expected := (-8.0 + sqrt(64.0 + 2.0 * FALL * 1.0)) / FALL
+	assert_almost_eq(result.time, expected, 0.0001)
+	assert_lt(result.time, sqrt(2.0 * 1.0 / FALL))
+
+
+func test_landing_for_a_fast_fall_over_five_units() -> void:
+	var platform := _platform(1.0, 0.0, 1.0)
+	var result := steering.landing(Vector3(0, 6.0, 0), -30.0, 0.0, RISE, FALL, [platform])
+	assert_almost_eq(result.time, (-30.0 + sqrt(900.0 + 2.0 * FALL * 5.0)) / FALL, 0.0001)
+
+
+func test_landing_for_a_stationary_fall_start_is_the_from_rest_time() -> void:
+	var platform := _platform(1.0, 0.0, 1.0)
+	var result := steering.landing(Vector3(0, 2.0, 0), 0.0, 0.0, RISE, FALL, [platform])
 	assert_almost_eq(result.time, sqrt(2.0 / FALL), 0.0001)
+
+
+func test_landing_for_a_falling_body_ignores_platforms_above_the_feet() -> void:
+	var above := _platform(1.0, 2.0, 3.0)
+	assert_null(steering.landing(Vector3(0, 2.0, 0), -8.0, 0.0, RISE, FALL, [above]))
+
+
+func test_landing_crossing_x_uses_the_faster_fall_time() -> void:
+	var platform := _platform(1.0, 0.0, 1.0, 3.0, 0.5)
+	var from_rest_x := 17.0 * sqrt(2.0 * 5.0 / FALL)
+	var fast_time := (-30.0 + sqrt(900.0 + 2.0 * FALL * 5.0)) / FALL
+	assert_gt(absf(from_rest_x - 3.0), 0.75 + 0.25)
+	assert_lt(absf(17.0 * fast_time - 3.0), 0.75 + 0.25)
+	assert_null(steering.landing(Vector3(0, 6.0, 0), 0.0, 17.0, RISE, FALL, [platform]))
+	assert_not_null(steering.landing(Vector3(0, 6.0, 0), -30.0, 17.0, RISE, FALL, [platform]))
+
+
+func test_landing_time_matches_a_numeric_integration_in_a_seeded_sweep() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var dt := 1.0 / 240.0
+	for _case in 100:
+		var height := rng.randf_range(1.0, 8.0)
+		var velocity := rng.randf_range(-20.0, 0.0)
+		var platform := _platform(0.0, 0.0, rng.randf_range(0.0, 0.9))
+		var result := steering.landing(Vector3(0, height, 0), velocity, 0.0, RISE, FALL, [platform])
+		var y := height
+		var v := velocity
+		var steps := 0
+		while y > platform.top:
+			v -= FALL * dt
+			y += v * dt
+			steps += 1
+		assert_almost_eq(result.time, steps * dt, 2.0 * dt)
 
 
 func test_landing_on_equal_tops_takes_the_nearest_in_depth() -> void:

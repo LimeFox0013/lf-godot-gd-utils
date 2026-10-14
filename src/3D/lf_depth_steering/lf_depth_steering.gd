@@ -92,18 +92,20 @@ static func time_to_apex(velocity_up: float, gravity: float) -> float:
 
 ## The footprint the fall reaches first: the highest `top` that is at or below the top of the
 ## jump and whose landing area (widened by `foot_half_x`) holds the feet's x at that moment.
-## `velocity_x` is held constant. Null when nothing lies below or the input is not finite.
+## A falling body keeps its downward speed; a rising one falls from rest at the apex. `velocity_x` is held constant. Null when nothing lies below or the input is not finite.
 func landing(position: Vector3, velocity_up: float, velocity_x: float, gravity_rise: float, gravity_fall: float, footprints: Array) -> Landing:
 	if not _valid_flight(position, velocity_up, velocity_x, gravity_rise, gravity_fall) or footprints.is_empty():
 		return null
 	var apex_y := apex_height(position.y, velocity_up, gravity_rise)
 	var apex_time := time_to_apex(velocity_up, gravity_rise)
+	var fall_speed := maxf(-velocity_up, 0.0)
 	var best: Footprint = null
 	var best_time := 0.0
 	for item: Footprint in footprints:
 		if item.top > apex_y:
 			continue
-		var cross_time := apex_time + sqrt(2.0 * (apex_y - item.top) / gravity_fall)
+		var drop := apex_y - item.top
+		var cross_time := apex_time + (sqrt(fall_speed * fall_speed + 2.0 * gravity_fall * drop) - fall_speed) / gravity_fall
 		var reach := item.land_half_x + foot_half_x
 		if absf(position.x + velocity_x * cross_time - item.center_x) > reach:
 			continue
