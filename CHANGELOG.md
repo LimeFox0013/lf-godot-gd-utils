@@ -47,6 +47,7 @@ One more, also experimental: `lf_shaders_2d`.
 - `LFEventBus.off_owner(owner)`: removes everything an object registered, self-capturing lambdas included.
 - `LFUtils.append_unique` and `LFUtils.merge_arrays_deep`; `LFUtils.move_node` takes an optional `global_position` applied after the reparent; the `merge_arrays` docs now state that Resources and other Objects in the first array are shared, not copied.
 - **(experimental)** `LFShaders2D` with four shaders: sprite outline, screen outline, dissolve and darken.
+- `LFShaders2D.cross_reveal`: a plus-shaped reveal whose arms grow with `progress`.
 - `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
 - `LFUtils2D.knock_back`: an instant impulse on a `RigidBody2D` away from a point.
 - `LFUtils.cycle_index`: the next accepted index round a list, wrapping.

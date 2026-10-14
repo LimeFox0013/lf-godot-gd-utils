@@ -1,4 +1,4 @@
-## Ready-made 2D shader materials: sprite outline, screen outline, dissolve and darken.
+## Ready-made 2D shader materials: sprite outline, screen outline, dissolve, darken and cross reveal.
 ##
 ## Each function returns a new `ShaderMaterial` to assign to a `CanvasItem.material`. Change
 ## it later with `material.set_shader_parameter(PARAM_..., value)`. All functions are static.
@@ -16,6 +16,9 @@ const PARAM_EDGE_COLOR := &"edge_color"
 const PARAM_EDGE_WIDTH := &"edge_width"
 ## `darken` parameter.
 const PARAM_DARKNESS := &"darkness"
+## `cross_reveal` parameters.
+const PARAM_PROGRESS := &"progress"
+const PARAM_ARM_HALF_THICKNESS := &"arm_half_thickness"
 
 const DEFAULT_OUTLINE_COLOR := Color(0.0, 1.0, 0.0)
 const DEFAULT_OUTLINE_WIDTH := 3.0
@@ -23,15 +26,18 @@ const DEFAULT_OUTLINE_THICKNESS := 1
 const DEFAULT_EDGE_COLOR := Color(1.0, 0.3, 0.0)
 const DEFAULT_EDGE_WIDTH := 0.05
 const DEFAULT_DARKNESS := 0.5
+const DEFAULT_ARM_HALF_THICKNESS := 0.15
 
 const MAX_OUTLINE_WIDTH := 6.0
 const MAX_OUTLINE_THICKNESS := 10
 const MAX_EDGE_WIDTH := 0.1
+const MAX_ARM_HALF_THICKNESS := 0.5
 
 const _SPRITE_OUTLINE := "lf_sprite_outline.gdshader"
 const _SCREEN_OUTLINE := "lf_screen_outline.gdshader"
 const _DISSOLVE := "lf_dissolve.gdshader"
 const _DARKEN := "lf_darken.gdshader"
+const _CROSS_REVEAL := "lf_cross_reveal.gdshader"
 
 static var _log := LFLogger.new(['LFShaders2D'])
 static var _shaders: Dictionary = {}
@@ -77,6 +83,17 @@ static func darken(darkness := DEFAULT_DARKNESS) -> ShaderMaterial:
 		return null
 	var material := _material(_DARKEN)
 	material.set_shader_parameter(PARAM_DARKNESS, clampf(darkness, 0.0, 1.0))
+	return material
+
+
+## Shows the item only inside a plus-shaped cut-out whose arms grow with `progress` (0 hidden,
+## 1 the arms reach the edges); `arm_half_thickness` is in UV units (0 to 0.5).
+static func cross_reveal(progress := 0.0, arm_half_thickness := DEFAULT_ARM_HALF_THICKNESS) -> ShaderMaterial:
+	if not _finite([progress, arm_half_thickness]):
+		return null
+	var material := _material(_CROSS_REVEAL)
+	material.set_shader_parameter(PARAM_PROGRESS, clampf(progress, 0.0, 1.0))
+	material.set_shader_parameter(PARAM_ARM_HALF_THICKNESS, clampf(arm_half_thickness, 0.0, MAX_ARM_HALF_THICKNESS))
 	return material
 
 

@@ -7,6 +7,7 @@ func test_every_material_compiles_to_a_canvas_item_shader():
 		LFShaders2D.screen_outline(),
 		LFShaders2D.dissolve(null),
 		LFShaders2D.darken(),
+		LFShaders2D.cross_reveal(),
 	]
 	for material in materials:
 		assert_not_null(material)
@@ -54,3 +55,17 @@ func test_materials_share_one_compiled_shader_but_not_their_parameters():
 	assert_same(first.shader, second.shader)
 	assert_ne(first, second)
 	assert_eq(first.get_shader_parameter(LFShaders2D.PARAM_DARKNESS), 0.2)
+
+
+func test_the_cross_reveal_carries_and_clamps_its_parameters():
+	var material := LFShaders2D.cross_reveal(0.4, 0.2)
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_PROGRESS), 0.4)
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_ARM_HALF_THICKNESS), 0.2)
+	material = LFShaders2D.cross_reveal(3.0, 9.0)
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_PROGRESS), 1.0)
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_ARM_HALF_THICKNESS), LFShaders2D.MAX_ARM_HALF_THICKNESS)
+
+
+func test_a_non_finite_cross_reveal_gives_no_material():
+	assert_null(LFShaders2D.cross_reveal(NAN))
+	assert_push_error('finite')
