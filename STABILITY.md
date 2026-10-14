@@ -167,6 +167,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_replication`](src/utils/lf_replication/README.md) | experimental | networking protocol shapes may still change |
 | [`lf_ring_slots`](src/utils/lf_ring_slots/README.md) | experimental | game-shaped crowd helper |
 | [`lf_server_lifetime`](src/utils/lf_server_lifetime/README.md) | experimental | new module; extracted from a game |
+| [`lf_setting_definition`](src/utils/lf_setting_definition/README.md) | experimental | new module; extracted from a game |
 | [`lf_seat_assigner`](src/utils/lf_seat_assigner/README.md) | experimental | new module; extracted from a game |
 | [`lf_short_code`](src/utils/lf_short_code/README.md) | experimental | new module; extracted from a game |
 | [`lf_slot_inventory`](src/utils/lf_slot_inventory/README.md) | stable | - |
