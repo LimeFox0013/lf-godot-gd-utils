@@ -121,6 +121,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | a 3D camera that keeps several players or units in view (centres on them, backs off as they spread) | [`LFOrbitCamera.frame_points`](src/3D/lf_orbit_camera/README.md) |
 | a camera that follows the player up a climb but only sinks slowly | [`LFRatchetFollow.step`](src/utils/lf_ratchet_follow/README.md) |
 | scatter grass, pebbles or flowers over a flat area with a MultiMesh | [`LFMultiMeshScatter`](src/3D/lf_multimesh_scatter/README.md) |
+| a matte alpha-cut material that gives each MultiMesh copy its own texture layer | [`LFShaders3D.layered_cutout`](src/3D/lf_shaders_3d/README.md) (pairs with `LFMultiMeshScatter`) |
 | turn a 3D point into a screen point | [`LFUtils3D.world_to_canvas_position`](src/3D/lf_utils_3d/README.md) |
 | pick a 3D object or ground point under the mouse | [`LFUtils3D.raycast_from_screen`](src/3D/lf_utils_3d/README.md) / `screen_to_plane` / `screen_distance_to_segment` |
 | find which entities a drag-select rectangle covers (world positions to a screen rect) | [`LFUtils3D.ids_in_screen_rect`](src/3D/lf_utils_3d/README.md) |
@@ -400,6 +401,7 @@ When two modules look alike, this says which to take.
 | `LFObstacleSidestep` | [`src/3D/lf_crowd_body`](src/3D/lf_crowd_body/README.md) | RefCounted | Steps along a wall met head-on | `new(square_dot, distance, hold, remember)`, `steer(body, direction, to_destination, delta)`, `is_sidestepping()`, `reset()`, tunables `head_on_dot` / `dead_center_slide` / `probe_distance` / `hold_seconds` / `memory_seconds`, `DEFAULT_HEAD_ON_DOT`, `DEFAULT_DEAD_CENTER_SLIDE`, `DEFAULT_PROBE_DISTANCE`, `DEFAULT_HOLD_SECONDS`, `DEFAULT_MEMORY_SECONDS` |
 | `LFMultiMeshScatter` | [`src/3D/lf_multimesh_scatter`](src/3D/lf_multimesh_scatter/README.md) | MultiMeshInstance3D | Fills the multimesh with random copies over a flat area (a plane or a mesh's bounds): density, size range, height shift, a random layer number per copy in the custom data's red channel, seedable | `area`, `density`, `scale_range`, `shift_y`, `layer_count`, `random_seed`, `scatter_on_ready`, `scatter() -> int`, `static place(size, count, rng, into_space, height, size_range, layer_total)`, `static plane_size_xz(mesh_instance)`, signal `scattered`, `DEFAULT_DENSITY`, `DEFAULT_LAYER_COUNT`, `UNSEEDED` |
 | `LFMultiMeshScatter.Placement` | [`src/3D/lf_multimesh_scatter`](src/3D/lf_multimesh_scatter/README.md) | inner RefCounted | What `LFMultiMeshScatter.place` decides: one transform and one layer per instance | `transforms`, `layers` |
+| `LFShaders3D` | [`src/3D/lf_shaders_3d`](src/3D/lf_shaders_3d/README.md) | static | Ready-made `ShaderMaterial`s for 3D meshes (one `.gdshader` beside it) | `static layered_cutout(layers, alpha_cutoff)`, `PARAM_*`, `DEFAULT_ALPHA_CUTOFF` |
 
 ## utils/ — core helpers
 

@@ -34,6 +34,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - `LFStyle.swatch`: a solid colour chip texture.
 - **(experimental)** `LFStatusEffectIcon` (`lf_hud_bars`): an `LFTimerIcon` that drains with one `LFStatusEffects` effect.
 - `LFStatusEffects` signals `started`, `refreshed` and `ended`, each fired right after `changed`.
+- **(experimental)** `LFShaders3D.layered_cutout` (`lf_shaders_3d`): a matte alpha-cut material whose texture layer comes from each MultiMesh instance's custom data.
 - `LFFactory.release_on_signal(name)`: an `on_acquire` hook that releases the entity when it emits the signal.
 - **(experimental)** `LFExperienceLevels`: an experience track with per-step thresholds,
   `gain` that carries left-over experience across several levels, `progress()`, `set_level`
