@@ -147,6 +147,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | timed turns / round-robin with skips and a stage timer | [`LFTurnCycle`](src/utils/lf_turn_cycle/README.md) |
 | wait for several things: all of them, or whichever comes first (a click or a timeout) | [`await LFAwait.all(fns)`](src/utils/lf_await/README.md) / `await LFAwait.any(fns)` |
 | save or search only after the player stops typing (debounce) / cap how often something runs (throttle) | [`LFDebounce.fn`](src/utils/lf_debounce/README.md) / `LFThrottle.fn` |
+| run an update that awaits (a turn, an animation) each frame without starting it twice, keeping the skipped frames' time | [`LFCoalescedTick.feed`](src/utils/lf_coalesced_tick/README.md) |
 | generate a level or parse a big file without freezing the game (work off the main thread) | [`LFThread`](src/utils/lf_thread/README.md) |
 | a global signal bus without an autoload (publish/subscribe), or one per object | [`LFEventBus`](src/utils/lf_event_bus/README.md) (global) / `LFEventEmitter` (per instance) |
 | drop every listener of a signal (or one object's) | [`LFUtils.disconnect_all(signal, only_object)`](src/utils/lf_utils/README.md) |
@@ -424,6 +425,7 @@ When two modules look alike, this says which to take.
 | `LFIdleDrift` | [`src/utils/lf_animate`](src/utils/lf_animate/README.md) | Node | Endless Lissajous-style drift of a Control or Node2D around a base position; pausable; a child of its target | `static start(node, amplitude, speed, rng)`, `paused`, `base_position`, `phase`, `elapsed`, `step(delta)`, `stop(restore)` |
 | `LFEventBus` | [`src/utils/lf_event_bus`](src/utils/lf_event_bus/README.md) | static | Process-wide pub/sub, backed by one shared `LFEventEmitter` | `static emit_sync(e, ...)`, `static emit_sync_v(e, args)`, `static on/once/off(e, cb)` (`off` with an empty Callable removes nothing and is reported), `static clear_event(e)`, `static clear()`, `static emitter` (read-only), `static off_owner(owner) -> int` (removes everything an object registered, self-capturing lambdas included) |
 | `LFEventEmitter` | [`src/utils/lf_event_emitter`](src/utils/lf_event_emitter/README.md) | RefCounted | Per-instance pub/sub; `emit` awaits every (async) handler, `emit_sync` calls them at once | `emit(e, ...) -> Array` (awaits all), `emit_sync(e, ...)`, `emit_sync_v(e, args)`, `on`, `once`, `off` (an empty Callable is reported; use `clear_event`), `clear_event`, `clear`, `has_handlers`, `handler_count` |
+| `LFCoalescedTick` | [`src/utils/lf_coalesced_tick`](src/utils/lf_coalesced_tick/README.md) | RefCounted | Runs a slow per-frame update that `await`s without re-entering it, banking the delta of frames that arrive meanwhile for its next run | `new(update)`, `tick_fn`, `feed(delta)` (call without `await`), `is_running()`, `pending_seconds()` |
 
 ## utils/ — objects, data and indexing
 

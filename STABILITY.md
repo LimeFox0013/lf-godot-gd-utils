@@ -121,6 +121,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_animate`](src/utils/lf_animate/README.md) | experimental | tween behaviour on live nodes; the pop animations are cosmetic |
 | [`lf_await`](src/utils/lf_await/README.md) | stable | - |
 | [`lf_capped_level_tracker`](src/utils/lf_capped_level_tracker/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
+| [`lf_coalesced_tick`](src/utils/lf_coalesced_tick/README.md) | experimental | new module; extracted from a game |
 | [`lf_cooldown`](src/utils/lf_cooldown/README.md) | stable | - |
 | [`lf_countdown`](src/utils/lf_countdown/README.md) | experimental | new module; the `ticked` / `finished` ordering and the `State` set may change after real use |
 | [`lf_jump_physics`](src/utils/lf_jump_physics/README.md) | experimental | newer, extracted from a game |
