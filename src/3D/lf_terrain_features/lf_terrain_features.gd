@@ -138,7 +138,7 @@ func is_walkable_between(from: Vector3, to: Vector3) -> bool:
 ## lattice at `lattice_spacing` and `max_slope_deg` (every step allowed without elevation).
 func nav_grid(half_extent: float, cell_size: float, lattice_spacing: float) -> Dictionary:
 	var lattice := height_lattice(half_extent, lattice_spacing) if has_elevation() else PackedFloat32Array()
-	return LFFlowField.nav_grid(half_extent, cell_size, height_at, _wall_rects, lattice, lattice_spacing, max_slope_deg)
+	return LFFlowField.build_nav_grid(half_extent, cell_size, height_at, _wall_rects, lattice, lattice_spacing, max_slope_deg)
 
 
 func _sort_features() -> void:

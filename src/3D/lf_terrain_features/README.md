@@ -66,7 +66,7 @@ Each feature is a Dictionary; rects are XZ (`Rect2`'s `y` is world Z), heights i
 | `is_wall_at`, `blocks_sight_at` | `(x: float, z: float) -> bool` | A wall covers the point; a wall or foliage does. Edges included. |
 | `blocks_sight_between` | `blocks_sight_between(from: Vector3, to: Vector3) -> bool` | Something opaque on the XZ segment, sampled every `sight_step` or less with both ends included. |
 | `is_walkable_between` | `is_walkable_between(from: Vector3, to: Vector3) -> bool` | A straight walk never climbs a face steeper than `max_slope_deg`; dropping down is fine. |
-| `nav_grid` | `nav_grid(half_extent: float, cell_size: float, lattice_spacing: float) -> Dictionary` | `LFFlowField.nav_grid` over these features: heights, wall cells, and `climbable` from the lattice. |
+| `nav_grid` | `nav_grid(half_extent: float, cell_size: float, lattice_spacing: float) -> Dictionary` | `LFFlowField.build_nav_grid` over these features: heights, wall cells, and `climbable` from the lattice. |
 | `DEFAULT_MAX_SLOPE_DEG`, `DEFAULT_SIGHT_STEP`, `DEFAULT_FOOTPRINT_GROW` | consts | Defaults of the three settings. |
 
 ## Usage

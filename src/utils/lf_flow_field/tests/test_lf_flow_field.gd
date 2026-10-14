@@ -535,7 +535,7 @@ func _all_neighbors() -> int:
 
 func test_nav_grid_reads_heights_at_cell_centers_and_blocks_cells_a_wall_overlaps():
 	var cols := LFGrid2D.cells_across(HALF, CELL)
-	var grid := LFFlowField.nav_grid(HALF, CELL, func(x: float, _z: float) -> float: return x, [Rect2(-1.5, -30.0, 3.0, 60.0)], PackedFloat32Array(), 1.0, 30.0)
+	var grid := LFFlowField.build_nav_grid(HALF, CELL, func(x: float, _z: float) -> float: return x, [Rect2(-1.5, -30.0, 3.0, 60.0)], PackedFloat32Array(), 1.0, 30.0)
 	assert_eq(grid['cols'], cols)
 	assert_eq(grid['rows'], cols)
 	assert_eq(grid['heights'].size(), cols * cols)
@@ -551,7 +551,7 @@ func test_nav_grid_reads_heights_at_cell_centers_and_blocks_cells_a_wall_overlap
 
 
 func test_nav_grid_without_a_lattice_allows_every_step():
-	var grid := LFFlowField.nav_grid(HALF, CELL, func(_x: float, _z: float) -> float: return 0.0, [], PackedFloat32Array(), 1.0, 30.0)
+	var grid := LFFlowField.build_nav_grid(HALF, CELL, func(_x: float, _z: float) -> float: return 0.0, [], PackedFloat32Array(), 1.0, 30.0)
 	for mask in grid['climbable']:
 		assert_eq(mask, _all_neighbors())
 
@@ -559,13 +559,13 @@ func test_nav_grid_without_a_lattice_allows_every_step():
 func test_nav_grid_climbable_comes_from_the_lattice():
 	var height_at := func(x: float, _z: float) -> float: return 3.0 if x >= 0.0 else 0.0
 	var lattice := _lattice(height_at)
-	var grid := LFFlowField.nav_grid(HALF, CELL, height_at, [], lattice, 1.0, 30.0)
+	var grid := LFFlowField.build_nav_grid(HALF, CELL, height_at, [], lattice, 1.0, 30.0)
 	assert_eq(grid['climbable'], Array(LFFlowField.climbable_masks(lattice, 1.0, HALF, CELL, 30.0)))
 	assert_does_not_have(grid, 'max_climb')
 
 
 func test_nav_grid_feeds_compute():
-	var grid := LFFlowField.nav_grid(HALF, CELL, func(_x: float, _z: float) -> float: return 0.0, [Rect2(-1.5, -30.0, 3.0, 40.0)], PackedFloat32Array(), 1.0, 30.0)
+	var grid := LFFlowField.build_nav_grid(HALF, CELL, func(_x: float, _z: float) -> float: return 0.0, [Rect2(-1.5, -30.0, 3.0, 40.0)], PackedFloat32Array(), 1.0, 30.0)
 	var field := LFFlowField.compute(_center(17, 10), HALF, CELL, [], 2.0, grid)
 	assert_gt(field.directions.size(), 0)
 	assert_ne(field.sample(_center(5, 10)), Vector3.ZERO)

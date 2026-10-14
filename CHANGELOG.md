@@ -58,7 +58,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - **(experimental)** `LFShaders2D` with four shaders: sprite outline, screen outline, dissolve and darken.
 - `LFShaders2D.cross_reveal`: a plus-shaped reveal whose arms grow with `progress`.
 - `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
-- `LFFlowField.nav_grid`: the whole walkability grid (heights, walls, climbable steps) from a height function and wall rects.
+- `LFFlowField.build_nav_grid`: the whole walkability grid (heights, walls, climbable steps) from a height function and wall rects.
 - `LFFlowFieldService.version`: counts every `field_updated` and `field_dropped`, so a caller keeping a field can tell it went stale.
 - **(experimental)** `LFTerrainFeatures` (`lf_terrain_features`): ground height, walls, cover, line of sight and straight-walk checks from platform, ramp, hill, wall and foliage dictionaries, and the flow-field nav grid.
 - `LFUtils2D.knock_back`: an instant impulse on a `RigidBody2D` away from a point.

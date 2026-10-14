@@ -225,7 +225,7 @@ static func climbable_masks(lattice: PackedFloat32Array, lattice_spacing: float,
 ## field: `height_at(x, z)` read at each cell centre, every cell a rect of `wall_rects` overlaps
 ## blocked (a rect that only touches a cell's edge leaves it open), and `climbable` from `lattice`
 ## (`climbable_masks`); an empty `lattice` means flat ground, every step allowed. Add `max_climb` yourself.
-static func nav_grid(half_extent: float, cell_size: float, height_at: Callable, wall_rects: Array[Rect2], lattice: PackedFloat32Array, lattice_spacing: float, max_slope_deg: float) -> Dictionary:
+static func build_nav_grid(half_extent: float, cell_size: float, height_at: Callable, wall_rects: Array[Rect2], lattice: PackedFloat32Array, lattice_spacing: float, max_slope_deg: float) -> Dictionary:
 	var cols := LFGrid2D.cells_across(half_extent, cell_size)
 	var rows := cols
 	var heights: Array[float] = []
