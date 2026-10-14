@@ -9,6 +9,10 @@ extends RefCounted
 var _names: Dictionary
 var _kinds: Dictionary
 var _required: Dictionary
+var _once_has := false
+var _once_kind: Variant = null
+var _once_payload: Variant = null
+var _once_text := ''
 
 
 ## `kind_names`: `{kind: wire name}`. `required`: `{kind: [payload keys]}`; a kind not listed needs none.
@@ -21,6 +25,31 @@ func _init(kind_names: Dictionary, required := {}) -> void:
 ## `{type: <wire name of kind>, payload: payload}`.
 func encode(kind: Variant, payload: Dictionary = {}) -> Dictionary:
 	return {'type': _names.get(kind, ''), 'payload': payload}
+
+
+## `encode(kind, payload)` as JSON text, kept: asking again with the very same `payload`
+## object (not an equal copy) and `kind` returns the kept text without encoding again. For a
+## message sent to many peers; do not change the object in between.
+func encode_text_once(kind: Variant, payload: Dictionary) -> String:
+	if not (_once_has and is_same(payload, _once_payload) and kind == _once_kind):
+		_once_text = JSON.stringify(encode(kind, payload))
+		_once_payload = payload
+		_once_kind = kind
+		_once_has = true
+	return _once_text
+
+
+## The JSON text of `encode(kind, payload)` with `field` taken out of `payload` and its
+## already encoded `field_text` put last, so a big field shared by many messages is encoded
+## once. It parses to the same message; only the key order differs. `payload` is not changed.
+func splice_text(kind: Variant, payload: Dictionary, field: String, field_text: String) -> String:
+	var rest := payload.duplicate()
+	rest.erase(field)
+	var rest_text := JSON.stringify(rest)
+	var separator := '' if rest.is_empty() else ','
+	return '{"type":%s,"payload":%s%s%s:%s}}' % [
+		JSON.stringify(_names.get(kind, '')), rest_text.left(-1), separator, JSON.stringify(field), field_text,
+	]
 
 
 ## `{kind, payload}` for a known type whose payload is a Dictionary holding the required keys;
