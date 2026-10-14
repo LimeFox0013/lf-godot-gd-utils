@@ -159,6 +159,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_local_service`](src/utils/lf_local_service/README.md) | experimental | platform-dependent; starts and stops programs; tested on macOS only |
 | [`lf_logger`](src/utils/lf_logger/README.md) | stable | - |
 | [`lf_momentum`](src/utils/lf_momentum/README.md) | experimental | new module; the penalty rule (a fraction of the whole value, floored at the base) may change after real use |
+| [`lf_streak_multiplier`](src/utils/lf_streak_multiplier/README.md) | experimental | new module; extracted from a game |
 | [`lf_loot_table`](src/utils/lf_loot_table/README.md) | stable | - |
 | [`lf_modifier_grant_service`](src/utils/lf_modifier_grant_service/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
 | [`lf_modifier_levels`](src/utils/lf_modifier_levels/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
