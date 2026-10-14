@@ -118,6 +118,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | Module | Stability | Why |
 |---|---|---|
 | [`lf_accounts`](src/utils/lf_accounts/README.md) | experimental | security-sensitive; under active review |
+| [`lf_alliance_groups`](src/utils/lf_alliance_groups/README.md) | experimental | new module; extracted from a game |
 | [`lf_animate`](src/utils/lf_animate/README.md) | experimental | tween behaviour on live nodes; the pop animations are cosmetic |
 | [`lf_await`](src/utils/lf_await/README.md) | stable | - |
 | [`lf_capped_level_tracker`](src/utils/lf_capped_level_tracker/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
