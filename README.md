@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**112 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**113 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-112 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+113 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -206,7 +206,7 @@ game; read their pages before adopting them:
 
 | Area | Modules |
 |---|---|
-| Everyday helpers | `lf_utils` (wait, find the closest, clear children…), `lf_dictionary` (read nested data, with a default when a key is missing), `lf_json`, `lf_text` (plurals, countdown clocks), `lf_graph` (tree layouts), `lf_uuid` (random ids, UUID v4), `lf_short_code` (readable codes players type), `lf_logger` (tidy log messages) |
+| Everyday helpers | `lf_utils` (wait, find the closest, clear children…), `lf_dictionary` (read nested data, with a default when a key is missing), `lf_json`, `lf_text` (plurals, countdown clocks), `lf_graph` (tree layouts), `lf_uuid` (random ids, UUID v4), `lf_short_code` (readable codes players type), `lf_logger` (tidy log messages), `lf_list_cursor` (a highlighted menu row that stays inside the list) |
 | Input | `lf_drag_tracker` (tell a click from a drag), `lf_input_keys` (keyboard as a gamepad, button names for hints) |
 | Timing and events | `lf_await` (wait for several things), `lf_debounce` and `lf_throttle` (limit how often something runs), `lf_cooldown`, `lf_interval_timer` (every N seconds), `lf_coalesced_tick` (a slow update that never runs twice at once), `lf_turn_cycle` (timed turns), `lf_thread` (run heavy work on a worker thread), `lf_animate` (simple animations), `lf_event_emitter` and `lf_event_bus` (send messages between parts of the game) |
 | Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_particle_pool` (reuse one particle effect, recoloured per copy), `lf_chunk_stream` (an endless level of equal pieces, built around the player), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |

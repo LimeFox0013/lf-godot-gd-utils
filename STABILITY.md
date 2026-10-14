@@ -150,6 +150,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_invert_index`](src/utils/lf_invert_index/README.md) | experimental | under active review |
 | [`lf_json`](src/utils/lf_json/README.md) | stable | - |
 | [`lf_layered_stats`](src/utils/lf_layered_stats/README.md) | stable | - |
+| [`lf_list_cursor`](src/utils/lf_list_cursor/README.md) | experimental | new module; extracted from a game |
 | [`lf_llm`](src/utils/lf_llm/README.md) | experimental | talks to third-party model APIs that change; under active review |
 | [`lf_local_service`](src/utils/lf_local_service/README.md) | experimental | platform-dependent; starts and stops programs; tested on macOS only |
 | [`lf_logger`](src/utils/lf_logger/README.md) | stable | - |
