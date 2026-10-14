@@ -62,6 +62,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | a StyleBoxFlat in one call / the same style on every button state | [`LFStyle.flat`](src/components/lf_style/README.md) / `LFStyle.set_button_styles` |
 | build a label, button or line edit in code | [`LFBuild`](src/components/lf_build/README.md) |
 | commit a text field on Enter and on focus loss / a margin / a spin box in one call | [`LFBuild.on_commit`](src/components/lf_build/README.md) / `LFBuild.margin` / `LFBuild.spin_box` |
+| a solid colour chip texture (an option's icon) | [`LFStyle.swatch`](src/components/lf_style/README.md) |
 | centred content that scrolls only when it doesn't fit | [`LFBuild.centered_box`](src/components/lf_build/README.md) |
 | a panel with a title label above its content (returns the box to fill) | [`LFBuild.titled_panel`](src/components/lf_build/README.md) |
 | a scrolling log with a line cap | [`LFLogView`](src/components/lf_log_view/README.md) |
@@ -333,7 +334,7 @@ When two modules look alike, this says which to take.
 
 | Class | Folder | Kind | Purpose | Key API |
 |---|---|---|---|---|
-| `LFStyle` | [`src/components/lf_style`](src/components/lf_style/README.md) | static | StyleBox builders and button-state styling | `static flat(bg, border, border_width, corner_radius, content_margin, draw_center, anti_aliasing)`, `static outline(color, width, corner_radius)`, `BUTTON_STATES`, `static set_button_styles(control, style, states)`, `static project_stylebox(name, theme_type, fallback)`, `DEFAULT_OUTLINE_WIDTH` |
+| `LFStyle` | [`src/components/lf_style`](src/components/lf_style/README.md) | static | StyleBox builders and button-state styling | `static flat(bg, border, border_width, corner_radius, content_margin, draw_center, anti_aliasing)`, `static outline(color, width, corner_radius)`, `static swatch(color, size)`, `BUTTON_STATES`, `static set_button_styles(control, style, states)`, `static project_stylebox(name, theme_type, fallback)`, `DEFAULT_OUTLINE_WIDTH` |
 | `LFBuild` | [`src/components/lf_build`](src/components/lf_build/README.md) | static | Factories for controls built in code; every builder of a new control takes its parent first | `static label(parent, text, color, font_size)`, `wrap(label, width, mode)`, `outline(label, color, size)`, `button(parent, text, on_pressed, tooltip)`, `line_edit(parent, placeholder, tooltip, secret)`, `on_commit(edit, callback)`, `margin(parent, px)`, `spin_box(parent, min, max, step, value)`, `spacer(parent)`, `fill_parent(control, …)`, `centered_box(parent, min_width, separation, panel_style, on_panel, scrolls)`, `titled_panel(parent, title, style, title_size, separation)` |
 
 ## 2D/
