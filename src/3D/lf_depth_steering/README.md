@@ -40,7 +40,7 @@ depth_velocity = next.y
 | Member | Signature | Description |
 |---|---|---|
 | `landing` | `landing(position, velocity_up, velocity_x, gravity_rise, gravity_fall, footprints) -> Landing` | The first platform the fall reaches: the highest top at or below the jump's apex whose landing area, widened by `foot_half_x`, holds the feet's x then. `Landing` has `footprint`, `time`, `z`. Null if nothing is below. |
-| `dodge` | `dodge(position, velocity_up, velocity_x, gravity_rise, footprints, prefer_z) -> Dodge` | Where to stand to clear platforms overhead: the nearest free edge toward `prefer_z`, else the nearest, ties toward 0. `Dodge` has `z`, `time` (until the head meets the earliest blocker, 0 if already level). Null if nothing blocks. |
+| `dodge` | `dodge(position, velocity_up, velocity_x, gravity_rise, footprints, prefer_z) -> Dodge` | Where to stand to clear platforms overhead: the nearest free edge on the side the body is already on (never across a platform's centre line); only from dead centre does it go toward `prefer_z`, else toward 0. `Dodge` has `z`, `time` (until the head meets the earliest blocker, 0 if already level). Null if nothing blocks. |
 | `step` | `step(z, depth_velocity, target_z, delta, time_left) -> Vector2` | Next depth (`x`) and depth velocity (`y`): eased, keeps its velocity when the target changes, never overshoots, lands on the target once `time_left <= delta`. |
 | `apex_height` | `static apex_height(height, velocity_up, gravity) -> float` | Top of the jump; the height itself when not rising. |
 | `time_to_apex` | `static time_to_apex(velocity_up, gravity) -> float` | Seconds to the top of the jump; 0 when not rising. |
@@ -52,5 +52,5 @@ depth_velocity = next.y
 - Velocities are positive upwards, as in `LFJumpPhysics`; pass its gravities for the current jump state.
 - `landing` holds `velocity_x` constant to the touchdown; call it every frame so it follows the player's steering.
 - A platform blocks when the body would meet it in height (head included, up to the jump's top) and in x (widened by `look_ahead`); a platform whose top is at or below the feet never blocks.
-- `step` smooths over `time_left / smooth_divisor`, so a long depth step in a short time is fast, not late.
+- `step` smooths over `time_left / smooth_divisor` (3.5 by default: about 1% of the distance is left at `time_left`, then it snaps), so a long depth step in a short time is fast, not late.
 - A non-finite input or a non-positive gravity is reported through `LFLogger`; `landing` and `dodge` return null and `step` returns `z` and `depth_velocity` unchanged. An empty footprint list returns null.

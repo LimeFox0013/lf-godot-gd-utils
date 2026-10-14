@@ -18,7 +18,7 @@ const DEFAULT_CLEARANCE := 0.2
 ## Seconds of x movement a blocker check looks ahead, when none is set.
 const DEFAULT_LOOK_AHEAD := 0.12
 ## `time_left` divided by this is the smoothing time of `step`, when none is set.
-const DEFAULT_SMOOTH_DIVISOR := 8.0
+const DEFAULT_SMOOTH_DIVISOR := 3.5
 
 ## Depth distances at or below this count as arrived (and as a tie).
 const ARRIVED_DISTANCE := 0.0001
@@ -122,8 +122,9 @@ func landing(position: Vector3, velocity_up: float, velocity_x: float, gravity_r
 ## Where to stand so the body clears everything overhead, or null when nothing blocks (or
 ## the body is falling clear of everything). A footprint blocks when its height band meets
 ## the body's path up to the top of the jump (head included) and its x band meets where the
-## body can be over `look_ahead`. The target is the nearest free edge toward `prefer_z`, else
-## the nearest free edge, ties toward 0; it never crosses another blocker. `time` is the
+## body can be over `look_ahead`. The body leaves by the side it is on: the nearest free edge
+## that does not cross a blocker's centre line. Only on a tie (dead centre) does it go toward
+## `prefer_z`, else toward 0; boxed in between two centres it takes the nearest edge. `time` is the
 ## seconds until the earliest blocker's bottom meets the head, 0 when already level with it.
 func dodge(position: Vector3, velocity_up: float, velocity_x: float, gravity_rise: float, footprints: Array, prefer_z: float) -> Dodge:
 	if not _valid_flight(position, velocity_up, velocity_x, gravity_rise, 1.0) or not is_finite(prefer_z) or footprints.is_empty():
@@ -133,6 +134,7 @@ func dodge(position: Vector3, velocity_up: float, velocity_x: float, gravity_ris
 	var x_low := minf(position.x, x_ahead) - body_radius
 	var x_high := maxf(position.x, x_ahead) + body_radius
 	var bands: Array[Vector2] = []
+	var centers: Array[float] = []
 	var earliest := INF
 	for item: Footprint in footprints:
 		if item.bottom >= sweep_top or item.top <= position.y:
@@ -141,6 +143,7 @@ func dodge(position: Vector3, velocity_up: float, velocity_x: float, gravity_ris
 			continue
 		var reach := item.half_z + body_radius + clearance
 		bands.append(Vector2(item.center_z - reach, item.center_z + reach))
+		centers.append(item.center_z)
 		earliest = minf(earliest, _time_to_head(position.y + body_height, item.bottom, velocity_up, gravity_rise))
 	if bands.is_empty():
 		return null
@@ -149,7 +152,7 @@ func dodge(position: Vector3, velocity_up: float, velocity_x: float, gravity_ris
 	if inside_index < 0:
 		return null
 	var result := Dodge.new()
-	result.z = _free_edge(bands, bands[inside_index], position.z, prefer_z)
+	result.z = _free_edge(bands, centers, position.z, prefer_z)
 	result.time = earliest
 	return result
 
@@ -219,37 +222,51 @@ func _band_index_containing(bands: Array[Vector2], z: float) -> int:
 	return -1
 
 
-func _free_edge(bands: Array[Vector2], inside: Vector2, z: float, prefer_z: float) -> float:
+func _free_edge(bands: Array[Vector2], centers: Array[float], z: float, prefer_z: float) -> float:
 	var edges: Array[float] = []
 	for band in bands:
 		edges.append(band.x)
 		edges.append(band.y)
-	var reachable: Array[float] = []
+	var valid: Array[float] = []
 	for edge in edges:
-		if not _crosses_other(bands, inside, z, edge):
-			reachable.append(edge)
+		if not _crosses_center(centers, z, edge):
+			valid.append(edge)
+	if valid.is_empty():
+		valid = edges
+	var nearest := _nearest_gap(valid, z)
+	var tied: Array[float] = []
+	for edge in valid:
+		if absf(edge - z) <= nearest + ARRIVED_DISTANCE:
+			tied.append(edge)
+	if tied.size() == 1:
+		return tied[0]
 	var side := signf(prefer_z - z)
-	var preferred: Array[float] = []
-	for edge in reachable:
+	var toward: Array[float] = []
+	for edge in tied:
 		if side != 0.0 and signf(edge - z) == side:
-			preferred.append(edge)
-	return _nearest(preferred if not preferred.is_empty() else reachable, z)
+			toward.append(edge)
+	return _closest_to_zero(toward if not toward.is_empty() else tied)
 
 
-func _crosses_other(bands: Array[Vector2], inside: Vector2, z: float, edge: float) -> bool:
+func _crosses_center(centers: Array[float], z: float, edge: float) -> bool:
 	var low := minf(z, edge)
 	var high := maxf(z, edge)
-	for band in bands:
-		if band != inside and band.x < high and band.y > low:
+	for center in centers:
+		if center > low and center < high:
 			return true
 	return false
 
 
-func _nearest(candidates: Array[float], z: float) -> float:
+func _nearest_gap(candidates: Array[float], z: float) -> float:
+	var best := INF
+	for candidate in candidates:
+		best = minf(best, absf(candidate - z))
+	return best
+
+
+func _closest_to_zero(candidates: Array[float]) -> float:
 	var best := candidates[0]
 	for candidate in candidates:
-		var gap := absf(candidate - z)
-		var best_gap := absf(best - z)
-		if gap < best_gap - ARRIVED_DISTANCE or (absf(gap - best_gap) <= ARRIVED_DISTANCE and absf(candidate) < absf(best)):
+		if absf(candidate) < absf(best):
 			best = candidate
 	return best

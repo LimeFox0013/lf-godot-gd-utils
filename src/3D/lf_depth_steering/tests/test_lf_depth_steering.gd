@@ -129,19 +129,70 @@ func test_landing_on_equal_tops_takes_the_nearest_in_depth() -> void:
 	assert_eq(result.footprint, near)
 
 
-func test_dodge_goes_toward_the_preferred_side() -> void:
+func test_dodge_from_dead_centre_goes_toward_the_preferred_side() -> void:
 	var overhead := _platform(0.0, 2.0, 3.0)
 	var reach := 0.5 + 0.25 + 0.2
-	var toward_back := steering.dodge(Vector3(0, 1.0, 0.1), 10.0, 0.0, RISE, [overhead], -5.0)
-	var toward_front := steering.dodge(Vector3(0, 1.0, 0.1), 10.0, 0.0, RISE, [overhead], 5.0)
+	var toward_back := steering.dodge(Vector3(0, 1.0, 0.0), 10.0, 0.0, RISE, [overhead], -5.0)
+	var toward_front := steering.dodge(Vector3(0, 1.0, 0.0), 10.0, 0.0, RISE, [overhead], 5.0)
 	assert_almost_eq(toward_back.z, -reach, 0.0001)
 	assert_almost_eq(toward_front.z, reach, 0.0001)
 
 
-func test_dodge_prefers_the_side_even_when_it_is_the_farther_edge() -> void:
+func test_dodge_inside_on_the_left_exits_left_even_when_preferring_the_centre() -> void:
 	var overhead := _platform(0.0, 2.0, 3.0)
-	var result := steering.dodge(Vector3(0, 1.0, 0.8), 10.0, 0.0, RISE, [overhead], -5.0)
+	var result := steering.dodge(Vector3(0, 1.0, -0.75), 10.0, 0.0, RISE, [overhead], 0.0)
 	assert_almost_eq(result.z, -0.95, 0.0001)
+
+
+func test_dodge_inside_on_the_right_exits_right_even_when_preferring_the_far_left() -> void:
+	var overhead := _platform(0.0, 2.0, 3.0)
+	var result := steering.dodge(Vector3(0, 1.0, 0.75), 10.0, 0.0, RISE, [overhead], -5.0)
+	assert_almost_eq(result.z, 0.95, 0.0001)
+
+
+func test_dodge_dead_centre_with_prefer_equal_to_the_centre_goes_toward_zero() -> void:
+	var overhead := _platform(2.0, 2.0, 3.0)
+	var result := steering.dodge(Vector3(0, 1.0, 2.0), 10.0, 0.0, RISE, [overhead], 2.0)
+	assert_almost_eq(result.z, 1.05, 0.0001)
+
+
+func test_dodge_with_merged_bands_leaves_by_the_edge_that_crosses_no_centre() -> void:
+	var first := _platform(0.0, 2.0, 3.0)
+	var second := _platform(1.4, 2.0, 3.0)
+	var result := steering.dodge(Vector3(0, 1.0, -0.5), 10.0, 0.0, RISE, [first, second], 5.0)
+	assert_almost_eq(result.z, -0.95, 0.0001)
+
+
+func test_dodge_boxed_in_between_two_centres_takes_the_nearest_edge() -> void:
+	var first := _platform(0.0, 2.0, 3.0)
+	var second := _platform(1.4, 2.0, 3.0)
+	var result := steering.dodge(Vector3(0, 1.0, 0.5), 10.0, 0.0, RISE, [first, second], 5.0)
+	assert_almost_eq(result.z, -0.95, 0.0001)
+
+
+func test_dodge_never_crosses_a_blocker_centre_in_a_seeded_sweep() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var checked := 0
+	for _case in 200:
+		var platforms: Array = []
+		for _i in rng.randi_range(1, 3):
+			platforms.append(_platform(rng.randf_range(-3.0, 3.0), 2.0, 3.0, 0.0, 1.0, rng.randf_range(0.1, 1.0)))
+		var z := rng.randf_range(-3.0, 3.0)
+		var result := steering.dodge(Vector3(0, 1.0, z), 10.0, 0.0, RISE, platforms, rng.randf_range(-3.0, 3.0))
+		if result == null:
+			continue
+		var low := INF
+		var high := -INF
+		for platform: LFDepthSteering.Footprint in platforms:
+			low = minf(low, platform.center_z)
+			high = maxf(high, platform.center_z)
+		if z > low and z < high:
+			continue
+		checked += 1
+		for platform: LFDepthSteering.Footprint in platforms:
+			assert_false((z - platform.center_z) * (result.z - platform.center_z) < 0.0, 'case crossed a centre')
+	assert_gt(checked, 50)
 
 
 func test_dodge_without_a_side_takes_the_nearest_edge() -> void:
@@ -156,11 +207,11 @@ func test_dodge_ties_go_toward_zero() -> void:
 	assert_almost_eq(result.z, 1.05, 0.0001)
 
 
-func test_dodge_goes_around_a_second_platform_on_the_preferred_side() -> void:
+func test_dodge_from_dead_centre_never_crosses_a_second_platforms_centre() -> void:
 	var first := _platform(0.0, 2.0, 3.0)
 	var second := _platform(1.4, 2.0, 3.0)
 	var result := steering.dodge(Vector3(0, 1.0, 0.0), 10.0, 0.0, RISE, [first, second], 5.0)
-	assert_almost_eq(result.z, 1.4 + 0.95, 0.0001)
+	assert_almost_eq(result.z, -0.95, 0.0001)
 
 
 func test_dodge_forbidden_bands_merge_into_one() -> void:
@@ -243,12 +294,21 @@ func test_step_arrives_by_time_left_even_for_a_long_distance() -> void:
 
 func test_step_eases_in_from_rest() -> void:
 	var states := _run(0.0, 2.0, 1.0)
-	var fastest := 0.0
+	assert_lt(states[0].x, 2.0 / 1.0 * DELTA)
+
+
+func test_step_of_nine_units_in_under_half_a_second_has_no_snap_step() -> void:
+	var states := _run(0.0, 9.0, 0.47)
 	var previous := 0.0
 	for state in states:
-		fastest = maxf(fastest, state.x - previous)
+		assert_lt(state.x - previous, 1.0)
 		previous = state.x
-	assert_lt(states[0].x, fastest * 0.5)
+	assert_eq(states[-1].x, 9.0)
+
+
+func test_step_of_twenty_units_in_a_third_of_a_second_still_arrives() -> void:
+	var states := _run(0.0, 20.0, 0.3)
+	assert_eq(states[-1].x, 20.0)
 
 
 func test_step_eases_out_into_the_target() -> void:
