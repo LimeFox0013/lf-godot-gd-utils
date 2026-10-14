@@ -17,12 +17,13 @@ Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_moment
 
 One more, also experimental: `lf_shaders_2d`.
 
-Two more, all experimental: `lf_property_patch` and `lf_follow_ring_3d`.
+Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_ring_markers_3d`.
 
 ### Added
 
 - **(experimental)** `LFPropertyPatch`: change an object property from a data entry (`add`, `multiply` or `set`, by dotted path, with a cap and a mirrored field).
 - **(experimental)** `LFFollowRing3D`: a pulsing ground ring that follows a `Node3D` and hides without one.
+- **(experimental)** `LFRingMarkers3D`: a pool of flat ground rings sharing one mesh and material, shown at the points you give.
 - `LFUtils3D.ids_in_screen_rect`: the keys of a position map that fall inside a screen rectangle.
 - `LFSpriteAtlasFrames.frame_region`: a manifest frame's atlas rect, optionally cropped to its opaque pixels.
 - `LFBuild.on_commit`, `LFBuild.margin` and `LFBuild.spin_box`.

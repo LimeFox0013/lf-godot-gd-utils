@@ -107,6 +107,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_heightmap`](src/3D/lf_heightmap/README.md) | experimental | rendering and physics geometry |
 | [`lf_magnet_pull_3d`](src/3D/lf_magnet_pull_3d/README.md) | experimental | new module; API unproven outside one game |
 | [`lf_orbit_camera`](src/3D/lf_orbit_camera/README.md) | experimental | input feel; tests cannot judge it |
+| [`lf_ring_markers_3d`](src/3D/lf_ring_markers_3d/README.md) | experimental | new module; rendering, tests cannot judge how it looks |
 | [`lf_shaker`](src/3D/lf_shaker/README.md) | experimental | camera feel; tests cannot judge it |
 | [`lf_utils_3d`](src/3D/lf_utils_3d/README.md) | stable | - |
 | [`lf_viewport_leave_3d`](src/3D/lf_viewport_leave_3d/README.md) | stable | - |
