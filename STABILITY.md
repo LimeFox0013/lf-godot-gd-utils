@@ -124,6 +124,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_cooldown`](src/utils/lf_cooldown/README.md) | stable | - |
 | [`lf_countdown`](src/utils/lf_countdown/README.md) | experimental | new module; the `ticked` / `finished` ordering and the `State` set may change after real use |
 | [`lf_jump_physics`](src/utils/lf_jump_physics/README.md) | experimental | newer, extracted from a game |
+| [`lf_peer_grace`](src/utils/lf_peer_grace/README.md) | experimental | new module; extracted from a game |
 | [`lf_property_patch`](src/utils/lf_property_patch/README.md) | experimental | new module; the entry keys were extracted from one game and may change |
 | [`lf_ratchet_follow`](src/utils/lf_ratchet_follow/README.md) | experimental | newer, extracted from a game |
 | [`lf_grade_combo`](src/utils/lf_grade_combo/README.md) | experimental | newer, extracted from a game |
