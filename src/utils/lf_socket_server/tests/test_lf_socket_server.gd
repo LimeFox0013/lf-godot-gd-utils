@@ -517,6 +517,31 @@ func test_free_port_returns_a_port_the_os_just_had_free():
 	probe.stop()
 
 
+func test_free_port_in_range_skips_taken_and_busy_ports_in_order():
+	var asked := []
+	var is_free := func(port: int) -> bool:
+		asked.append(port)
+		return port >= 5004
+	var taken := func(port: int) -> bool: return port == 5003 or port == 5004
+	assert_eq(LFSocketServer.free_port_in_range(5001, 5009, taken, is_free), 5005)
+	assert_eq(asked, [5001, 5002, 5005], 'is_free is skipped for taken ports and stops at the answer')
+
+
+func test_free_port_in_range_is_minus_one_when_nothing_fits():
+	assert_eq(LFSocketServer.free_port_in_range(5001, 5003, Callable(), func(_port: int) -> bool: return false), -1)
+	assert_eq(LFSocketServer.free_port_in_range(5003, 5001, Callable(), func(_port: int) -> bool: return true), -1, 'a reversed range is empty')
+
+
+func test_free_port_in_range_defaults_to_the_real_port_probe():
+	var free := LFSocketServer.free_port()
+	assert_eq(LFSocketServer.free_port_in_range(free, free), free)
+	var held := TCPServer.new()
+	assert_eq(held.listen(0, '127.0.0.1'), OK)
+	var busy := held.get_local_port()
+	assert_eq(LFSocketServer.free_port_in_range(busy, busy), -1)
+	held.stop()
+
+
 func test_free_port_returns_minus_one_for_an_address_it_cannot_bind():
 	assert_eq(LFSocketServer.free_port('203.0.113.1'), -1)
 

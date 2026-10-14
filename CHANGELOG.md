@@ -74,6 +74,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
   architecture (`OS.get_name()`, `Engine.get_architecture_name()`), so there is no
   `detect_os` or `detect_arch`.
 - **(experimental)** `LFShortCode` (`lf_short_code`): short readable codes from your own alphabet, and a check for typed ones.
+- `LFSocketServer.free_port_in_range`: the first free port in a range, skipping ports you have handed out.
 
 ### Changed
 
