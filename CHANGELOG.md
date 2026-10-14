@@ -73,6 +73,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - `LFOS` README: a note that the engine already answers the operating system and CPU
   architecture (`OS.get_name()`, `Engine.get_architecture_name()`), so there is no
   `detect_os` or `detect_arch`.
+- **(experimental)** `LFShortCode` (`lf_short_code`): short readable codes from your own alphabet, and a check for typed ones.
 
 ### Changed
 

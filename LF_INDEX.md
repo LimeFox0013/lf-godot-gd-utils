@@ -273,6 +273,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | stop networked units jittering or teleporting on clients (smooth positions) | [`LFInterpolationBuffer`](src/utils/lf_replication/README.md) + `LFPlaybackClock` |
 | **Misc** | |
 | a random id for a save slot or crafted item (UUID, 122 random bits) / a secret token, salt or session id | [`LFUuid.gen`](src/utils/lf_uuid/README.md) / `LFUuid.token` |
+| a room or invite code players read out and type (no look-alike letters), and checking a typed one | [`LFShortCode.gen`](src/utils/lf_short_code/README.md) / `LFShortCode.is_valid` |
 | log with a prefix; silence every log line, warning or error at once | [`LFLogger`](src/utils/lf_logger/README.md) (`enable_print_logs` / `enable_print_warnings` / `enable_print_errors`) |
 
 ---
@@ -395,6 +396,7 @@ When two modules look alike, this says which to take.
 | `LFGraph` | [`src/utils/lf_graph`](src/utils/lf_graph/README.md) | static | Layer depths of a prerequisite graph given as ids plus a parents-of callback; memoised, iterative, terminates on cycles (a closing edge is ignored) | `static layer_depths(ids, parents_of) -> Dictionary` |
 | `LFUuid` | [`src/utils/lf_uuid`](src/utils/lf_uuid/README.md) | static | RFC 4122 v4 UUID string (122 random bits) with an optional prefix; secret hex tokens; both from `Crypto.generate_random_bytes` | `static gen(prefix)`, `static token(bytes := 16)` (lowercase hex, `''` when `bytes <= 0`), `DEFAULT_TOKEN_BYTES` |
 | `LFLogger` | [`src/utils/lf_logger`](src/utils/lf_logger/README.md) | RefCounted | Prefix-tagged print/warning/error per instance, gated by the instance's `enabled` flag and by process-wide per-level switches; `log` lines are off until `enable_print_logs = true`, warnings and errors on by default | `new(prefix)`, `log`, `warning`, `error`, `set_prefix`, `enabled`, static vars `enable_print_logs` / `enable_print_warnings` / `enable_print_errors` |
+| `LFShortCode` | [`src/utils/lf_short_code`](src/utils/lf_short_code/README.md) | static | Short readable codes from your own alphabet (not secrets), and a check for typed ones | `gen(length, alphabet, rng, taken)` (one `randi_range` per character; `''` after `MAX_ATTEMPTS` taken draws), `normalize(text)`, `is_valid(text, length, alphabet)`, `MAX_ATTEMPTS` |
 
 ## utils/ — input
 
