@@ -105,6 +105,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_follow_ring_3d`](src/3D/lf_follow_ring_3d/README.md) | experimental | new module; rendering, tests cannot judge how it looks |
 | [`lf_multimesh_scatter`](src/3D/lf_multimesh_scatter/README.md) | experimental | newer, extracted from a game |
 | [`lf_heightmap`](src/3D/lf_heightmap/README.md) | experimental | rendering and physics geometry |
+| [`lf_terrain_features`](src/3D/lf_terrain_features/README.md) | experimental | new module; extracted from a game |
 | [`lf_magnet_pull_3d`](src/3D/lf_magnet_pull_3d/README.md) | experimental | new module; API unproven outside one game |
 | [`lf_orbit_camera`](src/3D/lf_orbit_camera/README.md) | experimental | input feel; tests cannot judge it |
 | [`lf_ring_markers_3d`](src/3D/lf_ring_markers_3d/README.md) | experimental | new module; rendering, tests cannot judge how it looks |
