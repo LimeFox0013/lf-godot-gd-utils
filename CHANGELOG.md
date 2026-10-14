@@ -19,6 +19,8 @@ One more, also experimental: `lf_shaders_2d`.
 
 ### Added
 
+- **(experimental)** `LFStatusEffectIcon` (`lf_hud_bars`): an `LFTimerIcon` that drains with one `LFStatusEffects` effect.
+- `LFFactory.release_on_signal(name)`: an `on_acquire` hook that releases the entity when it emits the signal.
 - **(experimental)** `LFExperienceLevels`: an experience track with per-step thresholds,
   `gain` that carries left-over experience across several levels, `progress()`, `set_level`
   and the signals `leveled_up` and `experience_gained`.

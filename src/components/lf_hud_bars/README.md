@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| **Files** | `lf_timer_icon.gd`, `lf_value_bar.gd` |
-| **Tests** | `tests/test_lf_timer_icon.gd`, `tests/test_lf_value_bar.gd` (in the repository; the release zip leaves tests out) |
-| **Depends on** | `LFLogger`, `LFStyle` (`LFValueBar`) |
+| **Files** | `lf_timer_icon.gd`, `lf_value_bar.gd`, `lf_status_effect_icon.gd` |
+| **Tests** | `tests/test_lf_timer_icon.gd`, `tests/test_lf_value_bar.gd`, `tests/test_lf_status_effect_icon.gd` (in the repository; the release zip leaves tests out) |
+| **Depends on** | `LFLogger`, `LFStyle` (`LFValueBar`), `LFStatusEffects` (`LFStatusEffectIcon`) |
 
 **Classes** ([how LF classes work](../../../README.md#how-lf-classes-work)):
 
@@ -14,6 +14,7 @@
 |---|---|
 | `LFTimerIcon` | Node: add it to a scene (it is a TextureProgressBar) |
 | `LFValueBar` | Node: add it to a scene (it is a ProgressBar) |
+| `LFStatusEffectIcon` | Node: an `LFTimerIcon` that follows one `LFStatusEffects` effect |
 
 ## When to use it
 
@@ -59,6 +60,15 @@
 | `timer` | `var timer: Timer` | The tracked timer, or null. |
 | `finished` | `signal finished` | The tracked timer stopped or ran out (once per run). Also emitted at once when you start tracking a timer that is not running. |
 
+### LFStatusEffectIcon
+
+Extends `LFTimerIcon` (all its members apply).
+
+| Member | Signature | Description |
+|---|---|---|
+| `track_effect` | `track_effect(effects: LFStatusEffects, id: StringName) -> void` | Follows effect `id`: a ticking effect shows the time to its next tick, any other finite one its time left out of the length taken now. |
+| `refresh` | `refresh() -> void` | Takes the time left now as the full length, for when the effect is refreshed. |
+
 ### LFValueBar
 
 | Member | Signature | Description |
@@ -93,6 +103,7 @@ icon.track(buff_timer)
 
 ## Notes
 
+- `LFStatusEffectIcon` updates in `_process`; while the effect is not active the fraction stays as it was, and an infinite effect never moves it.
 - `LFTimerIcon` updates in `_process`, only while a timer is tracked; it does not create timers of its own. Pause and `Timer.process_mode` follow Godot's rules.
 - A tracked timer with `wait_time` 0 shows 0. A one-shot timer that has finished is "stopped" and shows `stopped_fraction`; a timer that was never started is stopped too, so `track` emits `finished` for it on the first update.
 - `LFValueBar` has a fixed 12 px height by default (`custom_minimum_size.y`) and no percent text. It is a `ProgressBar`, so theme overrides (`fill`, `background` styleboxes) also work; setting `fill_color` replaces the fill override.
