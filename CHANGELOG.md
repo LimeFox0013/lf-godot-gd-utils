@@ -17,8 +17,11 @@ Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_moment
 
 One more, also experimental: `lf_shaders_2d`.
 
+One more, experimental: `lf_property_patch`.
+
 ### Added
 
+- **(experimental)** `LFPropertyPatch`: change an object property from a data entry (`add`, `multiply` or `set`, by dotted path, with a cap and a mirrored field).
 - `LFUtils3D.ids_in_screen_rect`: the keys of a position map that fall inside a screen rectangle.
 - `LFSpriteAtlasFrames.frame_region`: a manifest frame's atlas rect, optionally cropped to its opaque pixels.
 - `LFBuild.on_commit`, `LFBuild.margin` and `LFBuild.spin_box`.
