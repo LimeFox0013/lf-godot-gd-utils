@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**111 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**112 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-111 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+112 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -212,7 +212,7 @@ game; read their pages before adopting them:
 | Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_particle_pool` (reuse one particle effect, recoloured per copy), `lf_chunk_stream` (an endless level of equal pieces, built around the player), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |
 | Gameplay systems | `lf_state_machine` (enemy modes like patrol and chase), `lf_grade_combo` (Good / Great / Perfect streaks into a multiplier), `lf_jump_physics` (platformer jump feel), `lf_ratchet_follow` (a camera that follows a climb), `lf_status_effects` (buffs, poison), `lf_procs` (chance-on-hit effects), `lf_layered_stats` (base stats plus bonuses), `lf_modifier_levels`, `lf_capped_level_tracker` and `lf_modifier_grant_service` (upgrades with limits), `lf_experience_levels` (experience points and level-ups), `lf_health` (a health pool with damage and healing), `lf_countdown` (a round timer or fuse), `lf_property_patch` (apply data like "+20 max health" to an object), `lf_momentum` (a value that builds up and fades), `lf_unlock_tree` (skill trees), `lf_loot_table`, `lf_tier_roller` (rarity), `lf_pity_tracker` (bad-luck protection), `lf_weighted_pick`, `lf_random` (repeatable randomness), `lf_grid_2d`, `lf_flow_field` (move big crowds to a goal) |
 | Files | `lf_file` (read and save files; a save writes a checked temporary file, then renames it over the old one), `lf_file_observer` (settings that save themselves), `lf_zip` (unzip mods and downloads) |
-| Network and system | `lf_http` (talk to web servers), `lf_socket` and `lf_socket_server` (live online connections), `lf_peer_grace` (a time limit for new connections to prove themselves), `lf_server_lifetime` (when a server process should quit), `lf_url`, `lf_os` (system info, launch a server), `lf_process` (run other programs), `lf_local_service` (start a bundled back end on a free port and wait until it answers), `lf_wire_message` (typed messages as `{type, payload}`) |
+| Network and system | `lf_http` (talk to web servers), `lf_socket` and `lf_socket_server` (live online connections), `lf_peer_grace` (a time limit for new connections to prove themselves), `lf_server_lifetime` (when a server process should quit), `lf_url`, `lf_os` (system info, launch a server), `lf_process` (run other programs), `lf_local_service` (start a bundled back end on a free port and wait until it answers), `lf_wire_message` (typed messages as `{type, payload}`), `lf_seat_assigner` (give connecting players the next free seat, or the one they claim) |
 | Online services | `lf_llm` (call a language model that can use tools, e.g. for AI players), `lf_accounts` (player log-in), `lf_strike_guard` (lock out repeated failed log-ins), `lf_replication` (keep online players in sync) |
 
 ## Platforms

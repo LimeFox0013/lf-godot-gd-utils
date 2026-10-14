@@ -261,6 +261,7 @@ helpers, input, timing and events, data, gameplay systems, files, network and sy
 | serve encrypted `wss://` from Godot (TLS with your certificate) | [`LFSocketServer.listen(port, host, TLSOptions.server(key, cert))`](src/utils/lf_socket_server/README.md) |
 | drop WebSocket clients that vanished without closing | [`LFSocketServer.idle_timeout_ms`](src/utils/lf_socket_server/README.md) |
 | drop a connected player that has not proven its seat within N seconds | [`LFPeerGrace`](src/utils/lf_peer_grace/README.md) (`add`, `proven`, `tick`) |
+| give each connecting player the next free seat (team, slot), or the seat it claims, swapping with the holder | [`LFSeatAssigner`](src/utils/lf_seat_assigner/README.md) (`assign_next`, `move`, `forget`) |
 | kick a client so it does not reconnect | [`LFSocketServer.disconnect_peer`](src/utils/lf_socket_server/README.md) (`LFSocket.DISCONNECTED_BY_SERVER_CODE`) |
 | messages bigger than 64 KiB over WebSocket | [`LFSocketOptions.buffer_size`](src/utils/lf_socket/README.md) / `LFSocketServer.inbound_buffer_size` |
 | host a dedicated server from the menu (launch this game headless) | [`LFOS.self_launch_args`](src/utils/lf_os/README.md) + `LFProcess` |
@@ -532,6 +533,7 @@ siblings.
 | `LFInterpolationBuffer` | [`src/utils/lf_replication`](src/utils/lf_replication/README.md) | RefCounted | Time-stamped samples played back by interpolation (scaled Basis/Transform and non-normalized Quaternion included; inf/NaN samples refused with a warning) | `add_sample(time, value, previous_time := -INF)`, `sample_at(time)`, `static is_finite_value(value)`, `is_empty()`, `size()`, `latest_time()`, `clear()` |
 | `LFPlaybackClock` | [`src/utils/lf_replication`](src/utils/lf_replication/README.md) | RefCounted | Playback time that trails the newest stamp by a delay | `new(trail_seconds := 0.1, drift_correction_rate := 0.5, jump_after_seconds := 0.5)`, `delay` / `correction_rate` / `snap_seconds`, `stamp(stamp_time)`, `advance(delta) -> float`, `time`, `latest`, `is_started()`, `reset()`, `DEFAULT_DELAY`, `DEFAULT_CORRECTION_RATE`, `DEFAULT_SNAP_SECONDS` |
 | `LFPeerGrace` | [`src/utils/lf_peer_grace`](src/utils/lf_peer_grace/README.md) | RefCounted | A time limit for each newcomer to prove itself (a seat token, a first message); `tick` names who ran out, you disconnect them. Runs on the `delta` you pass | `new(grace)`, `grace_seconds`, `add(peer)`, `proven(peer)`, `forget(peer)`, `is_pending(peer)`, `pending_count()`, `tick(delta) -> Array` (expired peers, in the order added), `DEFAULT_GRACE_SECONDS` |
+| `LFSeatAssigner` | [`src/utils/lf_seat_assigner`](src/utils/lf_seat_assigner/README.md) | RefCounted | Hands a fixed set of seats to connecting peers in order, lets a peer claim a seat (swap with its holder), frees a leaver's seat at the back, tracks who proved their seat | `new(seats)`, `seat_assigned(peer, seat)`, `reserve`, `assign_next`, `move`, `forget`, `seat_of`, `peer_of`, `free_seats`, `mark_verified`, `is_verified` |
 
 ---
 

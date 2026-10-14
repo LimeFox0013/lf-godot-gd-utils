@@ -81,6 +81,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - **(experimental)** `LFCoalescedTick` (`lf_coalesced_tick`): runs an awaiting per-frame update one at a time and banks the time of the frames it skipped.
 - `LFWireMessage.encode_text_once` and `splice_text`: encode a message once for many peers, or splice one pre-encoded field into it.
 - `LFOrbitCamera.frame_points`: frame a group of 3D points, backing off by how far they spread.
+- **(experimental)** `LFSeatAssigner` (`lf_seat_assigner`): gives connecting peers the next free seat or the one they claim, swapping with its holder.
 
 ### Changed
 
