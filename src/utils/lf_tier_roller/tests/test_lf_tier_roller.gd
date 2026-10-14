@@ -146,3 +146,51 @@ func test_bucket_keeps_the_original_order_within_a_tier():
 func test_a_rolled_tier_below_the_floor_with_items_is_kept_by_resolve_tier():
 	# resolve_tier only applies the floor to the fallback search; pick_from_buckets never rolls below it.
 	assert_eq(LFTierRoller.resolve_tier(_buckets([1, 0, 1]), 0, 2), 0)
+
+
+func _reference_tilt(base: Array[float], luck: float, per_luck: float, floor_of_first: float) -> Array[float]:
+	var max_shift := base[0] - floor_of_first
+	var shift := clampf(maxf(luck, 0.0) * per_luck, 0.0, max_shift)
+	var higher_total := 0.0
+	for tier in range(1, base.size()):
+		higher_total += base[tier]
+	var weights: Array[float] = base.duplicate()
+	weights[0] -= shift
+	for tier in range(1, base.size()):
+		weights[tier] += shift * base[tier] / higher_total
+	return weights
+
+
+func test_tilt_weights_match_the_plain_formula_bit_for_bit_over_many_values():
+	var base: Array[float] = [50.0, 27.0, 15.0, 6.0, 2.0]
+	var luck := -3.0
+	while luck < 120.0:
+		var shift := maxf(luck, 0.0) * 1.0
+		assert_eq(LFTierRoller.tilt_weights(base, shift, 10.0), _reference_tilt(base, luck, 1.0, 10.0), 'luck %s' % luck)
+		assert_eq(LFTierRoller.tilt_weights(base, maxf(luck, 0.0) * 0.37, 12.5), _reference_tilt(base, luck, 0.37, 12.5), 'scaled luck %s' % luck)
+		luck += 0.37
+
+
+func test_tilt_weights_moves_weight_in_proportion_and_respects_the_floor():
+	var base: Array[float] = [50.0, 27.0, 15.0, 6.0, 2.0]
+	var tilted := LFTierRoller.tilt_weights(base, 10.0, 10.0)
+	var expected: Array[float] = [40.0, 32.4, 18.0, 7.2, 2.4]
+	for tier in expected.size():
+		assert_almost_eq(tilted[tier], expected[tier], 0.0001)
+	assert_eq(LFTierRoller.tilt_weights(base, 1000.0, 10.0)[0], 10.0, 'the first tier stops at the floor')
+	assert_eq(LFTierRoller.tilt_weights(base, -5.0, 10.0), base, 'a negative shift counts as 0')
+
+
+func test_tilt_weights_returns_a_new_array_each_call():
+	var base: Array[float] = [60.0, 40.0]
+	var first := LFTierRoller.tilt_weights(base, 0.0, 0.0)
+	first[0] = 1.0
+	assert_eq(base, [60.0, 40.0] as Array[float], 'the base is untouched')
+	assert_eq(LFTierRoller.tilt_weights(base, 0.0, 0.0), [60.0, 40.0] as Array[float])
+
+
+func test_tilt_weights_leaves_degenerate_inputs_alone():
+	assert_eq(LFTierRoller.tilt_weights([5.0], 3.0, 0.0), [5.0] as Array[float])
+	assert_eq(LFTierRoller.tilt_weights([], 3.0, 0.0), [] as Array[float])
+	assert_eq(LFTierRoller.tilt_weights([5.0, 0.0], 3.0, 0.0), [5.0, 0.0] as Array[float], 'nothing to spread over')
+	assert_eq(LFTierRoller.tilt_weights([5.0, 5.0], 3.0, 9.0), [5.0, 5.0] as Array[float], 'a floor above the weight moves nothing')
