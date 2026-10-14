@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**116 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**117 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-116 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+117 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -194,6 +194,7 @@ game; read their pages before adopting them:
 | `lf_follow_ring_3d` | A pulsing ring on the ground that follows a 3D node and hides without one: a selection marker |
 | `lf_heightmap` | Hills and terrain (mesh and collision) from a height formula |
 | `lf_magnet_pull_3d` | The 3D version of `lf_magnet_pull` |
+| `lf_projectile_3d` | A shot that flies straight to a fixed point, ends on the first area it touches, and returns to its pool |
 | `lf_orbit_camera` | A strategy-game camera: pan, zoom and orbit |
 | `lf_ring_markers_3d` | Flat rings on the ground at the points you give it, reused between calls |
 | `lf_multimesh_scatter` | Scatter grass, pebbles or flowers over a flat area with one cheap draw call |
