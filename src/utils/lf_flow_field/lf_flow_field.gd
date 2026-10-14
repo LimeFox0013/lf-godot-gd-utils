@@ -221,6 +221,36 @@ static func climbable_masks(lattice: PackedFloat32Array, lattice_spacing: float,
 	return masks
 
 
+## A ready-made nav grid (`cols`, `rows`, `heights`, `blocked`, `climbable`) over the same cells as the
+## field: `height_at(x, z)` read at each cell centre, every cell a rect of `wall_rects` overlaps
+## blocked (a rect that only touches a cell's edge leaves it open), and `climbable` from `lattice`
+## (`climbable_masks`); an empty `lattice` means flat ground, every step allowed. Add `max_climb` yourself.
+static func nav_grid(half_extent: float, cell_size: float, height_at: Callable, wall_rects: Array[Rect2], lattice: PackedFloat32Array, lattice_spacing: float, max_slope_deg: float) -> Dictionary:
+	var cols := LFGrid2D.cells_across(half_extent, cell_size)
+	var rows := cols
+	var heights: Array[float] = []
+	var blocked: Array[bool] = []
+	var climbable: Array[int] = []
+	heights.resize(cols * rows)
+	blocked.resize(cols * rows)
+	climbable.resize(cols * rows)
+	for cz in rows:
+		for cx in cols:
+			var center := LFGrid2D.cell_center(cx, cz, half_extent, cell_size)
+			heights[LFGrid2D.index_of(Vector2i(cx, cz), cols)] = height_at.call(center.x, center.z)
+	for rect in wall_rects:
+		for cell in LFGrid2D.cells_overlapping(rect, half_extent, cell_size):
+			blocked[LFGrid2D.index_of(cell, cols)] = true
+	if lattice.is_empty():
+		var all_neighbors := 0
+		for offset in _OFFSETS:
+			all_neighbors |= 1 << LFGrid2D.neighbor_bit(offset)
+		climbable.fill(all_neighbors)
+	else:
+		climbable.assign(climbable_masks(lattice, lattice_spacing, half_extent, cell_size, max_slope_deg))
+	return { 'cols': cols, 'rows': rows, 'heights': heights, 'blocked': blocked, 'climbable': climbable }
+
+
 ## The smallest rise `_line_climbable` allows per step on a line from a cell's centre to
 ## a neighbor's, less a margin for float rounding.
 static func _smallest_step_rise(cell_size: float, spacing: float, max_slope_deg: float) -> float:
