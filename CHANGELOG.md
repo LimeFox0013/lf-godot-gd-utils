@@ -77,6 +77,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - `LFSocketServer.free_port_in_range`: the first free port in a range, skipping ports you have handed out.
 - `LFOS.int_arg`: a parsed command-line argument as an int, with a fallback.
 - **(experimental)** `LFPeerGrace` (`lf_peer_grace`): a time limit for each new peer to prove itself, and who ran out.
+- **(experimental)** `LFServerLifetime` (`lf_server_lifetime`): why a server process should quit: job finished, nobody connected, or its launcher gone.
 
 ### Changed
 
