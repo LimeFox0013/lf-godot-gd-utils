@@ -891,3 +891,34 @@ func test_sleep_and_wake_ignore_null_and_freed_nodes():
 	LFFactory.wake(null)
 	LFFactory.wake(node)
 	assert_true(true, 'no error')
+
+
+class _Emitter:
+	extends Node
+	signal done
+
+
+func test_release_on_signal_releases_the_entity_when_it_emits():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	entity.done.emit()
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_connects_once_per_hand_out():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	entity.done.emit()
+	assert_eq(entity.done.get_connections().size(), 0)
+	assert_eq(factory.acquire('a'), entity)
+	assert_eq(entity.done.get_connections().size(), 1)
+	entity.done.emit()
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_with_an_unknown_signal_reports_and_connects_nothing():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'nope'))
+	var entity := factory.acquire('a')
+	assert_push_error('no signal')
+	assert_not_null(entity)
+	assert_false(factory.is_pooled(entity))

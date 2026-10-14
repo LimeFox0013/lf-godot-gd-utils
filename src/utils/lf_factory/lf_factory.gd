@@ -105,6 +105,12 @@ static func dormant_hooks() -> Dictionary:
 	}
 
 
+## An `on_acquire` hook that releases the entity when it emits `signal_name`. It connects
+## once per hand-out, so a reused entity is not released twice.
+func release_on_signal(signal_name: StringName) -> Callable:
+	return _connect_release.bind(signal_name)
+
+
 ## Puts `node` to sleep, remembering what it changes so `wake` can undo it: hides it (a
 ## CanvasItem or Node3D), sets its `process_mode` to `PROCESS_MODE_DISABLED`, sets
 ## `collision_layer` and `collision_mask` to 0 and turns `monitoring` off, each where the
@@ -330,6 +336,13 @@ func is_pooled(entity: Variant) -> bool:
 ## parented by `acquire_async`). Safe on a freed entity.
 func owns(entity: Variant) -> bool:
 	return is_instance_valid(entity) and _records.has(entity)
+
+
+func _connect_release(entity: Node, signal_name: StringName) -> void:
+	if not entity.has_signal(signal_name):
+		_log.error('LFFactory: "%s" has no signal "%s" to release on' % [entity, signal_name])
+		return
+	entity.connect(signal_name, release.bind(entity), CONNECT_ONE_SHOT)
 
 
 func _kind_or_report(key: Variant) -> _Kind:
