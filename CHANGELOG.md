@@ -59,6 +59,7 @@ Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_r
 - `LFShaders2D.cross_reveal`: a plus-shaped reveal whose arms grow with `progress`.
 - `LFUtils2D.alpha_click_mask`, `apply_alpha_click_mask` and `steer`.
 - `LFFlowField.nav_grid`: the whole walkability grid (heights, walls, climbable steps) from a height function and wall rects.
+- `LFFlowFieldService.version`: counts every `field_updated` and `field_dropped`, so a caller keeping a field can tell it went stale.
 - `LFUtils2D.knock_back`: an instant impulse on a `RigidBody2D` away from a point.
 - `LFUtils.cycle_index`: the next accepted index round a list, wrapping.
 - `LFControl.pin`: pin a Control to an edge, corner or centre, growing inward.

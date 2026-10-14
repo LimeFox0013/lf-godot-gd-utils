@@ -408,3 +408,49 @@ func test_a_nan_refresh_interval_is_rejected_and_the_value_is_kept():
 	assert_eq(service.refresh_interval, 3.0)
 	assert_eq(LFFlowFieldService.new(9.0, 3.0, NAN).refresh_interval, LFFlowFieldService.DEFAULT_REFRESH_INTERVAL)
 	assert_push_error_count(2)
+
+
+func test_version_counts_every_published_and_dropped_field():
+	var service := LFFlowFieldService.new(30.0)
+	var first := Vector3(20, 0, 0)
+	var second := Vector3(-20, 0, 0)
+	assert_eq(service.version, 0)
+	service.request_field(first)
+	service.request_field(second)
+	await _wait_ready(service, first)
+	await _wait_ready(service, second)
+	var ready_version := service.version
+	assert_gte(ready_version, 2)
+	service.prune([second])
+	assert_eq(service.version, ready_version + 1, 'a pruned field')
+	service.set_nav_grid({})
+	assert_eq(service.version, ready_version + 2, 'the rest dropped by new ground')
+	await _wait_idle(service)
+
+
+func test_version_is_already_current_inside_the_field_updated_handler():
+	var service := LFFlowFieldService.new(30.0)
+	var seen: Array[int] = []
+	service.field_updated.connect(func(_cell: Vector2i) -> void: seen.append(service.version))
+	var goal := Vector3(20, 0, 0)
+	service.request_field(goal)
+	await _wait_ready(service, goal)
+	assert_eq(seen[0], 1)
+
+
+func test_version_is_per_service_and_unchanged_by_a_tick_with_nothing_wanted():
+	var one := LFFlowFieldService.new(30.0)
+	var other := LFFlowFieldService.new(30.0)
+	var goal := Vector3(20, 0, 0)
+	one.request_field(goal)
+	await _wait_ready(one, goal)
+	other.tick(1.0)
+	assert_eq(other.version, 0)
+	assert_gt(one.version, 0)
+
+
+func test_assigning_version_is_reported_and_ignored():
+	var service := LFFlowFieldService.new(30.0)
+	service.set('version', 5)
+	assert_push_error('read-only')
+	assert_eq(service.version, 0)

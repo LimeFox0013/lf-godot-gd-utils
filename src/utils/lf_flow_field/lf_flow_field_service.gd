@@ -63,6 +63,15 @@ var nav_grid: Dictionary:
 	set(_value):
 		_log.error('LFFlowFieldService: nav_grid is read-only; call set_nav_grid() to change the ground.')
 
+## Counts every `field_updated` and `field_dropped`, so a caller keeping a field can tell
+## by one comparison that it must read it again. Read-only (assigning is reported and ignored).
+var version: int:
+	get:
+		return _version
+	set(_value):
+		_log.error('LFFlowFieldService: version is read-only.')
+
+var _version := 0
 var _refresh_interval := DEFAULT_REFRESH_INTERVAL
 var _half_extent: float
 var _cell_size: float
@@ -185,6 +194,7 @@ func tick(delta: float, positions: Variant = []) -> void:
 		if field == null or field.directions.is_empty():
 			continue
 		_fields[cell] = field
+		_version += 1
 		field_updated.emit(cell)
 
 
@@ -201,6 +211,7 @@ func prune(active_goals: Array) -> void:
 			stale.append(cell)
 	for cell in stale:
 		_fields.erase(cell)
+		_version += 1
 		field_dropped.emit(cell)
 	stale.clear()
 	for cell in _wanted:
@@ -224,6 +235,7 @@ func set_nav_grid(grid: Dictionary) -> void:
 	var dropped := _fields.keys()
 	_fields.clear()
 	for cell: Variant in dropped:
+		_version += 1
 		field_dropped.emit(cell)
 	for thread: Variant in _pending.values():
 		thread.request_stop()

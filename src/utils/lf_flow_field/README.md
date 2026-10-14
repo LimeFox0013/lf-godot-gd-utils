@@ -130,6 +130,7 @@ reported (`push_error`) and the ground treated as open.
 | `set_nav_grid` | `set_nav_grid(grid: Dictionary) -> void` | New ground (the service keeps a copy): ready fields are dropped, computes running on the old ground are stopped and thrown away, wanted fields recompute next `tick`. |
 | `nav_grid` | `var nav_grid: Dictionary` (read-only) | The current ground. Assigning it is reported and ignored (use `set_nav_grid`); don't edit the returned dictionary, running computes may be reading it. |
 | `is_pending`, `pending_count` | `is_pending(goal: Vector3) -> bool`, `pending_count() -> int` | Whether a compute for `goal`'s cell is running; how many are running. |
+| `version` | `var version: int` (read-only) | Goes up by one on every `field_updated` and `field_dropped` (already counted when the signal fires). Compare it with the value you stored to know a kept field must be read again. |
 | `field_updated` | `signal field_updated(cell: Vector2i)` | A new field is ready. |
 | `field_dropped` | `signal field_dropped(cell: Vector2i)` | A ready field was dropped (`prune`, `set_nav_grid`); stop sampling a kept copy. |
 
