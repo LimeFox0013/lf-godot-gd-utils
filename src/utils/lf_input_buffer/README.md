@@ -45,6 +45,7 @@ press and its clock; you decide what taking it does. Its time is the `delta` you
 | `new` | `LFInputBuffer.new(window := DEFAULT_WINDOW)` | A window of 0 or less, NaN or infinite is reported through `LFLogger` and the default is used. |
 | `window` | `var window: float` | Seconds a press is kept. Read only. |
 | `pending` | `var pending: bool` | Whether a press is waiting. Read only. |
+| `age` | `var age: float` | Seconds since the pending press (0 when none waits), so the one who takes it can grade it by how long ago it was made. Read only. |
 | `press` | `press() -> void` | Marks a press pending and restarts the window. |
 | `take` | `take() -> bool` | True once while a press is pending; clears it. |
 | `tick` | `tick(delta: float) -> bool` | Ages a pending press; true on the one call where the window runs out unused. A negative or NaN `delta` changes nothing. |

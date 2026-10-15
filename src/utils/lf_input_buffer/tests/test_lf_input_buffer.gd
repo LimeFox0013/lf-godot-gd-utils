@@ -98,3 +98,25 @@ func test_negative_and_nan_delta_change_nothing():
 	for i in 4:
 		buffer.tick(FRAME)
 	assert_true(buffer.tick(FRAME), 'the bad deltas aged nothing')
+
+
+func test_age_counts_the_seconds_since_the_pending_press():
+	var buffer := LFInputBuffer.new(0.5)
+	assert_eq(buffer.age, 0.0, "nothing waits")
+	buffer.press()
+	buffer.tick(0.1)
+	buffer.tick(0.05)
+	assert_almost_eq(buffer.age, 0.15, 0.0001)
+	buffer.press()
+	assert_eq(buffer.age, 0.0, "a new press restarts it")
+
+
+func test_age_reads_zero_once_the_press_is_taken_or_gone():
+	var buffer := LFInputBuffer.new(0.1)
+	buffer.press()
+	buffer.tick(0.05)
+	buffer.take()
+	assert_eq(buffer.age, 0.0)
+	buffer.press()
+	buffer.tick(0.2)
+	assert_eq(buffer.age, 0.0, "expired")

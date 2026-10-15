@@ -18,6 +18,11 @@ var pending: bool:
 	get:
 		return _pending
 
+## Seconds since the pending press, 0 when none waits. Read only.
+var age: float:
+	get:
+		return _age if _pending else 0.0
+
 var _window: float
 var _pending := false
 var _age := 0.0

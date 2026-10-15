@@ -17,6 +17,10 @@ Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_moment
 
 One more, also experimental: `lf_shaders_2d`.
 
+`LFInputBuffer` also reports the `age` of the press it holds.
+
+One more new module, experimental: `lf_input_rebinder` (reassign the keys and pad buttons of input actions, saved between runs).
+
 Two more, experimental: `lf_climb_score` (a score paid only for new height, weighted by a multiplier and gated by climb rate) and `lf_milestones` (each multiple of a step reported the first time).
 
 Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_ring_markers_3d`.
