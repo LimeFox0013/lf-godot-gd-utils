@@ -17,6 +17,8 @@ Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_moment
 
 One more, also experimental: `lf_shaders_2d`.
 
+Another new experimental module: `lf_wobble` (a damped spring for a bobblehead-style wobble).
+
 `LFInputBuffer` also reports the `age` of the press it holds.
 
 One more new module, experimental: `lf_input_rebinder` (reassign the keys and pad buttons of input actions, saved between runs).
