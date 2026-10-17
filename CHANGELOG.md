@@ -27,6 +27,10 @@ Two more, experimental: `lf_climb_score` (a score paid only for new height, weig
 
 Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_ring_markers_3d`.
 
+Another new experimental module: `lf_sound` (`LFTone` makes bleeps, sweeps and noise from code; `LFSfx` plays short sounds from a pool).
+
+One more, experimental: `lf_time_scale` (a short slow-motion pulse in real seconds).
+
 ### Added
 
 - **(experimental)** `LFPropertyPatch`: change an object property from a data entry (`add`, `multiply` or `set`, by dotted path, with a cap and a mirrored field).
