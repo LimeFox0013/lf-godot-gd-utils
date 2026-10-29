@@ -204,8 +204,11 @@ static func atlas(texture: Texture2D, region: Rect2) -> AtlasTexture:
 ## `manifest`; cropped to its opaque pixels when `texture` is given. Null when the manifest
 ## has no such animation or direction, or no frame size.
 static func frame_region(manifest: Dictionary, animation: String, direction: String, frame := 0, texture: Texture2D = null) -> Variant:
-	var rows: Variant = manifest.get(_KEY_ANIMATIONS, {}).get(animation, {}).get(_KEY_ROWS, {})
-	if not rows is Dictionary or not rows.has(direction):
+	var animations: Variant = manifest.get(_KEY_ANIMATIONS)
+	if not animations is Dictionary or not animations.get(animation) is Dictionary:
+		return null
+	var rows: Variant = animations[animation].get(_KEY_ROWS)
+	if not rows is Dictionary or not rows.has(direction) or not _is_number(rows[direction]):
 		return null
 	if not (_is_number(manifest.get(_KEY_FRAME_WIDTH)) and _is_number(manifest.get(_KEY_FRAME_HEIGHT))):
 		return null

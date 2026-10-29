@@ -135,6 +135,12 @@ func test_frame_region_is_null_for_a_missing_animation_direction_or_frame_size()
 	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": {"rows": 3}}}, "idle", "down"))
 
 
+func test_frame_region_is_null_for_a_manifest_of_the_wrong_shape():
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": 5}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": 7}}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": {"rows": {"down": "x"}}}}, "idle", "down"))
+
+
 func test_frame_region_with_a_texture_is_cropped_to_opaque_pixels():
 	var image := Image.create(12, 32, false, Image.FORMAT_RGBA8)
 	image.fill_rect(Rect2i(1, 5, 2, 1), Color.WHITE)
