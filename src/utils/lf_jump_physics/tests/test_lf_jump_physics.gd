@@ -66,6 +66,25 @@ func test_a_negative_power_ratio_counts_as_zero():
 	assert_eq(_physics.jump_strength(10.0, -2.0), 0.0)
 
 
+func test_defaults_match_the_constants():
+	assert_eq(_physics.gravity_scale, LFJumpPhysics.DEFAULT_GRAVITY_SCALE)
+	assert_eq(_physics.fall_multiplier, LFJumpPhysics.DEFAULT_FALL_MULTIPLIER)
+	assert_eq(_physics.low_jump_multiplier, LFJumpPhysics.DEFAULT_LOW_JUMP_MULTIPLIER)
+	assert_eq(_physics.power_exponent, LFJumpPhysics.DEFAULT_POWER_EXPONENT)
+	assert_eq(_physics.speed_bonus, LFJumpPhysics.DEFAULT_SPEED_BONUS)
+
+
+func test_a_2d_body_negates_velocity_y_on_both_sides():
+	_physics.fall_multiplier = 2.0
+	var velocity_y := 1.0
+	velocity_y = -_physics.fall_velocity(-velocity_y, GRAVITY, DELTA, true)
+	assert_almost_eq(velocity_y, 3.0, 0.0001, "falling (y down, positive) speeds up by the fall multiplier")
+
+
+func test_zero_delta_changes_nothing():
+	assert_eq(_physics.fall_velocity(3.0, GRAVITY, 0.0, false), 3.0)
+
+
 ## The height reached by a jump of 10 with the button held or released straight away.
 func _simulate(held: bool) -> float:
 	var velocity := 10.0

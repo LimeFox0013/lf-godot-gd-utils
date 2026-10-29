@@ -41,7 +41,7 @@ func _physics_process(delta: float) -> void:
 	if _height > 0.0 or _velocity_up > 0.0:
 		_velocity_up = _physics.fall_velocity(_velocity_up, 980.0, delta, Input.is_action_pressed("ui_accept"))
 		_height = maxf(_height + _velocity_up * delta, 0.0)
-	position.y = 400.0 - _height
+	position = Vector2(300.0, 400.0 - _height)
 	queue_redraw()
 
 func _draw() -> void:
@@ -71,6 +71,7 @@ A 3D character whose built-up speed boost makes the next jump higher:
 var _jump := LFJumpPhysics.new()
 var _boost := 25.0           # grows with perfectly timed jumps
 const BASE_BOOST := 25.0
+var top_speed := 8.0
 
 func _physics_process(delta: float) -> void:
 	var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
