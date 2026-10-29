@@ -53,7 +53,8 @@ func _ready() -> void:
 
 
 ## Places the instances again (replacing any earlier ones) and returns how many. 0, with an
-## error, when `area` is not set or has no mesh, or the multimesh or its mesh is missing.
+## error, when `area` is not set or has no mesh, the multimesh or its mesh is missing, or this
+## node or `area` is not in the scene tree.
 ## Each instance is a copy of the multimesh's mesh at a random spot, with this node's
 ## orientation, and layer `0..layer_count - 1` in its custom data's red channel. The multimesh
 ## must belong to this node alone (set it local to the scene): scattering rewrites it.
@@ -63,6 +64,9 @@ func scatter() -> int:
 		return 0
 	if multimesh == null or multimesh.mesh == null:
 		_log.error("LFMultiMeshScatter: the multimesh has no mesh")
+		return 0
+	if not is_inside_tree() or not area.is_inside_tree():
+		_log.error("LFMultiMeshScatter: the node and its area must be in the scene tree")
 		return 0
 	var size := plane_size_xz(area)
 	if size.x <= 0.0 or size.y <= 0.0:

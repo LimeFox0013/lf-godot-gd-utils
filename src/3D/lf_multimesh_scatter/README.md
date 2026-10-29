@@ -42,7 +42,7 @@ shader can use to pick between several looks. For terrain itself see `LFHeightma
 | `random_seed` | `@export var random_seed := 0` | 0: different every run; otherwise repeatable. |
 | `scatter_on_ready` | `@export var scatter_on_ready := true` | Scatter when the node is ready. |
 | `scattered` | `signal scattered(count: int)` | After `scatter`. |
-| `scatter` | `scatter() -> int` | Places the instances (replacing earlier ones); returns the count, or 0 with an error for a missing area, mesh or multimesh. |
+| `scatter` | `scatter() -> int` | Places the instances (replacing earlier ones); returns the count, or 0 with an error for a missing area, mesh or multimesh, or when the node or area is not in the scene tree. |
 | `place` | `static place(size: Vector2, count: int, rng: RandomNumberGenerator, into_space := Transform3D.IDENTITY, height := 0.0, size_range := Vector2.ONE, layer_total := 1) -> Placement` | The placement as plain data (`Placement.transforms`, `Placement.layers`), without a node. |
 | `plane_size_xz` | `static plane_size_xz(mesh_instance: MeshInstance3D) -> Vector2` | Width (x) and depth (y) of the mesh; zero for none. |
 | `Placement` | `class Placement` | Result of `place`: `transforms: Array[Transform3D]` and `layers: PackedInt32Array`. |

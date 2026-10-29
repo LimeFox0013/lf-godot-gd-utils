@@ -180,3 +180,15 @@ func test_plane_size_reads_a_plane_or_the_bounds_of_other_meshes():
 	assert_eq(LFMultiMeshScatter.plane_size_xz(null), Vector2.ZERO)
 	area.mesh = null
 	assert_eq(LFMultiMeshScatter.plane_size_xz(area), Vector2.ZERO)
+
+
+func test_outside_the_tree_it_reports_and_places_nothing():
+	var scatter := LFMultiMeshScatter.new()
+	scatter.multimesh = MultiMesh.new()
+	scatter.multimesh.mesh = BoxMesh.new()
+	var root: Node3D = add_child_autofree(Node3D.new())
+	scatter.area = _make_area(root)
+	scatter.scatter_on_ready = false
+	assert_eq(scatter.scatter(), 0)
+	assert_push_error('LFMultiMeshScatter')
+	scatter.free()
