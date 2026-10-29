@@ -84,6 +84,6 @@ flow_service.set_nav_grid(grid)
 
 ## Notes
 
-- A feature missing a key it needs (a ramp without `low_edge`) is a script error, as for any Dictionary lookup.
+- A feature missing a key it needs, with a wrongly typed `rect`, `center`, `height` or `radius`, a ramp with a zero-size rect or an unknown `low_edge`, or a hill with a radius of 0 or less is skipped with a `push_error` naming the problem; the other features still work. `features` keeps the entry, but no query sees it. A `type` the module does not know is ignored without an error.
 - A segment test misses a blocker thinner than `sight_step` that falls between two samples.
 - Overlapping elevation features do not add: the highest wins.

@@ -157,3 +157,37 @@ func test_assigning_features_sorts_them_out_again():
 	assert_eq(terrain.walls().size(), 1)
 	assert_eq(first.size(), 0, 'a list handed out earlier is left alone')
 	assert_true(terrain.is_wall_at(0.5, 0.5))
+
+
+func test_a_feature_missing_keys_is_skipped_and_the_rest_still_work():
+	var terrain := _terrain([
+		{ 'type': 'ramp', 'rect': Rect2(0, 0, 10, 10), 'height': 4.0 },
+		{ 'type': 'wall', 'height': 3.0 },
+		{ 'type': 'hill', 'center': Vector2.ZERO, 'height': 2.0 },
+		{ 'rect': Rect2(0, 0, 1, 1) },
+		{ 'type': 'platform', 'rect': Rect2(20, 20, 5, 5), 'height': 2.0 },
+	])
+	assert_push_error_count(4)
+	assert_eq(terrain.height_at(5.0, 5.0), 0.0)
+	assert_eq(terrain.walls().size(), 0)
+	assert_eq(terrain.height_at(22.0, 22.0), 2.0)
+
+
+func test_a_zero_size_ramp_is_skipped_without_dividing_by_zero():
+	var terrain := _terrain([
+		{ 'type': 'ramp', 'rect': Rect2(0, 0, 0, 10), 'height': 4.0, 'low_edge': 'x-' },
+		{ 'type': 'ramp', 'rect': Rect2(0, 0, 10, 0), 'height': 4.0, 'low_edge': 'z+' },
+	])
+	assert_push_error_count(2)
+	assert_false(terrain.has_elevation())
+	assert_eq(terrain.height_at(0.0, 0.0), 0.0)
+	assert_eq(terrain.height_lattice(HALF, 1.0).size(), LFHeightmap.samples_for(HALF, 1.0) ** 2)
+
+
+func test_a_ramp_with_an_unknown_low_edge_or_a_flat_hill_is_skipped():
+	var terrain := _terrain([
+		{ 'type': 'ramp', 'rect': Rect2(0, 0, 10, 10), 'height': 4.0, 'low_edge': 'up' },
+		{ 'type': 'hill', 'center': Vector2.ZERO, 'radius': 0.0, 'height': 2.0 },
+	])
+	assert_push_error_count(2)
+	assert_false(terrain.has_elevation())

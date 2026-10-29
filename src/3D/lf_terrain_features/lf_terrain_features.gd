@@ -148,7 +148,14 @@ func _sort_features() -> void:
 	_opaque_rects = []
 	_elevation_features = []
 	_elevation_bounds = []
+	var valid: Array[Dictionary] = []
 	for feature in features:
+		var problem := _problem_with(feature)
+		if problem.is_empty():
+			valid.append(feature)
+		else:
+			push_error('LFTerrainFeatures: feature skipped, %s: %s' % [problem, feature])
+	for feature in valid:
 		var type: String = feature['type']
 		if type == 'wall':
 			_walls.append(feature)
@@ -157,10 +164,45 @@ func _sort_features() -> void:
 			_foliage.append(feature)
 	for feature in _walls + _foliage:
 		_opaque_rects.append(feature['rect'])
-	for feature in features:
+	for feature in valid:
 		if feature['type'] in _ELEVATION_TYPES:
 			_elevation_features.append(feature)
 			_elevation_bounds.append(_footprint(feature))
+
+
+## Empty when the feature can be used, else why not. Unknown types are fine (they do nothing).
+static func _problem_with(feature: Dictionary) -> String:
+	if not feature.has('type'):
+		return "missing key 'type'"
+	var needed: Array[String] = []
+	match feature['type']:
+		'platform', 'wall':
+			needed = ['rect', 'height']
+		'ramp':
+			needed = ['rect', 'height', 'low_edge']
+		'hill':
+			needed = ['center', 'radius', 'height']
+		'foliage':
+			needed = ['rect']
+	for key in needed:
+		if not feature.has(key):
+			return "missing key '%s'" % key
+	if needed.has('rect'):
+		if typeof(feature['rect']) != TYPE_RECT2:
+			return "'rect' is not a Rect2"
+		var rect: Rect2 = feature['rect']
+		if feature['type'] == 'ramp' and (rect.size.x <= 0.0 or rect.size.y <= 0.0):
+			return 'ramp rect has no size'
+	if needed.has('height') and typeof(feature['height']) not in [TYPE_FLOAT, TYPE_INT]:
+		return "'height' is not a number"
+	if feature['type'] == 'ramp' and feature['low_edge'] not in ['x-', 'x+', 'z-', 'z+']:
+		return "'low_edge' is not 'x-', 'x+', 'z-' or 'z+'"
+	if feature['type'] == 'hill':
+		if typeof(feature['center']) != TYPE_VECTOR2:
+			return "'center' is not a Vector2"
+		if typeof(feature['radius']) not in [TYPE_FLOAT, TYPE_INT] or feature['radius'] <= 0.0:
+			return "'radius' is not a positive number"
+	return ''
 
 
 func _segment_steps(a: Vector2, b: Vector2) -> int:
