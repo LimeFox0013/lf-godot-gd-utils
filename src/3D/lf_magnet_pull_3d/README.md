@@ -7,7 +7,7 @@
 | **Kind** | [Object](../../../README.md#how-lf-classes-work): create it with `.new()` |
 | **Files** | `lf_magnet_pull_3d.gd` |
 | **Tests** | `tests/test_lf_magnet_pull_3d.gd` (in the repository; the release zip leaves tests out) |
-| **Depends on** | `LFMagnetPullCore` (`src/2D/lf_magnet_pull/lf_magnet_pull_core.gd`, the math shared with `LFMagnetPull2D`) |
+| **Depends on** | `LFMagnetPullCore` (`src/2D/lf_magnet_pull/lf_magnet_pull_core.gd`, the math shared with `LFMagnetPull2D`), which uses `LFLogger` |
 
 ## When to use it
 
@@ -42,8 +42,8 @@ You should see the orb glide toward the player at about 5 meters per second.
 | Member | Signature | Description |
 |---|---|---|
 | `set_attractor` | `set_attractor(attractor: Node3D, power: float, on := true) -> void` | Adds the attractor or changes its power; `on = false` removes it. A NaN power is rejected through `LFLogger`. |
-| `remove_attractor` | `remove_attractor(attractor: Node3D) -> void` | Removes it; harmless if absent. |
-| `has_attractor` | `has_attractor(attractor: Node3D) -> bool` | Whether it is added. |
+| `remove_attractor` | `remove_attractor(attractor: Variant) -> void` | Removes it; harmless if absent or already freed. |
+| `has_attractor` | `has_attractor(attractor: Variant) -> bool` | Whether it is added; false for a freed one. |
 | `attractor_count` | `attractor_count() -> int` | Added attractors that are alive and in the scene tree. |
 | `clear` | `clear() -> void` | Removes every attractor and zeroes the velocity. |
 | `velocity` | `Vector3` (read-only) | The current pulled velocity. |

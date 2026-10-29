@@ -66,3 +66,73 @@ func test_clear_drops_attractors_and_velocity() -> void:
 	_pull.clear()
 	assert_eq(_pull.velocity, Vector3.ZERO)
 	assert_eq(_pull.attractor_count(), 0)
+
+
+func test_nan_power_is_rejected_and_changes_nothing() -> void:
+	var node := _attractor(Vector3(10, 0, 0))
+	_pull.set_attractor(node, POWER)
+	_pull.set_attractor(node, NAN)
+	assert_eq(_pull.force_at(Vector3.ZERO).round(), Vector3(POWER, 0, 0))
+	var other := _attractor(Vector3(0, 10, 0))
+	_pull.set_attractor(other, NAN)
+	assert_false(_pull.has_attractor(other))
+	assert_push_error_count(2)
+
+
+func test_set_attractor_again_changes_power_and_off_removes() -> void:
+	var node := _attractor(Vector3(10, 0, 0))
+	_pull.set_attractor(node, POWER)
+	_pull.set_attractor(node, POWER * 2.0)
+	assert_eq(_pull.attractor_count(), 1)
+	assert_eq(_pull.force_at(Vector3.ZERO).round(), Vector3(POWER * 2.0, 0, 0))
+	_pull.set_attractor(node, POWER, false)
+	assert_false(_pull.has_attractor(node))
+
+
+func test_attractor_at_the_body_position_adds_nothing() -> void:
+	_pull.set_attractor(_attractor(Vector3(1, 2, 3)), POWER)
+	assert_eq(_pull.force_at(Vector3(1, 2, 3)), Vector3.ZERO)
+
+
+func test_force_at_changes_nothing() -> void:
+	_pull.set_attractor(_attractor(Vector3(10, 0, 0)), POWER)
+	_pull.force_at(Vector3.ZERO)
+	assert_eq(_pull.velocity, Vector3.ZERO)
+
+
+func test_attractor_outside_the_tree_is_skipped() -> void:
+	var node := Node3D.new()
+	autofree(node)
+	_pull.set_attractor(node, POWER)
+	assert_eq(_pull.attractor_count(), 0)
+	assert_eq(_pull.step(Vector3.ZERO, STEP_SECONDS), Vector3.ZERO)
+
+
+func test_removing_an_absent_attractor_is_harmless() -> void:
+	_pull.remove_attractor(_attractor(Vector3.ONE))
+	assert_eq(_pull.attractor_count(), 0)
+
+
+func test_equal_opposite_attractors_cancel() -> void:
+	_pull.set_attractor(_attractor(Vector3(10, 0, 0)), POWER)
+	_pull.set_attractor(_attractor(Vector3(-10, 0, 0)), POWER)
+	assert_eq(_pull.step(Vector3.ZERO, STEP_SECONDS).round(), Vector3.ZERO)
+
+
+func test_removing_a_freed_attractor_does_not_error_and_forgets_it() -> void:
+	var node := _attractor(Vector3(10, 0, 0))
+	var other := _attractor(Vector3(20, 0, 0))
+	_pull.set_attractor(node, POWER)
+	_pull.set_attractor(other, POWER)
+	node.free()
+	_pull.remove_attractor(node)
+	assert_false(_pull.has_attractor(node))
+	assert_eq(_pull.attractor_count(), 1)
+	assert_true(_pull.has_attractor(other))
+
+
+func test_has_attractor_is_false_for_a_freed_node() -> void:
+	var node := _attractor(Vector3(10, 0, 0))
+	_pull.set_attractor(node, POWER)
+	node.free()
+	assert_false(_pull.has_attractor(node))
