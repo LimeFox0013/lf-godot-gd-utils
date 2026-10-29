@@ -65,4 +65,5 @@ func _landed_on(area: Area3D) -> void:
 - Read your own fields before calling `super()` in `_landed_on`: for a pooled shot, `_finish()` triggers its reset hook, which may clear them.
 - The `reset` is not called by the class itself: register it as the pool's release hook (`LFFactory.register(key, create, Callable(), func(shot): shot.reset())`).
 - The flight is a straight line (no gravity); walls do not stop it, only an accepted area does.
+- A `speed` of zero or less never reaches the aim point, so the shot ends only on an accepted area.
 - `reset` and `launch_to` change `monitoring` and `monitorable` with `set_deferred`, in that order, so a shot reset inside a hit and launched again in the same frame ends up enabled.
