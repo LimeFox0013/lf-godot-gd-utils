@@ -330,7 +330,7 @@ func test_a_message_queued_offline_is_sent_as_it_was_when_queued():
 	socket.connect_to_server(_url())
 	assert_true(await _wait_ms(func(): return received.size() == 1), 'reached before the timeout')
 
-	assert_eq(received[0]['data']['v'], 1)
+	assert_eq(int(received[0]['data']['v']), 1)
 
 
 func test_a_reconnect_interval_of_zero_still_waits_between_dials():
