@@ -72,3 +72,33 @@ func test_constructor_values_shape_the_ring_and_the_pulse():
 	assert_eq(custom.global_position, Vector3(1, 0.2, 1))
 	custom._process(PI / 2.0)
 	assert_almost_eq(custom.scale.x, 1.5, 0.001)
+
+
+func test_target_set_before_entering_the_tree_is_followed_once_ready():
+	var node := _target(Vector3(2, 0, 2))
+	var early := LFFollowRing3D.new()
+	early.target = node
+	add_child_autofree(early)
+
+	assert_true(early.visible)
+	assert_true(early.is_processing())
+	assert_eq(early.global_position, Vector3(2, LFFollowRing3D.DEFAULT_LIFT, 2))
+
+
+func test_hides_when_the_target_leaves_the_tree():
+	var node := _target(Vector3.ZERO)
+	ring.target = node
+	remove_child(node)
+	await wait_process_frames(1)
+
+	assert_false(ring.visible)
+	assert_false(ring.is_processing())
+	node.free()
+
+
+func test_lift_can_change_after_construction():
+	var node := _target(Vector3(0, 1, 0))
+	ring.lift = 0.5
+	ring.target = node
+
+	assert_eq(ring.global_position, Vector3(0, 1.5, 0))

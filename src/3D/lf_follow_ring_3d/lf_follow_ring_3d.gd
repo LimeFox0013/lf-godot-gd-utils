@@ -53,6 +53,7 @@ func _init(
 
 
 func _ready() -> void:
+	_follow() # a target set before the ring entered the tree
 	set_process(visible) # Godot turns processing on for a ready node with _process
 
 
@@ -67,5 +68,5 @@ func _process(delta: float) -> void:
 func _follow() -> void:
 	var valid := target != null and is_instance_valid(target) and target.is_inside_tree()
 	visible = valid
-	if valid:
-		global_position = target.global_position + Vector3(0, lift, 0) if is_inside_tree() else target.global_position
+	if valid and is_inside_tree():
+		global_position = target.global_position + Vector3(0, lift, 0)
