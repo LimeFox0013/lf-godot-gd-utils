@@ -56,3 +56,26 @@ func test_is_valid_rejects_wrong_length_and_letters_outside_the_alphabet():
 	assert_false(LFShortCode.is_valid('ABCDEF', LENGTH, ALPHABET))
 	assert_false(LFShortCode.is_valid('ABCDO', LENGTH, ALPHABET))
 	assert_false(LFShortCode.is_valid('192.168.1.20', LENGTH, ALPHABET))
+
+
+func test_gen_stops_after_max_attempts():
+	var calls := [0]
+	var taken := func(_code: String) -> bool:
+		calls[0] += 1
+		return true
+	assert_eq(LFShortCode.gen(LENGTH, ALPHABET, _rng(1), taken), '')
+	assert_eq(calls[0], LFShortCode.MAX_ATTEMPTS)
+
+
+func test_gen_negative_length_is_empty_and_taken_receives_the_candidate():
+	assert_eq(LFShortCode.gen(-3, ALPHABET, _rng(1)), '')
+	var seen := []
+	var code := LFShortCode.gen(LENGTH, ALPHABET, _rng(2), func(c: String) -> bool:
+		seen.append(c)
+		return false)
+	assert_eq(seen, [code])
+
+
+func test_is_valid_rejects_empty_text_and_inner_whitespace():
+	assert_false(LFShortCode.is_valid('', LENGTH, ALPHABET))
+	assert_false(LFShortCode.is_valid('AB CD', LENGTH, ALPHABET))
