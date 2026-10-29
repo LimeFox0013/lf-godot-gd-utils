@@ -112,8 +112,7 @@ func _on_options_pressed() -> void:  # connect your Options button here
 func use_instant_switch() -> void:
 	# Replace the animation: show the next page at once. Once the function returns,
 	# the carousel hides every other page.
-	carousel.slide_fn = func(c: LFCarousel, next: String) -> void:
-		c.set_slide_state(next, true)
+	carousel.slide_fn = LFCarousel.instant
 
 
 func reload_pages() -> void:
