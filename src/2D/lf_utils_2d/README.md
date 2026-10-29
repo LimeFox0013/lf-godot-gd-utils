@@ -1,6 +1,6 @@
 # LFUtils2D
 
-> Static Camera2D and 2D helpers: whether a camera can be read, the centre and world rect of what it shows this frame, switching a node between idle and physics processing like a camera, where a ray from a rect's centre meets its border, random points in a circle or around a rect, the spread of a set of points, sizing a sprite, reading a collision shape's size, a click mask from a texture's alpha and steering a body toward a direction.
+> Static Camera2D and 2D helpers: whether a camera can be read, the centre and world rect of what it shows this frame, switching a node between idle and physics processing like a camera, where a ray from a rect's centre meets its border, random points in a circle or around a rect, the spread of a set of points, sizing a sprite, reading a collision shape's size, a click mask from a texture's alpha, steering a body toward a direction and knocking a rigid body away from a point.
 
 | | |
 |---|---|
