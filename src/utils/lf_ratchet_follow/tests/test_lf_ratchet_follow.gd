@@ -67,3 +67,16 @@ func test_a_non_positive_delta_or_a_nan_changes_nothing():
 	assert_eq(follow.step(1.0, NAN, 1.0), 1.0)
 	assert_eq(follow.step(1.0, 9.0, NAN), 1.0)
 	assert_true(is_nan(follow.step(NAN, 9.0, 1.0)))
+
+
+func test_defaults_are_the_documented_ones():
+	var follow := LFRatchetFollow.new()
+	assert_eq(follow.follow_speed, LFRatchetFollow.DEFAULT_FOLLOW_SPEED)
+	assert_eq(follow.sink_speed, 0.0)
+	assert_eq(follow.offset, 0.0)
+	assert_eq(follow.min_value, -INF)
+
+
+func test_a_negative_sink_speed_never_raises_the_value():
+	var follow := LFRatchetFollow.new(2.0, -5.0)
+	assert_eq(follow.step(5.0, 0.0, 1.0), 5.0)

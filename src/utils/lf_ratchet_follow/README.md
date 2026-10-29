@@ -27,9 +27,9 @@ This moves a square up after the mouse and lets it sink slowly.
 ```gdscript
 extends Node2D
 
-# Rises after the target (2 per second of "catching up"), sinks 40 pixels per second.
+# Rises after the target (catch-up speed 2.0), sinks 40 pixels per second.
 var _follow := LFRatchetFollow.new(2.0, 40.0)
-var _height := 600.0
+var _height := -600.0   # the square starts 600 pixels down the screen
 
 func _process(delta: float) -> void:
 	var target := -get_global_mouse_position().y      # up is a higher number
