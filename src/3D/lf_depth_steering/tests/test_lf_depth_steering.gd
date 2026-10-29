@@ -423,3 +423,20 @@ func test_empty_footprints_give_null() -> void:
 	assert_null(steering.landing(Vector3(0, 2, 0), 0.0, 0.0, RISE, FALL, []))
 	assert_null(steering.dodge(Vector3(0, 2, 0), 5.0, 0.0, RISE, [], 0.0))
 	assert_push_error_count(0)
+
+
+func test_apex_helpers_reject_bad_gravity_with_safe_values() -> void:
+	for bad in [0.0, -5.0, NAN, INF]:
+		assert_eq(LFDepthSteering.time_to_apex(5.0, bad), 0.0)
+		assert_eq(LFDepthSteering.apex_height(2.0, 5.0, bad), 2.0)
+	assert_push_error_count(8)
+
+
+func test_null_footprint_entries_are_skipped() -> void:
+	var platform := _platform(0.0, 0.0, 0.5)
+	var list: Array = [null, platform]
+	var landing := steering.landing(Vector3(0, 2, 0), 0.0, 0.0, RISE, FALL, list)
+	assert_not_null(landing)
+	assert_eq(landing.footprint, platform)
+	assert_null(steering.dodge(Vector3(0, 2, 0), 5.0, 0.0, RISE, [null], 0.0))
+	assert_push_error_count(0)

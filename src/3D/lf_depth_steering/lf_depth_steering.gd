@@ -78,15 +78,21 @@ class Dodge:
 
 
 ## The height of the top of a jump from `height` rising at `velocity_up` under `gravity`;
-## `height` itself when not rising.
+## `height` itself when not rising or when `gravity` is not finite and positive (logged).
 static func apex_height(height: float, velocity_up: float, gravity: float) -> float:
+	if not is_finite(gravity) or gravity <= 0.0:
+		_log.error('apex_height needs a finite, positive gravity, got', gravity)
+		return height
 	if velocity_up <= 0.0:
 		return height
 	return height + velocity_up * velocity_up / (2.0 * gravity)
 
 
-## Seconds until the top of a jump; 0 when not rising.
+## Seconds until the top of a jump; 0 when not rising or when `gravity` is not finite and positive (logged).
 static func time_to_apex(velocity_up: float, gravity: float) -> float:
+	if not is_finite(gravity) or gravity <= 0.0:
+		_log.error('time_to_apex needs a finite, positive gravity, got', gravity)
+		return 0.0
 	return maxf(velocity_up, 0.0) / gravity
 
 
@@ -101,7 +107,10 @@ func landing(position: Vector3, velocity_up: float, velocity_x: float, gravity_r
 	var fall_speed := maxf(-velocity_up, 0.0)
 	var best: Footprint = null
 	var best_time := 0.0
-	for item: Footprint in footprints:
+	for entry: Variant in footprints:
+		var item := entry as Footprint
+		if item == null:
+			continue
 		if item.top > apex_y:
 			continue
 		var drop := apex_y - item.top
@@ -138,7 +147,10 @@ func dodge(position: Vector3, velocity_up: float, velocity_x: float, gravity_ris
 	var bands: Array[Vector2] = []
 	var centers: Array[float] = []
 	var earliest := INF
-	for item: Footprint in footprints:
+	for entry: Variant in footprints:
+		var item := entry as Footprint
+		if item == null:
+			continue
 		if item.bottom >= sweep_top or item.top <= position.y:
 			continue
 		if item.center_x - item.half_x >= x_high or item.center_x + item.half_x <= x_low:
