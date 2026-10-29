@@ -342,7 +342,16 @@ func _connect_release(entity: Node, signal_name: StringName) -> void:
 	if not entity.has_signal(signal_name):
 		_log.error('LFFactory: "%s" has no signal "%s" to release on' % [entity, signal_name])
 		return
-	entity.connect(signal_name, release.bind(entity), CONNECT_ONE_SHOT)
+	var arg_count := 0
+	for info in entity.get_signal_list():
+		if info.name == signal_name:
+			arg_count = info.args.size()
+			break
+	var handler := release.bind(entity)
+	if arg_count > 0:
+		handler = handler.unbind(arg_count)
+	if not entity.is_connected(signal_name, handler):
+		entity.connect(signal_name, handler, CONNECT_ONE_SHOT)
 
 
 func _kind_or_report(key: Variant) -> _Kind:

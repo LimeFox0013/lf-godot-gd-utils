@@ -727,6 +727,8 @@ func test_a_fresh_acquire_while_the_container_sets_up_children_is_refused_by_god
 	assert_engine_error('busy setting up children')
 	assert_eq(child.got.size(), 2)
 	assert_eq(child.got[1].get_parent(), screen, 'acquire_async parented its entity')
+	if is_instance_valid(child.got[0]) and child.got[0].get_parent() == null:
+		child.got[0].free() # the refused acquire left an unparented node
 
 
 func test_a_fresh_entity_acquired_in_a_state_machine_hook_or_a_tick_callback_is_in_the_container():
@@ -922,3 +924,23 @@ func test_release_on_signal_with_an_unknown_signal_reports_and_connects_nothing(
 	assert_push_error('no signal')
 	assert_not_null(entity)
 	assert_false(factory.is_pooled(entity))
+
+
+class _ArgEmitter:
+	extends Node
+	signal hit(amount: int, who: String)
+
+
+func test_release_on_signal_works_with_a_signal_that_carries_arguments():
+	factory.register('a', _ArgEmitter.new, factory.release_on_signal(&'hit'))
+	var entity := factory.acquire('a') as _ArgEmitter
+	entity.hit.emit(3, 'x')
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_after_a_manual_release_does_not_connect_twice():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	factory.release(entity)
+	factory.acquire('a')
+	assert_eq(entity.done.get_connections().size(), 1)
