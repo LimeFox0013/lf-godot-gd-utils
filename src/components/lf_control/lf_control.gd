@@ -3,19 +3,19 @@
 ## While it is in the scene tree, the control is listed in one shared registry under its
 ## `registry_id`; `LFControl.by_id("that_id")` returns it from anywhere, with no node path and
 ## no SceneTree reference. It also has static helpers for UI placement: a control's
-## centre, sorting controls into reading order, and placing a popup beside a rectangle.
+## centre, pinning to a screen edge, sorting controls into reading order, and placing a popup beside a rectangle.
 ## It is the base class of `LFLayoutControl`, `LFControl2D` and `LFControlOut`.
 class_name LFControl
 extends Control
 
-## Key this control is registered under while in the tree, so it can be fetched with
-## `LFControl.by_id(registry_id)`. Empty means it is never registered. Changing it while
-## the control is in the tree moves the registration to the new key.
 const _RIGHT_PRESETS := [Control.PRESET_TOP_RIGHT, Control.PRESET_CENTER_RIGHT, Control.PRESET_BOTTOM_RIGHT]
 const _BOTTOM_PRESETS := [Control.PRESET_BOTTOM_LEFT, Control.PRESET_CENTER_BOTTOM, Control.PRESET_BOTTOM_RIGHT]
 const _CENTER_COLUMN_PRESETS := [Control.PRESET_CENTER_TOP, Control.PRESET_CENTER, Control.PRESET_CENTER_BOTTOM]
 const _CENTER_ROW_PRESETS := [Control.PRESET_CENTER_LEFT, Control.PRESET_CENTER, Control.PRESET_CENTER_RIGHT]
 
+## Key this control is registered under while in the tree, so it can be fetched with
+## `LFControl.by_id(registry_id)`. Empty means it is never registered. Changing it while
+## the control is in the tree moves the registration to the new key.
 @export var registry_id: String:
 	set(value):
 		if value == registry_id:
