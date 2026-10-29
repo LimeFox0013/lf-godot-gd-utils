@@ -409,14 +409,15 @@ func test_a_peer_closing_without_a_response_fails_promptly_even_without_a_timeou
 		assert_eq(r.res.error, "Connection lost")
 
 
-## The error text `LFHttp` gives for a connection to a closed loopback port on this platform.
-func _refused_connection_error() -> String:
+## The error texts `LFHttp` may give for a connection to a closed loopback port on this platform.
+## macOS 26 reports a lost connection; older macOS versions report a refused one.
+func _refused_connection_errors() -> Array:
 	match OS.get_name():
 		"Windows":
-			return "Connect timeout"
+			return ["Connect timeout"]
 		"macOS":
-			return "Connection lost"
-	return "Cannot connect"
+			return ["Connection lost", "Cannot connect"]
+	return ["Cannot connect"]
 
 
 func test_a_refused_connection_names_the_cause():
@@ -429,8 +430,8 @@ func test_a_refused_connection_names_the_cause():
 	if r.done:
 		assert_false(r.res.ok)
 		# Godot on Windows never reports a refused loopback connection, so the timeout ends it.
-		# Godot 4.7.2 on macOS 26 reports it as a lost connection instead of a refused one.
-		assert_eq(r.res.error, _refused_connection_error())
+		# Godot 4.7.2 on macOS 26 reports it as a lost connection instead of a refused one; older macOS says refused.
+		assert_true(r.res.error in _refused_connection_errors(), "refused connection error was: %s" % r.res.error)
 
 
 func test_the_timeout_bounds_the_whole_request_even_while_bytes_keep_arriving():
