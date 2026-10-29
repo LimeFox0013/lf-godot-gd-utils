@@ -56,3 +56,10 @@ func test_ids_can_be_numbers_and_a_member_in_two_groups_keeps_the_last():
 	alliances.configure([[1, 2], [2, 3]])
 	assert_true(alliances.are_allied(2, 3))
 	assert_false(alliances.are_allied(1, 2))
+
+
+func test_group_zero_and_a_member_repeated_in_one_group_work():
+	var alliances := LFAllianceGroups.new()
+	alliances.configure([["a", "a", "b"], []])
+	assert_true(alliances.are_allied("a", "b"), "the first group is index 0")
+	assert_false(alliances.are_allied("a", "c"))
