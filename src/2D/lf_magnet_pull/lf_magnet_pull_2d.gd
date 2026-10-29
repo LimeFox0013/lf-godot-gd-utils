@@ -26,13 +26,13 @@ func set_attractor(attractor: Node2D, power: float, on := true) -> void:
 	_core.set_attractor(attractor, power, on)
 
 
-## Removes `attractor`; does nothing if it was not added.
-func remove_attractor(attractor: Node2D) -> void:
+## Removes `attractor`; does nothing if it was not added. A freed `attractor` is accepted.
+func remove_attractor(attractor: Variant) -> void:
 	_core.remove_attractor(attractor)
 
 
-## Whether `attractor` is currently added.
-func has_attractor(attractor: Node2D) -> bool:
+## Whether `attractor` is currently added; false for a freed one.
+func has_attractor(attractor: Variant) -> bool:
 	return _core.has_attractor(attractor)
 
 

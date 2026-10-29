@@ -118,3 +118,49 @@ func test_force_at_does_not_change_velocity() -> void:
 	_pull.set_attractor(_attractor(Vector2(10, 0)), POWER)
 	_pull.force_at(Vector2.ZERO)
 	assert_eq(_pull.velocity, Vector2.ZERO)
+
+
+func test_remove_attractor_removes_and_ignores_unknown() -> void:
+	var node := _attractor(Vector2(10, 0))
+	var other := _attractor(Vector2(20, 0))
+	_pull.set_attractor(node, POWER)
+	assert_true(_pull.has_attractor(node))
+	_pull.remove_attractor(other)
+	assert_eq(_pull.attractor_count(), 1)
+	_pull.remove_attractor(node)
+	assert_false(_pull.has_attractor(node))
+	assert_eq(_pull.attractor_count(), 0)
+
+
+func test_step_with_zero_delta_keeps_velocity() -> void:
+	_pull.set_attractor(_attractor(Vector2(10, 0)), POWER)
+	assert_eq(_pull.step(Vector2.ZERO, 0.0), Vector2.ZERO)
+
+
+func test_core_works_on_vector3() -> void:
+	var core := LFMagnetPullCore.new(Vector3.ZERO)
+	var node: Node3D = add_child_autofree(Node3D.new())
+	node.global_position = Vector3(0, 0, 10)
+	core.set_attractor(node, POWER)
+	var v: Vector3 = core.step(Vector3.ZERO, 1.0)
+	assert_almost_eq(v.z, POWER, TOLERANCE)
+	assert_eq(core.velocity, v)
+
+
+func test_removing_a_freed_attractor_does_not_error_and_forgets_it() -> void:
+	var node := _attractor(Vector2(10, 0))
+	var other := _attractor(Vector2(20, 0))
+	_pull.set_attractor(node, POWER)
+	_pull.set_attractor(other, POWER)
+	node.free()
+	_pull.remove_attractor(node)
+	assert_false(_pull.has_attractor(node))
+	assert_eq(_pull.attractor_count(), 1)
+	assert_true(_pull.has_attractor(other))
+
+
+func test_has_attractor_is_false_for_a_freed_node() -> void:
+	var node := _attractor(Vector2(10, 0))
+	_pull.set_attractor(node, POWER)
+	node.free()
+	assert_false(_pull.has_attractor(node))

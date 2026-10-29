@@ -40,13 +40,19 @@ func set_attractor(attractor: Node, power: float, on := true) -> void:
 	_attractors[attractor.get_instance_id()] = {"node": weakref(attractor), "power": power}
 
 
-## Removes `attractor`; does nothing if it was not added.
-func remove_attractor(attractor: Node) -> void:
+## Removes `attractor`; does nothing if it was not added. A freed `attractor` is accepted:
+## nothing can be matched to it, so every freed attractor is dropped from the list.
+func remove_attractor(attractor: Variant) -> void:
+	if not is_instance_valid(attractor):
+		_prune()
+		return
 	_attractors.erase(attractor.get_instance_id())
 
 
-## Whether `attractor` is currently added.
-func has_attractor(attractor: Node) -> bool:
+## Whether `attractor` is currently added; false for a freed one.
+func has_attractor(attractor: Variant) -> bool:
+	if not is_instance_valid(attractor):
+		return false
 	return _attractors.has(attractor.get_instance_id())
 
 

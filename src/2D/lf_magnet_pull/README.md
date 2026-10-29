@@ -56,8 +56,8 @@ You should see the coin speed up toward the player and glide in at about 300 pix
 | Member | Signature | Description |
 |---|---|---|
 | `set_attractor` | `set_attractor(attractor: Node2D, power: float, on := true) -> void` | Adds the attractor or changes its power; `on = false` removes it. A NaN power is rejected through `LFLogger`. |
-| `remove_attractor` | `remove_attractor(attractor: Node2D) -> void` | Removes it; harmless if absent. |
-| `has_attractor` | `has_attractor(attractor: Node2D) -> bool` | Whether it is added. |
+| `remove_attractor` | `remove_attractor(attractor: Variant) -> void` | Removes it; harmless if absent or already freed. |
+| `has_attractor` | `has_attractor(attractor: Variant) -> bool` | Whether it is added; false for a freed one. |
 | `attractor_count` | `attractor_count() -> int` | Added attractors that are alive and in the scene tree. |
 | `clear` | `clear() -> void` | Removes every attractor and zeroes the velocity. |
 | `velocity` | `Vector2` (read-only) | The current pulled velocity. |
@@ -86,3 +86,4 @@ velocity = pull.step(global_position, delta)
 - Freed attractors and ones outside the scene tree are skipped (and forgotten); attractors are held by weak reference, so the pull never keeps them alive.
 - The pull has no range: add and remove attractors as they come and go. Positions are global.
 - `delta` scales the step, so results differ slightly between frame rates, as with any Euler integration.
+- `remove_attractor` and `has_attractor` take a `Variant`, so a freed attractor does not raise a type error: `has_attractor` returns false, and `remove_attractor` cannot tell which entry it was, so it drops every freed or out-of-tree attractor from the list.
