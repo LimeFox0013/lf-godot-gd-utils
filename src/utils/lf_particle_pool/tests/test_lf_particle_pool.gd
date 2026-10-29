@@ -111,3 +111,17 @@ func test_a_missing_or_wrong_reference_is_reported_and_acquire_gives_null():
 	autofree(wrong.reference)
 	_holder.add_child(wrong)
 	assert_push_error('LFParticlePool')
+
+
+func test_a_zero_or_negative_warm_up_builds_nothing_but_acquire_still_works():
+	var pool := _make_pool(-3)
+	assert_eq(pool.pooled_count(), 0)
+	assert_not_null(pool.acquire())
+
+
+func test_the_default_warm_up_is_used_when_none_is_set():
+	var pool := LFParticlePool.new()
+	pool.reference = _reference
+	assert_eq(pool.warm_up, LFParticlePool.DEFAULT_WARM_UP)
+	_holder.add_child(pool)
+	assert_eq(pool.pooled_count(), LFParticlePool.DEFAULT_WARM_UP)
