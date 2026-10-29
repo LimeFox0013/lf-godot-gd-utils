@@ -149,9 +149,10 @@ Everything the class offers; you only need the rows used above to get started.
 
 | Member | Signature | Description |
 |---|---|---|
-| `new` | `LFSnapshotReceiver.new(apply_delta_fn: Callable)` | `apply_delta_fn(snapshot, delta) -> Variant` returns the snapshot with the delta applied. |
+| `new` | `LFSnapshotReceiver.new(delta_applier: Callable = Callable())` | Sets `apply_delta_fn`: `(snapshot, delta) -> Variant`, returns the snapshot with the delta applied. With no valid function every delta is ignored. |
 | `on_checkpoint` | `on_checkpoint(snapshot: Variant) -> void` | Replaces the state. |
-| `on_delta` | `on_delta(delta: Variant) -> bool` | Applies a delta; false and no change before the first checkpoint. |
+| `on_delta` | `on_delta(delta: Variant) -> bool` | Applies a delta; false and no change before the first checkpoint or without a valid `apply_delta_fn`. |
+| `apply_delta_fn` | `var apply_delta_fn: Callable` | The function `on_delta` calls. |
 | `current` | `var current: Variant` | The newest state, null before the first checkpoint. |
 
 ### LFInterpolationBuffer (client, one per value)
