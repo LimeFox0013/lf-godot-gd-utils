@@ -80,7 +80,7 @@ Everything the two classes offer; you only need the rows used above to get start
 | `Ground` | inner class `LFFlowField.Ground` (made by `prepare_ground`) | `var cols: int` and the prepared per-cell arrays (`blocked`, `allowed`, `escape`). Nothing changes it after it is made (leave it unchanged too), so computes on several threads may share one. |
 | `sample_direction` | `static sample_direction(field: Field, position: Vector3) -> Vector3` | `field.sample(position)`; `Vector3.ZERO` for a null field. |
 | `climbable_masks` | `static climbable_masks(lattice: PackedFloat32Array, lattice_spacing: float, half_extent: float, cell_size: float, max_slope_deg: float) -> PackedInt32Array` | Builds a nav grid's `climbable` from a square height lattice (`round(2·half_extent / lattice_spacing) + 1` samples per side, read as a bilinear surface): per cell, the neighbors reached from its centre without climbing steeper than `max_slope_deg`; going down is always allowed. A lattice of the wrong size is reported and allows every step. |
-| `build_nav_grid` | `static build_nav_grid(half_extent: float, cell_size: float, height_at: Callable, wall_rects: Array[Rect2], lattice: PackedFloat32Array, lattice_spacing: float, max_slope_deg: float) -> Dictionary` | The whole `nav_grid` below in one call: `height_at(x, z)` at each cell centre, every cell a wall rect overlaps blocked, `climbable` from `lattice` (empty `lattice`: flat, every step allowed). Add `max_climb` yourself. |
+| `build_nav_grid` | `static build_nav_grid(half_extent: float, cell_size: float, height_at: Callable, wall_rects: Array[Rect2], lattice: PackedFloat32Array, lattice_spacing: float, max_slope_deg: float) -> Dictionary` | The whole `nav_grid` (described below) in one call: `height_at(x, z)` at each cell centre, every cell a wall rect overlaps blocked, `climbable` from `lattice` (empty `lattice`: flat, every step allowed). Add `max_climb` yourself. |
 | `DEFAULT_DENSITY_WEIGHT` | `const DEFAULT_DENSITY_WEIGHT := 2.0` | Default `density_weight`: how strongly crowding bends paths; 0 ignores the crowd, and so does a negative or non-finite value. |
 | `Field` | inner class `LFFlowField.Field` (made by `compute`) | `var goal: Vector3`, `var half_extent: float`, `var cell_size: float`, `var cols: int`, `var rows: int` (equal to `cols`; both 0 when the grid has no cells), `var directions: PackedVector3Array` (one unit XZ direction per cell, row-major), and `sample(position: Vector3) -> Vector3`: the direction at `position`, clamped into the grid; zero for an empty field and at the goal's cell centre (near a goal that is off its cell's centre, it still points toward the goal). |
 
@@ -94,7 +94,7 @@ The step goes to the allowed neighbor with the lowest cost-to-goal, ignoring the
 the step and that neighbor's own density, so a unit that follows the directions exactly can
 end up a little longer than the cheapest path.
 
-#### `build_nav_grid`
+#### `nav_grid`
 
 Optional, row-major per cell, matching the field's grid:
 
@@ -168,7 +168,7 @@ func crowd_positions() -> PackedVector3Array:
 	return positions
 ```
 
-Walls: describe the ground once with a nav grid (see `build_nav_grid` above) and hand it over. These lines go inside a function, with `fields` the `LFFlowFieldService` created above:
+Walls: describe the ground once with a nav grid (see `nav_grid` above; `LFFlowField.build_nav_grid` makes one) and hand it over. These lines go inside a function, with `fields` the `LFFlowFieldService` created above:
 
 ```gdscript
 var cols := LFGrid2D.cells_across(60.0, 3.0)
