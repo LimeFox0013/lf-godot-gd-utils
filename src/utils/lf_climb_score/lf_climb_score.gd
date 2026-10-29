@@ -65,10 +65,10 @@ func step(height: float, multiplier: float, min_rate: float, delta: float) -> fl
 		return 0.0
 	_clock += delta
 	_remember(height)
-	var rate := _rate(height)
+	var climb_rate := _rate(height)
 	var added := 0.0
 	if height > _peak:
-		if rate > min_rate and multiplier > 0.0:
+		if climb_rate > min_rate and multiplier > 0.0:
 			added = (height - _peak) * multiplier
 		_peak = height
 	if added > 0.0:

@@ -106,3 +106,25 @@ func test_a_bad_window_uses_the_default():
 	assert_push_error_count(1)
 	bad.step(1.0, 1.0, 0.0, 0.1)
 	assert_gt(bad.score, 0.0)
+
+
+func test_step_returns_the_points_added():
+	assert_almost_eq(s.step(2.0, 3.0, 0.0, 0.1), 6.0, 0.001)
+	assert_eq(s.step(1.0, 3.0, 0.0, 0.1), 0.0)
+
+
+func test_rate_reads_slow_at_first_then_matches_the_climb():
+	assert_eq(s.rate(), 0.0)
+	_climb(10.0, 5.0)
+	assert_almost_eq(s.rate(), 2.0, 0.05)
+
+
+func test_reset_clears_the_climb_history():
+	_climb(10.0, 2.0)
+	s.reset()
+	assert_eq(s.rate(), 0.0)
+
+
+func test_a_non_finite_start_height_resets_to_zero():
+	s.reset(NAN)
+	assert_eq(s.peak, 0.0)

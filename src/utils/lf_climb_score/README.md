@@ -32,10 +32,10 @@ Use it for a climbing or endless-ascent game where the score is the height gaine
    	for h in [2.0, 4.0, 1.0, 4.0, 6.0]:
    		score.step(h, 2.0, 1.0, 0.5)
    	print(score.peak)   # 6.0
-   	print(score.score)  # only height above the peak so far, while climbing fast enough
+   	print(score.score)  # 12.0: 4 + 4 for the climb to 4 m, 4 for the 4 m to 6 m
    ```
 4. Press **F6** (*Run Current Scene*) and save the scene when asked, for example as `test.tscn`.
-5. In the *Output* panel you should see the peak (`6.0`) and a score that counts only the metres gained above earlier peaks.
+5. In the *Output* panel you should see the peak (`6.0`) and the score `12.0`: the fall to 1 m and the climb back to 4 m earn nothing.
 
 ## API
 
@@ -49,6 +49,10 @@ Use it for a climbing or endless-ascent game where the score is the height gaine
 | `score` | `var score: float` | Points so far. Read only. |
 | `peak` | `var peak: float` | The highest height reached. Read only. |
 | `changed` | `signal changed(score: float)` | After a `step` that raised the score. |
+
+## Usage
+
+Call `step` once per frame with the current height, your multiplier, the slowest climb rate worth paying (height per second) and the frame time. Read `score` and `peak` at any time, connect `changed` to refresh a display, and call `reset` when a run starts.
 
 ## Notes
 
