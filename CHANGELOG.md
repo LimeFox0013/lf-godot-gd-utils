@@ -6,33 +6,15 @@ major version.
 
 ## Unreleased
 
-Six new modules, all experimental: `lf_grade_combo`, `lf_chunk_stream`, `lf_ratchet_follow`,
-`lf_jump_physics`, `lf_particle_pool` and `lf_multimesh_scatter`.
+## 2.0.0 - 2026-10-29
 
-Four more new modules, all experimental: `lf_experience_levels`, `lf_group_camera_2d`,
-`lf_local_service` and `lf_auto_size_text_edit`.
+**Breaking:** `lf_log_view`: `LFLogView.append` now returns `Control` instead of `Label`, because a custom line scene can be any `Control`. The default line is still a `Label`; code that typed the result as `Label` must write `append(...) as Label`. This is why this release is 2.0.0.
 
-Nine more new modules, all experimental: `lf_health`, `lf_countdown`, `lf_momentum`, `lf_hit_boxes`,
-`lf_magnet_pull`, `lf_magnet_pull_3d`, `lf_confirm`, `lf_prompt_dialog` and `lf_hud_bars`.
-
-One more, also experimental: `lf_shaders_2d`.
-
-Another new experimental module: `lf_wobble` (a damped spring for a bobblehead-style wobble).
-
-`LFInputBuffer` also reports the `age` of the press it holds.
-
-One more new module, experimental: `lf_input_rebinder` (reassign the keys and pad buttons of input actions, saved between runs).
-
-Two more, experimental: `lf_climb_score` (a score paid only for new height, weighted by a multiplier and gated by climb rate) and `lf_milestones` (each multiple of a step reported the first time).
-
-Three more, all experimental: `lf_property_patch`, `lf_follow_ring_3d` and `lf_ring_markers_3d`.
-
-Another new experimental module: `lf_sound` (`LFTone` makes bleeps, sweeps and noise from code; `LFSfx` plays short sounds from a pool).
-
-One more, experimental: `lf_time_scale` (a short slow-motion pulse in real seconds).
+46 new modules (128 in all), all labelled experimental in STABILITY.md: see **Added**.
 
 ### Added
 
+- **(experimental)** `LFPixelDraw` (`lf_pixel_draw`): pixel art drawn from code - rectangles, discs, lines, frames, ASCII sprites (as merged `ColorRect`s or one baked texture) and bitmap text.
 - **(experimental)** `LFPropertyPatch`: change an object property from a data entry (`add`, `multiply` or `set`, by dotted path, with a cap and a mirrored field).
 - **(experimental)** `LFFollowRing3D`: a pulsing ground ring that follows a `Node3D` and hides without one.
 - **(experimental)** `LFRingMarkers3D`: a pool of flat ground rings sharing one mesh and material, shown at the points you give.
@@ -106,10 +88,31 @@ One more, experimental: `lf_time_scale` (a short slow-motion pulse in real secon
 - **(experimental)** `LFListCursor` (`lf_list_cursor`): a highlighted list row that stops at both ends, with a pointer-prefix helper.
 - **(experimental)** `LFSettingDefinition` (`lf_setting_definition`): one options-menu setting (pick-one or whole number) with `sanitize` and `display`.
 - **(experimental)** `LFWallet` (`lf_wallet`): an amount you add to and spend, with a `changed` signal.
+- **(experimental)** `LFGradeCombo` (`lf_grade_combo`): counts earned grades, combines them into one multiplier, removes a share best-first as a penalty, and maps a score to a grade.
+- **(experimental)** `LFChunkStream` (`lf_chunk_stream`): keeps a window of numbered level chunks built around a focused index, with spawn and despawn callables you supply.
+- **(experimental)** `LFRatchetFollow` (`lf_ratchet_follow`): a one-way follower that eases up after a higher target and sinks slowly, for climb cameras.
+- **(experimental)** `LFJumpPhysics` (`lf_jump_physics`): platformer jump feel as maths (heavier fall, short hop on early release, jump strength from built-up power and running speed).
+- **(experimental)** `LFParticlePool` (`lf_particle_pool`): a pool of independent copies of one `GPUParticles2D`/`3D` set up in the editor, each returning to the pool when it emits `finished`.
+- **(experimental)** `LFMultiMeshScatter` (`lf_multimesh_scatter`): a `MultiMeshInstance3D` that fills itself with random copies of its mesh over a flat area, with density, size range, height shift, a layer number per copy and a seed.
+- **(experimental)** `LFWobble` (`lf_wobble`): a damped spring for one number (a bobblehead's tilt) with `step`, `kick`, `reset` and `limit`.
+- **(experimental)** `LFInputRebinder` (`lf_input_rebinder`): reassign the keyboard and pad bindings of `InputMap` actions (swap on conflict), reset them, and save and load them as JSON.
+- **(experimental)** `LFClimbScore` (`lf_climb_score`): a score paid only for height above the peak, times a multiplier, and only while the climb rate averaged over a window beats a minimum.
+- **(experimental)** `LFMilestones` (`lf_milestones`): reports each multiple of a step the first time a value reaches it, with a big mark every n-th.
+- **(experimental)** `LFTone` and `LFSfx` (`lf_sound`): sound effects made from code (sine, square, triangle and noise tones and sweeps) and a pool of players for overlapping short sounds.
+- **(experimental)** `LFTimeScale` (`lf_time_scale`): a slow-motion pulse measured in real seconds; the earlier game speed returns when it ends.
+- `LFInputBuffer.age`: how long the held press has waited.
 
 ### Changed
 
-- **Breaking:** `LFLogView.append` returns `Control` instead of `Label` (a custom line can be any control). Write `log.append(text) as Label` where a typed `Label` is needed.
+- **Breaking:** `lf_log_view`: `LFLogView.append` returns `Control` instead of `Label` (a custom line can be any control). Write `log.append(text) as Label` where a typed `Label` is needed.
+- **(experimental)** `LFHttp.request` has new `max_redirects` and `redirect_validator` parameters and the error `Body not resent to another origin`; the default `timeout_ms` is now 30 s and the default body cap 16 MiB. Header and URL length limits, `Content-Length` validation and a bounded per-frame body read were added.
+- `LFStatusEffects.remove` and `clear` now also emit `ended`.
+
+### Fixed
+
+- `lf_process`: no source or API change; a missing `.uid` file for its Windows test script was added.
+- `lf_await`: the retry tests no longer depend on tight wall-clock bounds, so they do not fail on a loaded machine. No source or API change.
+- `lf_socket`: the tests tolerate the engine's macOS 26 "Unable to set TCP no delay option" message when a test dials a closed port. No source or API change.
 
 ## 1.0.0 - 2026-10-09
 

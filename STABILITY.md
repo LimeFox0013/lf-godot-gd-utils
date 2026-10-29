@@ -51,7 +51,7 @@ release. Entries for experimental modules are marked **(experimental)**.
 - **experimental**: usable, tested, and documented, but its API may change in a minor
   release. The reason is given in the last column. Pin the exact version you tested with.
 
-These labels are the maintainers' judgment at version 1.0.0, based on each module's
+These labels are the maintainers' judgment at version 2.0.0, based on each module's
 README and tests; they are not measurements, and a "stable" label is a commitment about
 how the API will change, not a promise that the module has no bugs. Modules move from
 experimental to stable in a minor release, with a CHANGELOG entry.
@@ -87,6 +87,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | Module | Stability | Why |
 |---|---|---|
 | [`lf_infinite_scroll_sprite`](src/2D/lf_infinite_scroll_sprite/README.md) | experimental | rendering; tests cannot judge how it looks |
+| [`lf_pixel_draw`](src/2D/lf_pixel_draw/README.md) | experimental | new module; extracted from two games; the font and the draw API may still change |
 | [`lf_group_camera_2d`](src/2D/lf_group_camera_2d/README.md) | experimental | camera feel; tests cannot judge it |
 | [`lf_hit_boxes`](src/2D/lf_hit_boxes/README.md) | experimental | new module; the gate and hit-box semantics were extracted from one game and may change |
 | [`lf_magnet_pull`](src/2D/lf_magnet_pull/README.md) | experimental | new module; API unproven outside one game |
@@ -127,6 +128,7 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_capped_level_tracker`](src/utils/lf_capped_level_tracker/README.md) | experimental | game-shaped (roguelike upgrades); the shape may still change |
 | [`lf_coalesced_tick`](src/utils/lf_coalesced_tick/README.md) | experimental | new module; extracted from a game |
 | [`lf_cooldown`](src/utils/lf_cooldown/README.md) | stable | - |
+| [`lf_climb_score`](src/utils/lf_climb_score/README.md) | experimental | new module; one consumer; the averaged-rate gating may be tuned |
 | [`lf_countdown`](src/utils/lf_countdown/README.md) | experimental | new module; the `ticked` / `finished` ordering and the `State` set may change after real use |
 | [`lf_jump_physics`](src/utils/lf_jump_physics/README.md) | experimental | newer, extracted from a game |
 | [`lf_peer_grace`](src/utils/lf_peer_grace/README.md) | experimental | new module; extracted from a game |
@@ -159,6 +161,8 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_llm`](src/utils/lf_llm/README.md) | experimental | talks to third-party model APIs that change; under active review |
 | [`lf_local_service`](src/utils/lf_local_service/README.md) | experimental | platform-dependent; starts and stops programs; tested on macOS only |
 | [`lf_logger`](src/utils/lf_logger/README.md) | stable | - |
+| [`lf_milestones`](src/utils/lf_milestones/README.md) | experimental | new module; small, but no release history yet |
+| [`lf_input_rebinder`](src/utils/lf_input_rebinder/README.md) | experimental | new module; the file format and swap semantics are untested in a shipped game |
 | [`lf_momentum`](src/utils/lf_momentum/README.md) | experimental | new module; the penalty rule (a fraction of the whole value, floored at the base) may change after real use |
 | [`lf_streak_multiplier`](src/utils/lf_streak_multiplier/README.md) | experimental | new module; extracted from a game |
 | [`lf_loot_table`](src/utils/lf_loot_table/README.md) | stable | - |
@@ -189,6 +193,9 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_tier_roller`](src/utils/lf_tier_roller/README.md) | stable | - |
 | [`lf_turn_cycle`](src/utils/lf_turn_cycle/README.md) | stable | - |
 | [`lf_unlock_tree`](src/utils/lf_unlock_tree/README.md) | stable | - |
+| [`lf_sound`](src/utils/lf_sound/README.md) | experimental | new module; the API (pool eviction, wave set, no per-sound bus or stop control) may still change |
+| [`lf_time_scale`](src/utils/lf_time_scale/README.md) | experimental | new module; uses static global state on `Engine.time_scale` |
+| [`lf_wobble`](src/utils/lf_wobble/README.md) | experimental | new module; written for one game's bobblehead |
 | [`lf_wallet`](src/utils/lf_wallet/README.md) | experimental | new module; extracted from a game |
 | [`lf_url`](src/utils/lf_url/README.md) | experimental | URL parsing that the network modules rely on; under active review |
 | [`lf_utils`](src/utils/lf_utils/README.md) | stable | - |
@@ -197,4 +204,4 @@ experimental to stable in a minor release, with a CHANGELOG entry.
 | [`lf_wire_message`](src/utils/lf_wire_message/README.md) | experimental | new module |
 | [`lf_zip`](src/utils/lf_zip/README.md) | experimental | threads plus untrusted archives |
 
-52 modules are stable and 40 are experimental.
+52 modules are stable and 76 are experimental.

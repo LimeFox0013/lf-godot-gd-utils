@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**127 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**128 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-127 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+128 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -179,6 +179,7 @@ game; read their pages before adopting them:
 | `lf_hit_boxes` | Hit boxes and hurt boxes that turn overlaps into damage, with a short invulnerability gate |
 | `lf_infinite_scroll_sprite` | Endless scrolling and parallax backgrounds that follow the camera |
 | `lf_magnet_pull` | Pulls pickups toward nearby magnets, each with its own power |
+| `lf_pixel_draw` | Pixel art drawn from code: rectangles, discs, lines, frames, ASCII sprites and bitmap text, as separate `ColorRect`s or one baked texture |
 | `lf_shaders_2d` | Ready-made materials: sprite outline, screen outline, dissolve and darken |
 | `lf_utils_2d` | Helpers for what a 2D camera sees, pinning things to the screen edge, random points around a spot, and sizing sprites |
 | `lf_viewport_leave` | Tells you when a node has been off-screen for a while (to free bullets, despawn enemies) |
