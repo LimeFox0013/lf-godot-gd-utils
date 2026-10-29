@@ -7,7 +7,7 @@
 | **Kind** | [Object](../../../README.md#how-lf-classes-work): create it with `LFSettingDefinition.choice(...)` or `LFSettingDefinition.integer(...)` |
 | **Files** | `lf_setting_definition.gd` |
 | **Tests** | `tests/test_lf_setting_definition.gd` (in the repository; the release zip leaves tests out) |
-| **Depends on** | `LFUtils` |
+| **Depends on** | `LFUtils`, `LFLogger` |
 
 ## When to use it
 
@@ -39,7 +39,7 @@ func _ready() -> void:
 |---|---|---|
 | `Kind` | `enum Kind { CHOICE, INTEGER }` | Pick-one or whole number. |
 | `choice` | `static choice(setting_id, setting_label, setting_description, choices, initial) -> LFSettingDefinition` | A pick-one setting; `choices` is `[{ "value", "label" }]`. |
-| `integer` | `static integer(setting_id, setting_label, setting_description, lowest, highest, increment, initial, formatter := Callable())` | A whole number from `lowest` to `highest` in steps of `increment`. |
+| `integer` | `static integer(setting_id, setting_label, setting_description, lowest, highest, increment, initial, formatter := Callable()) -> LFSettingDefinition` | A whole number from `lowest` to `highest` in steps of `increment`. |
 | `id` / `label` / `description` / `kind` / `default_value` | `var` | What the setting is called, explained as, and falls back to. |
 | `options` | `var options: Array` | CHOICE only. |
 | `min_value` / `max_value` / `step` / `format_fn` | `var` | INTEGER only; `format_fn.call(value) -> String` shapes the text. |
@@ -57,5 +57,6 @@ picker_items = definition.values()
 ## Notes
 
 - A float is cut to a whole number first (52.9 counts as 52), then snapped to the nearest step.
-- An integer setting needs a `step` above 0.
+- A `step` of 0 or less counts as 1 in `sanitize` and `values` (a warning is logged once, when `integer(...)` builds the definition); the `step` variable itself is left as given.
+- A float beyond the range is clamped to it before being cut to a whole number, so a huge float gives `min_value` or `max_value` (a warning is logged on each such call, for floats beyond about 9e18 or infinite). NaN gives the default, with a warning.
 - Choices are matched with `LFUtils.find_by`, so a choice value must be comparable with `==`.

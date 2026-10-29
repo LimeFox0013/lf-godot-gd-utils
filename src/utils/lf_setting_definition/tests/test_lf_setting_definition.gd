@@ -72,3 +72,62 @@ func test_display_of_an_integer_uses_the_format_or_the_number():
 func test_values_lists_every_legal_value_in_order():
 	assert_eq(mode.values(), ["easy", "hard"])
 	assert_eq(LFSettingDefinition.integer("n", "N", "", 0, 9, 3, 0).values(), [0, 3, 6, 9])
+
+
+func test_choice_matching_ignores_type_surprises_without_error():
+	assert_eq(mode.sanitize(1), "easy")
+	assert_eq(mode.sanitize(["easy"]), "easy")
+
+
+func test_a_choice_value_can_be_a_number():
+	var level := LFSettingDefinition.choice("lvl", "Level", "", [{ "value": 1, "label": "One" }, { "value": 2, "label": "Two" }], 1)
+	assert_eq(level.sanitize(2), 2)
+	assert_eq(level.sanitize(3), 1)
+	assert_eq(level.display(2), "Two")
+
+
+func test_a_negative_range_snaps_from_the_minimum():
+	var temp := LFSettingDefinition.integer("t", "T", "", -10, 10, 5, 0)
+	assert_eq(temp.sanitize(-100), -10)
+	assert_eq(temp.sanitize(-3), -5)
+	assert_eq(temp.sanitize(4), 5)
+	assert_eq(temp.values(), [-10, -5, 0, 5, 10])
+
+
+func test_the_formatter_can_name_a_special_value():
+	var cap := LFSettingDefinition.integer("cap", "Cap", "", 0, 10, 5, 0, func(v): return "Unlimited" if int(v) == 0 else str(v))
+	assert_eq(cap.display(0), "Unlimited")
+	assert_eq(cap.display(5), "5")
+
+
+func test_sanitized_integer_is_always_one_of_the_values():
+	for raw in [-7, 0, 1, 22, 59, 61, 500]:
+		assert_true(count.values().has(count.sanitize(raw)), str(raw))
+
+
+func test_a_step_of_zero_or_less_counts_as_one_and_warns_once_per_definition():
+	for bad_step in [0, -5]:
+		var plain := LFSettingDefinition.integer("n", "N", "", 0, 4, bad_step, 2)
+		assert_eq(plain.sanitize(3), 3)
+		assert_eq(plain.sanitize(4), 4)
+		assert_eq(plain.values(), [0, 1, 2, 3, 4])
+	assert_push_warning_count(2)
+
+
+func test_a_valid_step_logs_nothing():
+	LFSettingDefinition.integer("n", "N", "", 0, 4, 1, 2).sanitize(1.0)
+	assert_push_warning_count(0)
+
+
+func test_a_huge_float_clamps_to_the_range_and_warns():
+	var wide := LFSettingDefinition.integer("n", "N", "", 10, 100, 10, 50)
+	assert_eq(wide.sanitize(1.0e30), 100)
+	assert_eq(wide.sanitize(-1.0e30), 10)
+	assert_eq(wide.sanitize(INF), 100)
+	assert_push_warning_count(3)
+
+
+func test_nan_gives_the_default_and_warns():
+	var wide := LFSettingDefinition.integer("n", "N", "", 10, 100, 10, 50)
+	assert_eq(wide.sanitize(NAN), 50)
+	assert_push_warning("NaN")

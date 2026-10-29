@@ -8,6 +8,9 @@ extends RefCounted
 
 enum Kind { CHOICE, INTEGER }
 
+## Floats larger than this (or infinite) are warned about before being clamped.
+const _MAX_SAFE_FLOAT := 9.0e18
+
 ## Identifies the setting in saved data.
 var id: String
 ## The name the player sees.
@@ -24,10 +27,12 @@ var options: Array = []
 var min_value := 0
 ## INTEGER only: the largest legal value.
 var max_value := 0
-## INTEGER only: legal values are `min_value` plus a whole number of steps.
+## INTEGER only: legal values are `min_value` plus a whole number of steps. A value below 1 counts as 1.
 var step := 1
 ## INTEGER only: `format_fn.call(value) -> String`, how a value reads (0 as "Unlimited"). Empty shows the number.
 var format_fn: Callable = Callable()
+
+var _log := LFLogger.new(['LFSettingDefinition'])
 
 
 ## A pick-one setting; `choices` is `[{ "value", "label" }]`.
@@ -52,6 +57,8 @@ static func integer(setting_id: String, setting_label: String, setting_descripti
 	definition.min_value = lowest
 	definition.max_value = highest
 	definition.step = increment
+	if increment < 1:
+		definition._log.warning(setting_id, 'step must be at least 1, got', increment, '- using 1')
 	definition.default_value = initial
 	definition.format_fn = formatter
 	return definition
@@ -64,7 +71,16 @@ func sanitize(value: Variant) -> Variant:
 		return value if LFUtils.find_by(options, "value", value) != null else default_value
 	if not (value is int or value is float):
 		return default_value
-	var snapped_value := min_value + int(round(float(int(value) - min_value) / step)) * step
+	if value is float:
+		if is_nan(value):
+			_log.warning(id, 'got NaN, using the default', default_value)
+			return default_value
+		if absf(value) > _MAX_SAFE_FLOAT:
+			_log.warning(id, 'got a float beyond the whole-number range,', value, '- clamping it')
+		# Clamp first: int() of a float beyond the int range is undefined.
+		value = clampf(value, float(min_value), float(max_value))
+	var safe_step := _safe_step()
+	var snapped_value := min_value + int(round(float(int(value) - min_value) / safe_step)) * safe_step
 	return clampi(snapped_value, min_value, max_value)
 
 
@@ -80,4 +96,9 @@ func display(value: Variant) -> String:
 func values() -> Array:
 	if kind == Kind.CHOICE:
 		return options.map(func(option): return option["value"])
-	return range(min_value, max_value + 1, step)
+	return range(min_value, max_value + 1, _safe_step())
+
+
+## `step`, or 1 when it is 0 or negative.
+func _safe_step() -> int:
+	return step if step > 0 else 1
