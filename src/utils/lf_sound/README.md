@@ -35,6 +35,32 @@ func _ready() -> void:
 
 Make each tone once, keep it in a variable and play it as often as you like.
 
+## Usage
+
+Several effects share one `LFSfx`; make each tone once and keep it:
+
+```gdscript
+extends Node
+
+var sfx := LFSfx.new()
+var jump := LFTone.make(300.0, 0.15, LFTone.Wave.SQUARE, 0.4, 700.0)
+var thud := LFTone.make(80.0, 0.2, LFTone.Wave.NOISE, 0.6)
+
+
+func _ready() -> void:
+	sfx.pitch_jitter = 0.05   # set before add_child: voices and bus are read on entering the tree
+	sfx.voices = 4
+	add_child(sfx)
+
+
+func on_jump() -> void:
+	sfx.play(jump)
+
+
+func on_land() -> void:
+	sfx.play(thud, -3.0)      # 3 dB quieter
+```
+
 ## API
 
 `LFTone` (static):
@@ -52,7 +78,7 @@ Make each tone once, keep it in a variable and play it as often as you like.
 | `voices` | `int = 8` | How many sounds play at once; read when the node enters the tree. |
 | `pitch_jitter` | `float = 0.0` | Each play's pitch is multiplied by a random factor within 1 plus or minus this. |
 | `bus` | `StringName = &"Master"` | The audio bus the players use; read when the node enters the tree. |
-| `play` | `play(stream, volume_db = 0.0, pitch = 1.0) -> bool` | Plays on a free player, else cuts the one that has played longest. False for a null stream. |
+| `play` | `play(stream, volume_db = 0.0, pitch = 1.0) -> bool` | Plays on a free player; when all are busy, cuts the players in turn (round-robin, so usually the one started longest ago). The pitch is `pitch` times the jitter factor, at least 0.01. False for a null stream or before the node has entered the tree. |
 | `busy_count` | `busy_count() -> int` | How many players are playing now. |
 
 ## Notes

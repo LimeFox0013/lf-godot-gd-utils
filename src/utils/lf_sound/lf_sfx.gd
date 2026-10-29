@@ -6,7 +6,7 @@
 class_name LFSfx
 extends Node
 
-## How many sounds can play at once; the oldest is cut when all are busy.
+## How many sounds can play at once; when all are busy the players are cut in turn. Read when the node enters the tree.
 @export var voices := 8
 ## Each play's pitch is multiplied by a random factor within 1 plus or minus this.
 @export var pitch_jitter := 0.0
@@ -26,7 +26,7 @@ func _ready() -> void:
 		_players.append(player)
 
 
-## Plays `stream` on a free player, or on the one that has played longest. Returns false for a null stream.
+## Plays `stream` on a free player, or else on the next player in turn (round-robin). Returns false for a null stream.
 func play(stream: AudioStream, volume_db: float = 0.0, pitch: float = 1.0) -> bool:
 	if stream == null or _players.is_empty():
 		return false

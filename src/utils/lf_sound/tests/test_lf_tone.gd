@@ -41,3 +41,24 @@ func test_nothing_to_play_gives_an_empty_sound() -> void:
 	assert_eq(LFTone.make(440.0, 0.0).data.size(), 0)
 	assert_eq(LFTone.make(0.0, 0.1).data.size(), 0)
 	assert_gt(LFTone.make(0.0, 0.1, LFTone.Wave.NOISE).data.size(), 0, 'noise needs no pitch')
+
+
+func test_samples_match_the_stream_data() -> void:
+	assert_eq(LFTone.make(440.0, 0.05).data, LFTone.samples(440.0, 0.05))
+
+
+func test_a_sweep_to_zero_or_less_keeps_the_pitch() -> void:
+	assert_eq(LFTone.samples(300.0, 0.05, LFTone.Wave.SINE, 0.5, -5.0), LFTone.samples(300.0, 0.05))
+
+
+func test_volume_is_clamped_to_one() -> void:
+	assert_eq(LFTone.samples(200.0, 0.05, LFTone.Wave.SQUARE, 5.0), LFTone.samples(200.0, 0.05, LFTone.Wave.SQUARE, 1.0))
+
+
+func test_a_bad_rate_gives_an_empty_sound() -> void:
+	assert_eq(LFTone.make(440.0, 0.1, LFTone.Wave.SINE, 0.5, 0.0, 0.005, 0).data.size(), 0)
+
+
+func test_the_start_ramps_up_over_the_attack() -> void:
+	var data := LFTone.samples(200.0, 0.2, LFTone.Wave.SQUARE, 1.0, 0.0, 0.05)
+	assert_lt(absi(data.decode_s16(2)), 2000, 'second sample is still quiet')
