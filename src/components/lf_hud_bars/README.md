@@ -1,6 +1,6 @@
-# LFTimerIcon, LFValueBar
+# LFTimerIcon, LFStatusEffectIcon, LFValueBar
 
-> Two thin HUD bars: an icon that drains as a timer runs down, and a bar that shows a current value out of a maximum (health, mana, progress) with optional easing.
+> Thin HUD bars: an icon that drains as a timer runs down (`LFStatusEffectIcon` drives one from a status effect), and a bar that shows a current value out of a maximum (health, mana, progress) with optional easing.
 
 | | |
 |---|---|
@@ -104,7 +104,7 @@ icon.track(buff_timer)
 ## Notes
 
 - `LFStatusEffectIcon` updates in `_process`; while the effect is not active the fraction stays as it was, and an infinite effect never moves it.
-- `LFTimerIcon` updates in `_process`, only while a timer is tracked; it does not create timers of its own. Pause and `Timer.process_mode` follow Godot's rules.
+- `LFTimerIcon` updates in `_process` and does nothing while no timer is tracked; it does not create timers of its own. Pause and `Timer.process_mode` follow Godot's rules.
 - A tracked timer with `wait_time` 0 shows 0. A one-shot timer that has finished is "stopped" and shows `stopped_fraction`; a timer that was never started is stopped too, so `track` emits `finished` for it on the first update.
 - `LFValueBar` has a fixed 12 px height by default (`custom_minimum_size.y`) and no percent text. It is a `ProgressBar`, so theme overrides (`fill`, `background` styleboxes) also work; setting `fill_color` replaces the fill override.
 - A source that is freed disconnects itself; `bind` on a freed source or a missing signal is an error and binds nothing.

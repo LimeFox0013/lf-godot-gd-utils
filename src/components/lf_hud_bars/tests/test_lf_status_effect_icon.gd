@@ -48,3 +48,11 @@ func test_an_untracked_icon_does_nothing():
 	icon._process(0.0)
 	icon.refresh()
 	assert_almost_eq(icon.fraction, 0.3, 0.001)
+
+
+func test_the_icon_follows_the_effect_without_calling_process_by_hand():
+	effects.apply(LFStatusEffectDef.new(&'buff', LFStatusEffectDef.Accumulation.INDEPENDENT, 10.0))
+	icon.track_effect(effects, &'buff')
+	effects.tick(5.0)
+	await wait_process_frames(2)
+	assert_almost_eq(icon.fraction, 0.5, 0.001)
