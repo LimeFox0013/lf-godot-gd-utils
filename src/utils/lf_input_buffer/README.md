@@ -51,8 +51,34 @@ press and its clock; you decide what taking it does. Its time is the `delta` you
 | `tick` | `tick(delta: float) -> bool` | Ages a pending press; true on the one call where the window runs out unused. A negative or NaN `delta` changes nothing. |
 | `clear` | `clear() -> void` | Drops a pending press without an expiry report. |
 
+## Usage
+
+A combo attack: a press during the last 0.15 seconds of a swing still starts the next one. Add this to a script that has its own `_start_swing()` method; call `_swing_ended()` when a swing finishes.
+
+```gdscript
+var _attack := LFInputBuffer.new(0.15)
+
+func _process(delta: float) -> void:
+	if Input.is_action_just_pressed("ui_accept"):
+		_attack.press()
+	_attack.tick(delta)
+
+func _swing_ended() -> void:
+	if _attack.take():
+		_start_swing()   # the press was made shortly before the swing ended
+```
+
+`age` tells the one who takes a press how long ago it was made, so the take can be graded:
+
+```gdscript
+var how_early := _attack.age   # read it before take(), which clears the press
+if _attack.take():
+	print("pressed %.2f s ago" % how_early)
+```
+
 ## Notes
 
 - Expiry is reported once; after it the press is no longer pending.
 - A `take` before the window runs out cancels the expiry report.
+- `age` reads 0 once the press is taken, cleared or expired.
 - A press arriving while one is pending restarts the window rather than queueing a second one.

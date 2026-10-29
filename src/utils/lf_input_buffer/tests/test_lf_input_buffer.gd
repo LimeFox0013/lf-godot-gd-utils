@@ -120,3 +120,29 @@ func test_age_reads_zero_once_the_press_is_taken_or_gone():
 	buffer.press()
 	buffer.tick(0.2)
 	assert_eq(buffer.age, 0.0, "expired")
+
+
+func test_default_window_constant_and_property():
+	assert_eq(LFInputBuffer.DEFAULT_WINDOW, 0.08)
+	assert_eq(buffer.window, 0.08)
+
+
+func test_infinite_delta_expires_a_pending_press():
+	buffer.press()
+	assert_true(buffer.tick(INF))
+	assert_false(buffer.pending)
+
+
+func test_a_tick_reaching_exactly_the_window_expires():
+	buffer = LFInputBuffer.new(0.5)
+	buffer.press()
+	assert_false(buffer.tick(0.25))
+	assert_true(buffer.tick(0.25))
+
+
+func test_press_after_expiry_is_pending_again():
+	buffer.press()
+	buffer.tick(1.0)
+	buffer.press()
+	assert_true(buffer.pending)
+	assert_true(buffer.take())
