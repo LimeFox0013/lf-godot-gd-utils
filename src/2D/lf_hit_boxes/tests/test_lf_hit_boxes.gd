@@ -271,3 +271,11 @@ func test_monitoring_follows_disabled() -> void:
 	hit_box.disabled = false
 	await get_tree().process_frame
 	assert_true(hit_box.monitorable)
+
+
+func test_register_hit_records_the_target_for_any_behaviour() -> void:
+	var hit_box := _make_hit()
+	assert_false(hit_box.has_hit(_hurt))
+	hit_box.register_hit(_hurt)
+	assert_true(hit_box.has_hit(_hurt))
+	assert_true(hit_box.can_hit(_hurt), "REPEATED still hits again")

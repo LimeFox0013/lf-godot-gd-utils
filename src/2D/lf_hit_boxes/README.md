@@ -88,6 +88,7 @@ while you stay inside.
 | `has_hit` | `has_hit(hurt_box: LFHurtBox2D) -> bool` | Whether it has landed on `hurt_box` (kept for `ONCE`). |
 | `clear_hit_targets` | `clear_hit_targets() -> void` | Forgets landed-on targets; call when a new swing starts. |
 | `set_disabled` | `set_disabled(state: bool) -> void` | Setter of `disabled`; the monitorable change is deferred. |
+| `register_hit` | `register_hit(hurt_box: LFHurtBox2D) -> void` | Records the landing and emits `hit_landed`. The hurt box calls it once it accepted a hit; you do not call it yourself. |
 
 ## Usage
 
