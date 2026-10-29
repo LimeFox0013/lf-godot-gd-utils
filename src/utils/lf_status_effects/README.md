@@ -134,8 +134,8 @@ Everything the three classes offer; you only need the rows used above to get sta
 | `ids` | `ids() -> Array[StringName]` | Active effect ids. |
 | `is_empty` | `is_empty() -> bool` | Whether no effect is active. |
 | `now` | `now() -> float` | Container clock; only advances while something is active. |
-| `remove` | `remove(id: StringName) -> void` | Removes every stack of the effect; emits `changed` if it was active. |
-| `clear` | `clear() -> void` | Removes everything; safe to call from inside `on_tick` (effects that already expired earlier in that same pass are still announced). |
+| `remove` | `remove(id: StringName) -> void` | Removes every stack of the effect; emits `changed`, then `ended`, if it was active. |
+| `clear` | `clear() -> void` | Removes everything, emitting `changed` then `ended` per removed id; safe to call from inside `on_tick` (effects that already expired earlier in that same pass are still announced). |
 
 ### Re-application
 
