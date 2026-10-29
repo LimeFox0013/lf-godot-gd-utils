@@ -63,3 +63,20 @@ func test_the_default_grace_applies_when_none_is_given():
 	var default_grace := LFPeerGrace.new()
 	default_grace.add(1)
 	assert_eq(default_grace.tick(LFPeerGrace.DEFAULT_GRACE_SECONDS), [1])
+
+
+func test_changing_grace_seconds_applies_to_peers_already_waiting():
+	grace.add(1)
+	grace.tick(2.0)
+	grace.grace_seconds = 1.0
+	assert_eq(grace.tick(0.0), [1])
+
+
+func test_string_peers_work_and_pending_count_tracks_waiting_peers():
+	grace.add('a')
+	grace.add('b')
+	assert_eq(grace.pending_count(), 2)
+	grace.proven('a')
+	assert_false(grace.is_pending('a'))
+	assert_eq(grace.tick(GRACE), ['b'])
+	assert_eq(grace.pending_count(), 0)
