@@ -102,3 +102,11 @@ func test_kick_with_nan_is_ignored_and_reset_clears():
 	wobble.reset()
 	assert_eq(wobble.value, 0.0)
 	assert_eq(wobble.velocity, 0.0)
+
+
+func test_an_infinite_delta_is_simulated_as_the_longest_span():
+	var wobble := LFWobble.new()
+	wobble.kick(1.0)
+	wobble.step(INF)
+	assert_true(is_finite(wobble.value))
+	assert_ne(wobble.velocity, 1.0, 'time passed')

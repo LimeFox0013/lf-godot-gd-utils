@@ -38,8 +38,9 @@ func _init(initial_stiffness := DEFAULT_STIFFNESS, initial_damping := DEFAULT_DA
 func step(delta: float, drive := 0.0) -> float:
 	if is_nan(delta) or is_nan(drive) or delta <= 0.0:
 		return value
-	var slices := mini(ceili(delta / MAX_SLICE), MAX_SLICES)
-	var slice := minf(delta, MAX_SLICE * MAX_SLICES) / slices
+	var span := minf(delta, MAX_SLICE * MAX_SLICES)
+	var slices := clampi(ceili(span / MAX_SLICE), 1, MAX_SLICES)
+	var slice := span / slices
 	for i in slices:
 		velocity += (drive - stiffness * value - damping * velocity) * slice
 		value += velocity * slice
