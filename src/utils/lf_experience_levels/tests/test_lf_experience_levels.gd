@@ -156,3 +156,37 @@ func test_progress_runs_from_zero_to_one_within_a_level():
 	track.gain(10.0)
 	track.gain(5.0)
 	assert_almost_eq(track.progress(), 0.25, 0.0001)
+
+
+func test_infinite_gain_is_rejected():
+	assert_eq(track.gain(INF), 0)
+	assert_eq(track.experience, 0.0)
+	assert_push_error_count(1)
+
+
+func test_start_level_at_max_is_accepted():
+	var full := LFExperienceLevels.new([10, 20], 2)
+	assert_eq(full.level, 2)
+	assert_true(full.is_max())
+	assert_eq(full.gain(5.0), 0)
+
+
+func test_fractional_gains_add_up():
+	track.gain(2.5)
+	track.gain(2.5)
+	assert_eq(track.experience, 5.0)
+	assert_almost_eq(track.progress(), 0.5, 0.0001)
+
+
+func test_set_thresholds_with_invalid_start_level_starts_at_zero():
+	track.gain(15.0)
+	track.set_thresholds([3, 3], 9)
+	assert_eq(track.level, 0)
+	assert_eq(track.max_level, 2)
+	assert_push_error_count(1)
+
+
+func test_set_thresholds_and_reset_emit_no_level_up():
+	track.set_thresholds([1, 1], 1)
+	track.reset()
+	assert_eq(reached, [])
