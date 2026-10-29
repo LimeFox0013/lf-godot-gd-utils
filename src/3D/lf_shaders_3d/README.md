@@ -23,8 +23,8 @@ pixels. Pixels are lit, with no shine.
 ## Step by step
 
 1. Import your pictures as one texture array (a `Texture2DArray` or an imported `CompressedTexture2DArray`).
-2. Build the material and give it to the mesh your `LFMultiMeshScatter` repeats:
-   `mesh.material = LFShaders3D.layered_cutout(my_texture_array)`
+2. Build the material and set it on the `LFMultiMeshScatter` node (a `MultiMeshInstance3D`):
+   `scatter.material_override = LFShaders3D.layered_cutout(my_texture_array)`
 3. Set the scatter's `layer_count` to the number of layers in the array.
 
 ## API
@@ -35,6 +35,10 @@ pixels. Pixels are lit, with no shine.
 
 `PARAM_TEXTURE_ARRAY` and `PARAM_ALPHA_CUTOFF` name the shader parameters (`textureArray`, `alphaCutoff`);
 `DEFAULT_ALPHA_CUTOFF` is the default.
+
+## See also
+
+[`LFMultiMeshScatter`](../lf_multimesh_scatter/README.md) writes the per-copy layer number this material reads.
 
 ## Notes
 
