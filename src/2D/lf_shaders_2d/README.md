@@ -25,7 +25,8 @@ writing a shader. Each function returns a `ShaderMaterial`; assign it to any `Sp
 1. Pick the effect and build the material, for example in `_ready`:
    `$Sprite2D.material = LFShaders2D.sprite_outline(Color.YELLOW, 2.0)`
 2. To change it later: `$Sprite2D.material.set_shader_parameter(LFShaders2D.PARAM_OUTLINE_WIDTH, 0.0)`
-3. To burn something away, animate `amount` from 0 to 1 with a tween:
+3. To burn something away, give it a dissolve material (`noise` is a `NoiseTexture2D`) and animate `amount` from 0 to 1 with a tween:
+   `$Sprite2D.material = LFShaders2D.dissolve(noise)`
    `create_tween().tween_property($Sprite2D.material, "shader_parameter/amount", 1.0, 1.5)`
 
 ## API
@@ -40,6 +41,10 @@ writing a shader. Each function returns a `ShaderMaterial`; assign it to any `Sp
 
 Each returns null, with an error through `LFLogger`, for a NaN or infinite number. Numbers outside
 a shader's range are clamped. The `PARAM_*` and `DEFAULT_*` constants name every parameter and default.
+
+## See also
+
+- [`LFPixelDraw`](../lf_pixel_draw/README.md) to make the art these materials restyle.
 
 ## Notes
 

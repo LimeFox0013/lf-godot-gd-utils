@@ -69,3 +69,22 @@ func test_the_cross_reveal_carries_and_clamps_its_parameters():
 func test_a_non_finite_cross_reveal_gives_no_material():
 	assert_null(LFShaders2D.cross_reveal(NAN))
 	assert_push_error('finite')
+
+
+func test_defaults_match_the_constants():
+	var material := LFShaders2D.sprite_outline()
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_OUTLINE_COLOR), LFShaders2D.DEFAULT_OUTLINE_COLOR)
+	assert_eq(material.get_shader_parameter(LFShaders2D.PARAM_OUTLINE_WIDTH), LFShaders2D.DEFAULT_OUTLINE_WIDTH)
+	assert_eq(LFShaders2D.darken().get_shader_parameter(LFShaders2D.PARAM_DARKNESS), LFShaders2D.DEFAULT_DARKNESS)
+	assert_eq(LFShaders2D.screen_outline().get_shader_parameter(LFShaders2D.PARAM_OUTLINE_THICKNESS), LFShaders2D.DEFAULT_OUTLINE_THICKNESS)
+
+
+func test_a_non_finite_screen_outline_colour_gives_no_material():
+	assert_null(LFShaders2D.screen_outline(Color(NAN, 0, 0)))
+	assert_push_error('finite')
+
+
+func test_dissolve_is_intact_at_zero_and_gone_at_one():
+	var code := LFShaders2D.dissolve(null).shader.code
+	assert_true(code.contains('amount * (1.0 + edge_width)'))
+	assert_true(code.contains('sprite.a * keep'))

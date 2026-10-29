@@ -10,7 +10,9 @@ uniform float edge_width : hint_range(0.0, 0.1) = 0.05;
 void fragment() {
 	vec4 sprite = texture(TEXTURE, UV);
 	float noise = texture(noise_texture, UV).r;
-	float gone = smoothstep(amount - edge_width, amount, noise);
-	float edge = smoothstep(amount, amount + edge_width, noise);
-	COLOR = vec4(mix(sprite.rgb, edge_color.rgb, edge), sprite.a * (1.0 - gone));
+	// The burn front moves from below 0 to above 1 so 0 is intact and 1 is gone.
+	float front = amount * (1.0 + edge_width);
+	float keep = smoothstep(front - edge_width, front, noise);
+	float edge = (1.0 - smoothstep(front, front + edge_width, noise)) * smoothstep(0.0, 0.01, amount);
+	COLOR = vec4(mix(sprite.rgb, edge_color.rgb, edge), sprite.a * keep);
 }
