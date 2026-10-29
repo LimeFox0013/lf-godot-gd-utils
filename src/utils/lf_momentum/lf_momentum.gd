@@ -51,6 +51,7 @@ var _log := LFLogger.new(['LFMomentum'])
 ## losing `initial_decay_per_second` while slowing.
 func _init(initial_base: float = 0.0, initial_cap: float = CAP_AT_BASE, initial_decay_per_second: float = DEFAULT_DECAY_PER_SECOND) -> void:
 	base = initial_base
+	cap = base
 	if not is_nan(initial_cap):
 		cap = initial_cap
 	decay_per_second = initial_decay_per_second

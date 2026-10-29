@@ -132,3 +132,16 @@ func test_ratio_feeds_a_jump_strength():
 	momentum.bump(20.0)
 	var strong := physics.jump_strength(10.0, 1.0, momentum.ratio())
 	assert_gt(strong, physics.jump_strength(10.0, 1.0, 0.0))
+
+
+func test_a_negative_base_with_the_default_cap_has_the_cap_on_the_base():
+	var flat := LFMomentum.new(-5.0)
+	assert_eq(flat.cap, -5.0)
+	assert_eq(flat.value, -5.0)
+	assert_eq(flat.bump(3.0), -5.0)
+
+
+func test_a_negative_base_with_a_cap_below_it_uses_the_base():
+	var bad := LFMomentum.new(-5.0, -8.0)
+	assert_push_error('cap')
+	assert_eq(bad.cap, -5.0)
