@@ -66,11 +66,11 @@ func _remove(index: int, _chunk: Variant) -> void:
 | `ahead` / `behind` | `var ahead: int`, `var behind: int` | Chunks kept after / before the focused one; below 0 counts as 0. |
 | `min_index` / `max_index` | `var … := ±UNBOUNDED` | The window never reaches outside these. |
 | `chunk_spawned` / `chunk_despawned` | `signal …(index: int, chunk: Variant)` | After a chunk is built / removed. |
-| `focus` | `focus(index: int) -> void` | Moves the window: removes outside (lowest first), builds missing inside (lowest first). Clamps `index` to the bounds. A call from inside `spawn_fn` / `despawn_fn` waits; the last one wins. |
+| `focus` | `focus(index: int) -> void` | Moves the window: removes outside (lowest first), builds missing inside (lowest first). Clamps `index` to the bounds; with `min_index` above `max_index` it reports an error, removes every chunk and builds none. A call from inside `spawn_fn` / `despawn_fn` waits; the last one wins. |
 | `focused_index` | `focused_index() -> Variant` | The clamped index of the last `focus`; null before it. |
 | `chunk_at` / `has_chunk` / `index_of` | `chunk_at(index)`, `has_chunk(index) -> bool`, `index_of(chunk) -> Variant` | Look chunks up either way; null when absent. |
 | `indices` / `count` | `indices() -> Array[int]`, `count() -> int` | The tracked indices, lowest first / how many. |
-| `clear` | `clear() -> void` | Removes every chunk and forgets the focus. |
+| `clear` | `clear() -> void` | Removes every chunk and forgets the focus. A `focus` from inside `despawn_fn` during it is dropped; a `clear` from inside a running `focus`'s callbacks is reported and ignored. |
 
 ## Usage
 
@@ -107,3 +107,4 @@ func _on_chunk_entered(chunk: Node3D) -> void:
 - Connect a chunk's "player entered" signal once, when the chunk is first created, not on every `spawn_fn` call, or a reused chunk collects duplicate connections.
 - `focus` with the index already focused only fills gaps; it is cheap to call every frame.
 - The stream holds the chunks it was given; it frees nothing. `clear()` calls `despawn_fn` for each.
+- If `min_index` is greater than `max_index` the range is empty: `focus` logs an error, removes all chunks, builds none and leaves `focused_index()` null.

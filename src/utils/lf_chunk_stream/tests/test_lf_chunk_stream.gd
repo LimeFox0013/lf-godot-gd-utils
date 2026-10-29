@@ -144,3 +144,40 @@ func test_a_focus_from_inside_spawn_waits_and_the_last_one_wins():
 	stream.focus(0)
 	assert_eq(stream.focused_index(), 10)
 	assert_eq(stream.indices(), [10, 11] as Array[int])
+
+
+func test_an_inverted_range_is_reported_and_keeps_no_chunks():
+	_stream.focus(5)
+	_stream.min_index = 10
+	_stream.max_index = 2
+	_spawned.clear()
+	_stream.focus(5)
+	assert_push_error('LFChunkStream')
+	assert_eq(_stream.count(), 0)
+	assert_eq(_spawned, [] as Array[int])
+	assert_null(_stream.focused_index())
+
+
+func test_a_focus_from_inside_despawn_during_clear_is_dropped():
+	var holder: Array[LFChunkStream] = []
+	var refocus := func(_index: int, _chunk: Variant) -> void:
+		holder[0].focus(20)
+	var stream := LFChunkStream.new(_spawn, refocus, 1, 1)
+	holder.append(stream)
+	stream.focus(5)
+	stream.clear()
+	assert_eq(stream.count(), 0)
+	assert_null(stream.focused_index())
+
+
+func test_clear_from_inside_a_running_focus_is_ignored():
+	var holder: Array[LFChunkStream] = []
+	var clearer := func(_index: int, _chunk: Variant) -> void:
+		holder[0].clear()
+	var stream := LFChunkStream.new(_spawn, clearer, 1, 0)
+	holder.append(stream)
+	stream.focus(1)
+	stream.focus(5)
+	assert_push_error('LFChunkStream')
+	assert_push_error('LFChunkStream')
+	assert_eq(stream.indices(), [5, 6] as Array[int])

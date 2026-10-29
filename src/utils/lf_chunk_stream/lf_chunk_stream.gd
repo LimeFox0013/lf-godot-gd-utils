@@ -55,7 +55,8 @@ func _init(initial_spawn: Callable, initial_despawn: Callable, initial_ahead := 
 
 ## Moves the window to `index`: removes the tracked chunks outside it (lowest first), then builds the
 ## missing ones inside it (lowest first, so a chunk can be placed after its neighbour). An index
-## outside `min_index`..`max_index` is clamped to it. A `spawn_fn` that returns null is reported
+## outside `min_index`..`max_index` is clamped to it; if `min_index` is above `max_index` the range
+## is empty: the error is reported, every chunk is removed, nothing is built and the focus is forgotten. A `spawn_fn` that returns null is reported
 ## and that index stays empty. A `focus` called from inside `spawn_fn` or `despawn_fn` waits for the
 ## running one to finish, then runs; only the last such call counts.
 func focus(index: int) -> void:
@@ -106,14 +107,28 @@ func count() -> int:
 	return _chunks.size()
 
 
-## Removes every tracked chunk (lowest first) and forgets the focus.
+## Removes every tracked chunk (lowest first) and forgets the focus. A `focus` called from inside
+## `despawn_fn` while it clears is dropped. Called from inside `spawn_fn` or `despawn_fn` of a
+## running `focus`, it is reported and does nothing.
 func clear() -> void:
+	if _busy:
+		_log.error("LFChunkStream: clear() was called from inside spawn_fn or despawn_fn; ignored")
+		return
+	_busy = true
 	for index in indices():
 		_remove(index)
 	_focused = null
+	_pending = null
+	_busy = false
 
 
 func _apply(index: int) -> void:
+	if min_index > max_index:
+		_log.error("LFChunkStream: min_index %d is above max_index %d; the range is empty, no chunks are kept" % [min_index, max_index])
+		for tracked in indices():
+			_remove(tracked)
+		_focused = null
+		return
 	_focused = index
 	var first := maxi(index - behind, min_index)
 	var last := mini(index + ahead, max_index)
