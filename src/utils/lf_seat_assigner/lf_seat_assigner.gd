@@ -28,9 +28,10 @@ func reserve(seat: Variant) -> void:
 	_free.erase(seat)
 
 
-## Seats the next free seat to `peer` and emits `seat_assigned`. False, changing nothing, when none is free.
+## Seats the next free seat to `peer` and emits `seat_assigned`. False, changing nothing,
+## when none is free or `peer` already holds a seat.
 func assign_next(peer: Variant) -> bool:
-	if _free.is_empty():
+	if _seat_of_peer.has(peer) or _free.is_empty():
 		return false
 	var seat: Variant = _free.pop_front()
 	_seat_of_peer[peer] = seat

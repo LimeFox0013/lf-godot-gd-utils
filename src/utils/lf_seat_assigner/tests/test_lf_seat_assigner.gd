@@ -127,3 +127,20 @@ func test_the_lists_it_returns_are_copies():
 	seats.seats_by_peer().clear()
 	assert_eq(seats.free_seats(), ["b", "c", "d"])
 	assert_eq(seats.seat_of(1), "a")
+
+
+func test_a_seated_peer_is_not_seated_twice():
+	assert_true(seats.assign_next(1))
+	announced.clear()
+	assert_false(seats.assign_next(1))
+	assert_eq(announced, [])
+	assert_eq(seats.seat_of(1), "a")
+	assert_eq(seats.free_seats(), ["b", "c", "d"])
+
+
+func test_seats_by_peer_and_verified_count():
+	seats.assign_next(1)
+	seats.assign_next(2)
+	seats.mark_verified(2)
+	assert_eq(seats.seats_by_peer(), {1: "a", 2: "b"})
+	assert_eq(seats.verified_count(), 1)

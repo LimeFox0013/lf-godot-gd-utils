@@ -40,7 +40,7 @@ func _ready() -> void:
 | `seat_assigned` | `signal seat_assigned(peer, seat)` | A peer now holds a seat; on a swap the displaced peer comes first. |
 | `_init` | `LFSeatAssigner.new(seats := [])` | The seats, in the order they are handed out. |
 | `reserve` | `reserve(seat) -> void` | Takes a seat out of the pool; a peer can still `move` onto it. |
-| `assign_next` | `assign_next(peer) -> bool` | Seats the peer on the first free seat; false when none is free. |
+| `assign_next` | `assign_next(peer) -> bool` | Seats the peer on the first free seat; false when none is free or the peer already holds a seat. |
 | `move` | `move(peer, seat) -> bool` | Moves a seated peer onto a seat, swapping with its holder. False for an unseated peer or an unknown seat. |
 | `forget` | `forget(peer) -> Variant` | Removes the peer and its proof, frees its seat at the back of the line and returns it (null for an unseated peer). |
 | `seat_of` / `peer_of` | `seat_of(peer)` / `peer_of(seat)` | The seat a peer holds / the peer holding a seat; null when none. |
@@ -64,3 +64,4 @@ func _on_peer_connected(peer_id: int) -> void:
 - A freed seat goes to the back of the line, so the next newcomer gets the seat that has been free longest.
 - A `move` to an unknown seat fails, even if the seat is free.
 - Seats and peers are compared with `==` and used as dictionary keys.
+- `forget` puts the seat back in the pool even if it was `reserve`d.
