@@ -71,3 +71,35 @@ func test_a_gone_parent_is_reported_after_its_check_interval():
 	lifetime.tick(CHECK * 0.6, 1)
 	await _until_parent_answered()
 	assert_eq(lifetime.tick(0.0, 1), LFServerLifetime.Reason.PARENT_GONE)
+
+
+func test_the_constructor_stores_its_times():
+	var made := LFServerLifetime.new(7.0, 3.0, 0.5)
+	assert_eq(made.idle_seconds, 7.0)
+	assert_eq(made.finished_seconds, 3.0)
+	assert_eq(made.parent_check_seconds, 0.5)
+	assert_eq(made.parent_pid, 0)
+	assert_null(made.parent_watch)
+
+
+func test_the_check_interval_defaults_to_two_seconds():
+	assert_eq(LFServerLifetime.new(1.0, 1.0).parent_check_seconds, 2.0)
+
+
+func test_a_zero_grace_finishes_on_the_next_tick():
+	var made := LFServerLifetime.new(IDLE, 0.0)
+	made.finish()
+	assert_eq(made.tick(0.0, 1), LFServerLifetime.Reason.FINISHED)
+
+
+func test_a_negative_parent_pid_watches_nothing():
+	lifetime.parent_pid = -1
+	lifetime.tick(CHECK * 2.0, 1)
+	assert_null(lifetime.parent_watch)
+
+
+func test_idle_beats_a_gone_parent():
+	var made := LFServerLifetime.new(1.0, AFTER_FINISH, CHECK)
+	made.parent_pid = NO_SUCH_PID
+	assert_eq(made.tick(1.0, 0), LFServerLifetime.Reason.IDLE)
+	assert_null(made.parent_watch, 'a reason that fires skips the parent check')
