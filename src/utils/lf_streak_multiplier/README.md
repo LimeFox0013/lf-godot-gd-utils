@@ -50,6 +50,22 @@ over time use `LFMomentum`.
 | `count` | `var count: int` | Hits since the last `reset`, hits at the ceiling included. Read only. |
 | `changed` | `signal changed(value: float)` | After a `hit` or `reset` that changed the value. |
 
+## Usage
+
+```gdscript
+var score_mult := LFStreakMultiplier.new()   # x1.0, +0.2 per hit, at most x5.0
+score_mult.changed.connect(_on_mult_changed) # a method, not a lambda
+
+func _on_landed(good: bool) -> void:
+	if good:
+		score += int(100 * score_mult.hit())
+	else:
+		score_mult.reset()
+
+func _on_mult_changed(value: float) -> void:
+	label.text = "x%.1f" % value
+```
+
 ## Notes
 
 - The value is `minf(base + step * count, ceiling)`, so it does not drift over many hits.
