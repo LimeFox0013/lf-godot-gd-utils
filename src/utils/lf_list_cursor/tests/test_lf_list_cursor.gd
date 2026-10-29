@@ -60,3 +60,33 @@ func test_move_to_clamps_and_marker_at_follows_the_index():
 	assert_eq(cursor.index, 2)
 	assert_eq(cursor.marker_at(2, "> "), "> ")
 	assert_eq(cursor.marker_at(0, "> ", "  "), "  ")
+
+
+func test_a_negative_row_count_is_treated_as_empty():
+	var cursor := LFListCursor.new(-4, 3)
+	assert_eq(cursor.count, 0)
+	assert_eq(cursor.index, 0)
+	cursor.set_count(-1)
+	assert_eq(cursor.count, 0)
+
+
+func test_an_empty_cursor_never_moves():
+	var cursor := LFListCursor.new()
+	assert_false(cursor.move(1))
+	assert_false(cursor.move(-1))
+	cursor.move_to(5)
+	assert_eq(cursor.index, 0)
+
+
+func test_move_by_zero_does_not_move_and_negative_start_clamps_to_zero():
+	var cursor := LFListCursor.new(3, -2)
+	assert_eq(cursor.index, 0)
+	assert_false(cursor.move(0))
+	cursor.move_to(-5)
+	assert_eq(cursor.index, 0)
+
+
+func test_step_with_a_large_delta_stops_at_the_ends():
+	assert_eq(LFListCursor.step(1, 1000, 4), 3)
+	assert_eq(LFListCursor.step(1, -1000, 4), 0)
+	assert_eq(LFListCursor.step(0, 1, 0), 0)
