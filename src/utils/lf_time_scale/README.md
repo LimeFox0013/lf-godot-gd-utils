@@ -51,4 +51,5 @@ func _draw() -> void:
 ## Notes
 
 - Call `reset()` when the scene that pulsed is freed, or a restart in the middle of a pulse runs in slow motion until its timer ends.
+- A pulse also ends, and the speed comes back, when the tree's root window starts leaving the tree (quit, or the tree being freed). This is done by listening to the root's `tree_exiting` signal; a tree without a root is not watched. If something frees the tree without that signal firing, call `reset()` yourself.
 - Anything else that sets `Engine.time_scale` during a pulse is overwritten when the pulse ends.
