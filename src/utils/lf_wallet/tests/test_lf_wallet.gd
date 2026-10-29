@@ -48,3 +48,19 @@ func test_spend_that_cannot_be_afforded_changes_nothing_and_stays_quiet():
 	assert_false(wallet.spend(10.5))
 	assert_eq(wallet.amount, 10.0)
 	assert_eq(heard, [])
+
+
+func test_add_of_zero_still_announces():
+	wallet.add(0.0)
+	assert_eq(heard, [10.0])
+
+
+func test_spend_of_zero_succeeds_and_announces():
+	assert_true(wallet.spend(0.0))
+	assert_eq(heard, [10.0])
+
+
+func test_setting_amount_directly_announces_nothing():
+	wallet.amount = 99.0
+	assert_eq(heard, [])
+	assert_true(wallet.can_afford(99.0))

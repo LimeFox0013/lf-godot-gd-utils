@@ -30,7 +30,7 @@ func _ready() -> void:
 	print(gold.spend(8.0))    # true
 ```
 
-3. Press **F6**. The Output panel shows `gold is now 15`, `false`, then `gold is now 7` and `true`.
+3. Press **F6**. The Output panel shows `gold is now 15.0`, `false`, then `gold is now 7.0` and `true`.
 
 ## API
 
