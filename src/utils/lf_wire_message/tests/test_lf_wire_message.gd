@@ -70,3 +70,28 @@ func test_splice_text_parses_to_the_whole_message():
 	var payload := {'x': 1, 'y': 2, 'big': {'k': [1, 2, 3]}}
 	var spliced: Variant = JSON.parse_string(codec.splice_text(Kind.MOVE, payload, 'big', JSON.stringify(payload['big'])))
 	assert_eq(spliced, JSON.parse_string(JSON.stringify(codec.encode(Kind.MOVE, payload))))
+
+
+func test_encode_of_an_unlisted_kind_has_an_empty_type_that_decode_refuses():
+	var wire := codec.encode(99, {'x': 1})
+	assert_eq(wire['type'], '')
+	assert_null(codec.decode(wire))
+
+
+func test_encode_defaults_to_an_empty_payload():
+	assert_eq(codec.encode(Kind.PING), {'type': 'ping', 'payload': {}})
+
+
+func test_decode_counts_a_missing_payload_as_empty_and_refuses_it_when_keys_are_required():
+	assert_eq(codec.decode({'type': 'ping'})['payload'], {})
+	assert_null(codec.decode({'type': 'move'}))
+
+
+func test_decode_refuses_a_type_that_is_not_a_known_name():
+	assert_null(codec.decode({'type': 5}))
+	assert_null(codec.decode({'type': [1]}))
+
+
+func test_splice_text_drops_the_old_value_of_the_field_and_keeps_the_rest():
+	var text := codec.splice_text(Kind.PING, {'big': 'old', 'n': 1}, 'big', '"new"')
+	assert_eq(text, '{"type":"ping","payload":{"n":1,"big":"new"}}')
