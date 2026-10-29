@@ -45,3 +45,34 @@ func test_growing_again_reuses_the_hidden_rings():
 
 	assert_eq(markers.get_child_count(), 3)
 	assert_eq(markers.shown_count(), 3)
+
+
+func test_defaults_match_the_documented_constants():
+	var plain := LFRingMarkers3D.new()
+	add_child_autofree(plain)
+
+	plain.display([Vector3.ZERO])
+
+	var ring: MeshInstance3D = plain.get_child(0)
+	var torus := ring.mesh as TorusMesh
+	assert_eq(torus.outer_radius, LFRingMarkers3D.DEFAULT_RADIUS)
+	assert_almost_eq(torus.inner_radius, LFRingMarkers3D.DEFAULT_RADIUS - LFRingMarkers3D.DEFAULT_WIDTH, 0.0001)
+	assert_eq((ring.material_override as StandardMaterial3D).albedo_color, LFRingMarkers3D.DEFAULT_COLOR)
+	assert_almost_eq(ring.position.y, LFRingMarkers3D.DEFAULT_LIFT, 0.0001)
+
+
+func test_display_with_no_positions_shows_the_node_but_no_rings():
+	markers.display([])
+
+	assert_true(markers.visible)
+	assert_eq(markers.shown_count(), 0)
+	assert_eq(markers.get_child_count(), 0)
+
+
+func test_display_moves_existing_rings_to_new_positions():
+	markers.display([Vector3(1, 0, 1)])
+
+	markers.display([Vector3(7, 0, -2)])
+
+	assert_eq(markers.get_child_count(), 1)
+	assert_eq((markers.get_child(0) as MeshInstance3D).position, Vector3(7, 0.1, -2))
