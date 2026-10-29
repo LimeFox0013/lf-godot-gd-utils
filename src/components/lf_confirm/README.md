@@ -27,7 +27,7 @@ for text, use `LFPromptDialog`. For a screen of your own design, build a scene i
    	if ok:
    		get_tree().quit()
    ```
-3. Press **F6**, press the button. A dimmed screen with a small panel appears; the **No** button is highlighted. Press Enter: nothing happens (it chose No). Press the button again and click **Yes**: the game quits.
+3. Press **F6**, press the button. A dimmed screen with a small panel appears; the **No** button is highlighted. Press Enter: the popup closes and the game keeps running (it chose No). Press the button again and click **Yes**: the game quits.
 
 ## API
 
