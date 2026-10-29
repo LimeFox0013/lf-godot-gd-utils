@@ -74,3 +74,17 @@ func test_a_path_that_misses_an_object_reports_and_changes_nothing():
 
 	assert_push_error("does not reach an object")
 	assert_eq(target.damage, 10)
+
+
+func test_an_entry_without_path_or_value_reports_and_returns_false():
+	assert_false(LFPropertyPatch.apply(target, {"value": 1}))
+	assert_false(LFPropertyPatch.apply(target, {"path": "damage"}))
+
+	assert_push_error_count(2)
+	assert_eq(target.damage, 10)
+
+
+func test_an_unknown_property_reports_and_returns_false():
+	assert_false(LFPropertyPatch.apply(target, {"path": "nope", "value": 1}))
+
+	assert_push_error("no property")

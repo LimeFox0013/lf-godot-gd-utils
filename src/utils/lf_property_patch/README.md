@@ -38,7 +38,7 @@ For per-owner upgrade levels that add up to a stat, use `LFModifierLevels` or
 
 | Member | Signature | Description |
 |---|---|---|
-| `apply` | `static apply(root: Object, modifier: Dictionary) -> bool` | Applies the entry to `root`. False, with an error, when the path does not reach an object. |
+| `apply` | `static apply(root: Object, modifier: Dictionary) -> bool` | Applies the entry to `root`. False, with an error, and nothing changed, when the entry lacks `path` or `value`, the path does not reach an object, or that object has no such property. |
 | `KEY_PATH`, `KEY_VALUE` | `const String` (`path`, `value`) | Required entry keys. `path` is a property or a dotted path to one on a nested object. |
 | `KEY_OP` | `const String` (`op`) | `OP_ADD` (default), `OP_MULTIPLY` or `OP_SET`; any other value changes nothing. |
 | `KEY_CLAMP_MAX` | `const String` (`clampMax`) | Caps the result. |
