@@ -139,6 +139,11 @@ func set_uid(uid: String) -> void:
 	_logger.set_prefix([_LOG_TAG, _LOG_UID_FORMAT % [_uid]])
 
 
+## Whether to take the Windows branches (refuse .bat/.cmd, cmd.exe as the shell, no SIGTERM). Set from the
+## OS; not API, tests flip it to cover those branches on any platform.
+var _windows := OS.has_feature(_FEATURE_WINDOWS)
+
+
 ## Stops whatever this instance started before (a running child, a pending restart), then
 ## saves the command for restarts, resets the restart count and spawns it. Returns false,
 ## spawning nothing and leaving no command for restart_now, when `path` doesn't resolve to an executable (LFOS.resolve_executable),
@@ -150,7 +155,7 @@ func start(path: String, args: PackedStringArray = [], env: Dictionary = {}) -> 
 	if resolved.is_empty():
 		_logger.error('not an executable: %s' % path)
 		return false
-	if OS.has_feature(_FEATURE_WINDOWS) and resolved.get_extension().to_lower() in _BATCH_EXTENSIONS:
+	if _windows and resolved.get_extension().to_lower() in _BATCH_EXTENSIONS:
 		_logger.error('batch files run through cmd.exe and its own parsing; use run_shell(): %s' % path)
 		return false
 	for key: Variant in env:
@@ -177,7 +182,7 @@ func stop() -> void:
 ## Blocks the calling thread for up to `grace_ms` plus what stop() waits. Windows has no polite signal for a
 ## console process, so there it is stop().
 func terminate(grace_ms: int = DEFAULT_TERMINATE_GRACE_MS) -> void:
-	if not _child.is_empty() and not OS.has_feature(_FEATURE_WINDOWS):
+	if not _child.is_empty() and not _windows:
 		var child := _child
 		child['lock'].lock()
 		if child['alive']:
@@ -227,7 +232,7 @@ func restart_now() -> bool:
 ## The shell interprets the whole line (pipes, $variables, quotes): never build it from
 ## untrusted input — pass such values as start() args instead.
 func run_shell(cmd_line: String) -> bool:
-	if OS.has_feature(_FEATURE_WINDOWS):
+	if _windows:
 		return start(_WINDOWS_SHELL, [_WINDOWS_SHELL_RUN_FLAG, cmd_line])
 	return start(_UNIX_SHELL, [_UNIX_SHELL_RUN_FLAG, cmd_line])
 
