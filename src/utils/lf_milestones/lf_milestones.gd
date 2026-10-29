@@ -10,6 +10,8 @@ extends RefCounted
 const DEFAULT_STEP := 10.0
 ## Default: every fifth milestone is big.
 const DEFAULT_BIG_EVERY := 5
+## The most milestones one `advance` call will report. A jump past it is refused.
+const MAX_PER_CALL := 10000
 
 ## The distance between milestones. Read only.
 var step: float:
@@ -40,13 +42,19 @@ func _init(step_size := DEFAULT_STEP, big_every := DEFAULT_BIG_EVERY) -> void:
 
 
 ## Milestones first reached at `value`, oldest first, each `{ "value": float, "number": int,
-## "big": bool }`. A NaN or infinite value is reported and returns nothing.
+## "big": bool }`. A NaN or infinite value is reported and returns nothing. A value that would
+## report more than `MAX_PER_CALL` milestones is reported and returns nothing, and nothing is
+## counted as reached.
 func advance(value: float) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not is_finite(value):
 		_log.error('the value must be finite, got', value)
 		return out
-	var number := int(floor(value / _step))
+	var wanted: float = floor(value / _step)
+	if wanted - float(_reached) > float(MAX_PER_CALL):
+		_log.error('the value would report more than', MAX_PER_CALL, 'milestones in one call, got', value)
+		return out
+	var number := int(wanted)
 	while _reached < number:
 		_reached += 1
 		out.append({

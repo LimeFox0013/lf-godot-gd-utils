@@ -38,8 +38,9 @@ Use it to announce round numbers during a climb or a run, such as every 50 m, wi
 | Member | Signature | Description |
 |---|---|---|
 | `DEFAULT_STEP`, `DEFAULT_BIG_EVERY` | `10.0`, `5` | Defaults of the arguments below. |
+| `MAX_PER_CALL` | `10000` | The most milestones one `advance` call reports. |
 | `new` | `LFMilestones.new(step_size := DEFAULT_STEP, big_every := DEFAULT_BIG_EVERY)` | A step of 0 or less, NaN or infinite, or `big_every` below 1, is reported through `LFLogger` and the default is used. |
-| `advance` | `advance(value: float) -> Array[Dictionary]` | Milestones first reached by `value`, oldest first, each `{value, number, big}`. A NaN or infinite value is reported and returns nothing. |
+| `advance` | `advance(value: float) -> Array[Dictionary]` | Milestones first reached by `value`, oldest first, each `{value, number, big}`. A NaN or infinite value, or one that would report more than `MAX_PER_CALL` milestones, is reported and returns nothing; `reached` does not change. |
 | `reset` | `reset() -> void` | Forgets every milestone reported. |
 | `step` | `var step: float` | Distance between milestones. Read only. |
 | `reached` | `var reached: int` | Highest milestone number reported so far. Read only. |
@@ -47,4 +48,5 @@ Use it to announce round numbers during a climb or a run, such as every 50 m, wi
 ## Notes
 
 - Milestones start at `step`; a value of 0 or below reports nothing.
-- One call can return several milestones when the value jumps.
+- One call can return several milestones when the value jumps, one entry per milestone, so the array can hold up to `MAX_PER_CALL` entries. A bigger jump is refused with an error and reports nothing; advance in smaller steps to get those milestones.
+- The milestone count is `floor(value / step)` in floating point, so a value that is meant to be exactly a multiple of a non-binary step (such as 0.3 with a step of 0.1) can fall just short of it.
