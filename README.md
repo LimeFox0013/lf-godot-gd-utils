@@ -6,7 +6,7 @@
 ![Godot 4.7+](https://img.shields.io/badge/Godot-4.7%2B-478cbf?logo=godotengine&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-**82 small GDScript modules, each with its own step-by-step guide and its own tests**:
+**128 small GDScript modules, each with its own step-by-step guide and its own tests**:
 cooldowns, screen shake, loot tables, state machines, save files, menus that slide between
 screens, and more, for **Godot 4.7+**. Copy the library's folder into your project and use
 the classes by name. Modules may use each other, so keep the folder whole.
@@ -132,7 +132,7 @@ The module pages use these words. You don't need them all to get started.
 
 ## What's inside
 
-82 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
+128 modules in four groups. Each module is one folder, `src/<group>/lf_<name>/`, with its own
 page (`README.md`); the `utils/` table groups them by area.
 
 Most modules are small, general helpers. A few are larger and made for particular kinds of
@@ -149,18 +149,22 @@ game; read their pages before adopting them:
 
 | Module | What it does |
 |---|---|
+| `lf_auto_size_text_edit` | A multi-line text field that grows as you type, between a smallest and a largest size |
 | `lf_bar_chart` | Draws a small bar chart from a list of numbers |
+| `lf_confirm` | A yes/no popup you wait for (`await LFConfirm.ask(...)`) |
 | `lf_build` | Creates labels, buttons, text fields and scrolling boxes from code in one line |
 | `lf_carousel` | Switches between screens or pages with a slide (or any) animation |
 | `lf_components` | Creates one of the library's ready-made UI scenes by its short name |
 | `lf_control` | Finds a UI element from anywhere by an id you give it; orders elements for keyboard browsing; places a popup beside something |
 | `lf_control_2d` | Keeps a 2D node on top of a UI element's position |
 | `lf_control_out` | A label whose text any script can set by id |
+| `lf_hud_bars` | Bars for the HUD: an icon that drains with a timer, and a health-style bar with easing |
 | `lf_help_tip` | Rich tooltips (title, text, pictures) on any UI element, and a key to browse every tip on screen |
 | `lf_input_manager` | Lets an open menu or dialog take input first, so the game underneath ignores it |
 | `lf_layout_control` | An invisible area for layout that never blocks clicks |
 | `lf_log_view` | A scrolling message log, and a ready chat box |
 | `lf_option_picker` | Fills a dropdown (OptionButton) from your data, with icons, and reads back the chosen value |
+| `lf_prompt_dialog` | A popup that asks the player for a line of text, such as a name, and returns it |
 | `lf_parallax_control` | Background layers in a menu that move at different speeds for depth |
 | `lf_style` | Makes button and panel styles (colours, borders, corners) in one call |
 | `lf_table` | A table of rows and columns: scoreboards, inventories, lists with buttons |
@@ -171,8 +175,13 @@ game; read their pages before adopting them:
 
 | Module | What it does |
 |---|---|
+| `lf_group_camera_2d` | A 2D camera that keeps several players or units in view: it centres on them and zooms out as they spread |
+| `lf_hit_boxes` | Hit boxes and hurt boxes that turn overlaps into damage, with a short invulnerability gate |
 | `lf_infinite_scroll_sprite` | Endless scrolling and parallax backgrounds that follow the camera |
-| `lf_utils_2d` | Helpers for what a 2D camera sees, and for pinning things to the screen edge |
+| `lf_magnet_pull` | Pulls pickups toward nearby magnets, each with its own power |
+| `lf_pixel_draw` | Pixel art drawn from code: rectangles, discs, lines, frames, ASCII sprites and bitmap text, as separate `ColorRect`s or one baked texture |
+| `lf_shaders_2d` | Ready-made materials: sprite outline, screen outline, dissolve and darken |
+| `lf_utils_2d` | Helpers for what a 2D camera sees, pinning things to the screen edge, random points around a spot, and sizing sprites |
 | `lf_viewport_leave` | Tells you when a node has been off-screen for a while (to free bullets, despawn enemies) |
 | `lf_virtual_grid` | Shows only the rows of a huge 2D list that are on screen, so it builds only the rows you can see |
 
@@ -183,8 +192,16 @@ game; read their pages before adopting them:
 | `lf_crowd_body` | Units in a crowd push apart, get knocked back, and walk round walls |
 | `lf_directional_sprite` | 2D sprite characters in a 3D world that show the right side to the camera (Doom-style) |
 | `lf_floating_text_3d` | Damage numbers and pop-up text that rise, fade and disappear |
+| `lf_follow_ring_3d` | A pulsing ring on the ground that follows a 3D node and hides without one: a selection marker |
 | `lf_heightmap` | Hills and terrain (mesh and collision) from a height formula |
+| `lf_magnet_pull_3d` | The 3D version of `lf_magnet_pull` |
+| `lf_projectile_3d` | A shot that flies straight to a fixed point, ends on the first area it touches, and returns to its pool |
+| `lf_depth_steering` | For a 2.5D platformer: which platform a jump lands on, where to stand in depth to clear platforms overhead, and an eased depth follow |
 | `lf_orbit_camera` | A strategy-game camera: pan, zoom and orbit |
+| `lf_ring_markers_3d` | Flat rings on the ground at the points you give it, reused between calls |
+| `lf_shaders_3d` | A ready-made matte alpha-cut material that picks each copy's texture layer, for scattered grass |
+| `lf_multimesh_scatter` | Scatter grass, pebbles or flowers over a flat area with one cheap draw call |
+| `lf_terrain_features` | A level made of platforms, ramps, hills, walls and bushes: ground height, line of sight, and straight-walk checks |
 | `lf_shaker` | Screen shake (and shaking anything else) for hits and explosions |
 | `lf_utils_3d` | Click on the 3D world, find screen positions of 3D points, and ground-plane math |
 | `lf_viewport_leave_3d` | The 3D version of `lf_viewport_leave` |
@@ -193,13 +210,13 @@ game; read their pages before adopting them:
 
 | Area | Modules |
 |---|---|
-| Everyday helpers | `lf_utils` (wait, find the closest, clear children…), `lf_dictionary` (read nested data, with a default when a key is missing), `lf_json`, `lf_text` (plurals, countdown clocks), `lf_graph` (tree layouts), `lf_uuid` (random ids, UUID v4), `lf_logger` (tidy log messages) |
-| Input | `lf_drag_tracker` (tell a click from a drag), `lf_input_keys` (keyboard as a gamepad, button names for hints) |
-| Timing and events | `lf_await` (wait for several things), `lf_debounce` and `lf_throttle` (limit how often something runs), `lf_cooldown`, `lf_interval_timer` (every N seconds), `lf_turn_cycle` (timed turns), `lf_thread` (run heavy work on a worker thread), `lf_animate` (simple animations), `lf_event_emitter` and `lf_event_bus` (send messages between parts of the game) |
-| Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |
-| Gameplay systems | `lf_state_machine` (enemy modes like patrol and chase), `lf_status_effects` (buffs, poison), `lf_procs` (chance-on-hit effects), `lf_layered_stats` (base stats plus bonuses), `lf_modifier_levels`, `lf_capped_level_tracker` and `lf_modifier_grant_service` (upgrades with limits), `lf_unlock_tree` (skill trees), `lf_loot_table`, `lf_tier_roller` (rarity), `lf_pity_tracker` (bad-luck protection), `lf_weighted_pick`, `lf_random` (repeatable randomness), `lf_grid_2d`, `lf_flow_field` (move big crowds to a goal) |
+| Everyday helpers | `lf_utils` (wait, find the closest, clear children…), `lf_dictionary` (read nested data, with a default when a key is missing), `lf_json`, `lf_text` (plurals, countdown clocks), `lf_graph` (tree layouts), `lf_uuid` (random ids, UUID v4), `lf_short_code` (readable codes players type), `lf_logger` (tidy log messages), `lf_list_cursor` (a highlighted menu row that stays inside the list), `lf_setting_definition` (describe an options-menu setting and clean up its value) |
+| Input | `lf_drag_tracker` (tell a click from a drag), `lf_input_keys` (keyboard as a gamepad, button names for hints), `lf_input_buffer` (keep a press for a moment so a later event can use it), `lf_input_rebinder` (reassign keys and pad buttons, saved between runs) |
+| Timing and events | `lf_await` (wait for several things), `lf_debounce` and `lf_throttle` (limit how often something runs), `lf_cooldown`, `lf_interval_timer` (every N seconds), `lf_coalesced_tick` (a slow update that never runs twice at once), `lf_turn_cycle` (timed turns), `lf_thread` (run heavy work on a worker thread), `lf_animate` (simple animations), `lf_event_emitter` and `lf_event_bus` (send messages between parts of the game) |
+| Objects and data | `lf_factory` (reuse bullets and effects instead of creating new ones), `lf_particle_pool` (reuse one particle effect, recoloured per copy), `lf_chunk_stream` (an endless level of equal pieces, built around the player), `lf_object_id_registry`, `lf_invert_index` (find things by tag), `lf_spatial_index` (find what's nearby), `lf_ring_slots` (units stand side by side at a destination), `lf_slot_inventory` (hotbar and backpack) |
+| Gameplay systems | `lf_state_machine` (enemy modes like patrol and chase), `lf_grade_combo` (Good / Great / Perfect streaks into a multiplier), `lf_jump_physics` (platformer jump feel), `lf_ratchet_follow` (a camera that follows a climb), `lf_wobble` (a bobblehead-style wobble), `lf_climb_score` (a score paid only for new height), `lf_milestones` (each round number reported once), `lf_status_effects` (buffs, poison), `lf_procs` (chance-on-hit effects), `lf_layered_stats` (base stats plus bonuses), `lf_modifier_levels`, `lf_capped_level_tracker` and `lf_modifier_grant_service` (upgrades with limits), `lf_experience_levels` (experience points and level-ups), `lf_health` (a health pool with damage and healing), `lf_countdown` (a round timer or fuse), `lf_property_patch` (apply data like "+20 max health" to an object), `lf_momentum` (a value that builds up and fades), `lf_streak_multiplier` (a multiplier that grows with each success in a row), `lf_unlock_tree` (skill trees), `lf_loot_table`, `lf_tier_roller` (rarity), `lf_pity_tracker` (bad-luck protection), `lf_weighted_pick`, `lf_random` (repeatable randomness), `lf_sound` (bleeps and thuds made from code, and a pool that plays them), `lf_time_scale` (a short slow-motion pulse), `lf_grid_2d`, `lf_flow_field` (move big crowds to a goal), `lf_wallet` (an amount to add to and spend, with a change signal), `lf_alliance_groups` (which teams fight on the same side) |
 | Files | `lf_file` (read and save files; a save writes a checked temporary file, then renames it over the old one), `lf_file_observer` (settings that save themselves), `lf_zip` (unzip mods and downloads) |
-| Network and system | `lf_http` (talk to web servers), `lf_socket` and `lf_socket_server` (live online connections), `lf_url`, `lf_os` (system info, launch a server), `lf_process` (run other programs) |
+| Network and system | `lf_http` (talk to web servers), `lf_socket` and `lf_socket_server` (live online connections), `lf_peer_grace` (a time limit for new connections to prove themselves), `lf_server_lifetime` (when a server process should quit), `lf_url`, `lf_os` (system info, launch a server), `lf_process` (run other programs), `lf_local_service` (start a bundled back end on a free port and wait until it answers), `lf_wire_message` (typed messages as `{type, payload}`), `lf_seat_assigner` (give connecting players the next free seat, or the one they claim) |
 | Online services | `lf_llm` (call a language model that can use tools, e.g. for AI players), `lf_accounts` (player log-in), `lf_strike_guard` (lock out repeated failed log-ins), `lf_replication` (keep online players in sync) |
 
 ## Platforms
@@ -224,6 +241,7 @@ instead) and the tests of refused connections are skipped or adjusted (see below
 - `lf_socket`, `lf_socket_server`: desktop (Windows, macOS, Linux) only, not a web export.
 - `lf_http`: tested on desktop only; in a browser export the browser makes the request.
 - Windows, refused connections: in the Windows CI run Godot 4.7.2 never reported a refused loopback connection (still connecting after 25 s). `lf_socket` then reports no `error` and schedules no reconnect, and `lf_http` ends such a request with `Connect timeout` instead of `Cannot connect`. The tests of the refusal behaviour are skipped (`lf_socket`) or adjusted (`lf_http`) on Windows.
+- macOS 26, refused connections: with Godot 4.7.2 on macOS 26.7.1 (a local run; the CI run above used GitHub's `macos-latest` runner), dialling a closed loopback port makes the engine itself log `Unable to set TCP no delay option`, and `lf_http` reports such a request as `Connection lost` rather than `Cannot connect`. The tests that dial closed ports accept the engine message and that text on macOS only; the library's own behaviour is unchanged.
 - `lf_thread`, `lf_zip`: on a build without thread support (a web export with *Thread
   Support* off) there is no worker thread; the work runs on the main thread and blocks it.
   `lf_zip` is tested on macOS desktop; `lf_thread` in the editor on desktop.

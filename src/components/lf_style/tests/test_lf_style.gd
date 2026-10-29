@@ -98,3 +98,11 @@ func test_outline_keeps_the_default_content_margin():
 
 	assert_eq(style.get_content_margin(SIDE_LEFT), StyleBoxFlat.new().get_content_margin(SIDE_LEFT))
 	assert_eq(style.bg_color, Color.TRANSPARENT)
+
+
+func test_swatch_is_a_solid_square_of_the_colour():
+	var texture := LFStyle.swatch(Color.RED, 6)
+
+	assert_eq(texture.get_size(), Vector2(6, 6))
+	assert_eq(texture.get_image().get_pixel(0, 0), Color.RED)
+	assert_eq(texture.get_image().get_pixel(5, 5), Color.RED)

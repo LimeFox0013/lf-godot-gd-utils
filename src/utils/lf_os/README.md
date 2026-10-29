@@ -100,6 +100,7 @@ Everything the class offers; you only need the rows used in the steps above to g
 | `pid_check_runs_command` | `static pid_check_runs_command() -> bool` | Whether `is_pid_alive` for another process launches a command (macOS and other Unix without `/proc`, Windows) and so blocks until it exits. `false` on Linux and on web/Android/iOS. |
 | `self_launch_args` | `static self_launch_args(user_args: PackedStringArray = [], headless := true) -> PackedStringArray` | Arguments that run this same project again: `--headless` (when `headless`), `--path <project>` when running from the editor (whose executable is Godot itself), then `--` and `user_args` (read back with `OS.get_cmdline_user_args()`). Pair with `OS.get_executable_path()`. |
 | `parse_user_args` | `static parse_user_args(args: PackedStringArray) -> Dictionary` | `--key=value` → `{key: 'value'}` (the value is everything after the first `=`) and `--flag` → `{flag: true}`. Arguments not starting with `--`, and a bare `--`, are skipped; a repeated key keeps its last value. Pair with `OS.get_cmdline_user_args()`. |
+| `int_arg` | `static int_arg(parsed: Dictionary, key: String, fallback: int) -> int` | `parsed[key]` as an int, or `fallback` when the key is missing or a bare flag. Text that is not a number reads as 0. |
 | `encode_arg_value` | `static encode_arg_value(value: Variant) -> String` | `value`'s JSON, base64-encoded: one word of letters, digits, `+`, `/` and `=` (none special to a POSIX shell), which argv carries unchanged whatever text or structure it holds. |
 | `decode_arg_value` | `static decode_arg_value(text: String) -> Variant` | The value `encode_arg_value` wrote, or `null` when `text` is not base64 of JSON. Quiet: no engine error on bad input. Numbers come back as floats. |
 | `local_addresses` | `static local_addresses(include_link_local := false, ipv4_only := false) -> Array[String]` | This machine's IP addresses (`IP.get_local_addresses()`), sorted. Link-local ones (`fe80::/10`, `169.254.0.0/16`) are left out unless `include_link_local`; `ipv4_only` drops IPv6. |
@@ -173,6 +174,7 @@ if path.is_empty():
 
 ## Notes
 
+- There is no `detect_os` or `detect_arch`: the engine already answers both. `OS.get_name().to_lower()` gives `windows`, `macos`, `linux`, `android`, `ios` or `web` for those platforms (the strings `select_backend` compares), and `Engine.get_architecture_name()` names the CPU the build was made for (`arm64` on an Apple-silicon Mac). To pick a per-platform helper binary, build its file name from those two.
 - `select_backend` is a simple naming rule, not a check of what the computer can really do: it returns `metal` on any macOS (even when Godot renders through OpenGL) and `cuda` from the vendor string alone, without probing for a CUDA runtime.
 - `'vulkan'` means Godot itself renders through Vulkan; a GPU that supports Vulkan while Godot uses D3D12 or OpenGL gives `'cpu'`.
 - Under `--headless` the GPU vendor is empty, but the driver name still reflects the configured renderer (e.g. `metal` on macOS), so the result there follows the OS and driver, not the hardware.

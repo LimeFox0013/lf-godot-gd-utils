@@ -150,6 +150,11 @@ static func x_shift_out(carousel: LFCarousel, next_slide_name: String) -> void:
 		carousel.set_slide_state(outgoing, false)
 
 
+## Strategy for `slide_fn`: switches with no animation (the carousel hides the other pages).
+static func instant(carousel: LFCarousel, next_slide_name: String) -> void:
+	carousel.set_slide_state(next_slide_name, true)
+
+
 ## Coroutine (`await` it to wait for the tween): shows the page, jumps it to `from` when
 ## given (a Vector2; null keeps its current position), and tweens its position to `to`
 ## over `duration` seconds along the `tween_trans` curve (linear by default) with

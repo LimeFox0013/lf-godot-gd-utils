@@ -288,3 +288,114 @@ func test_an_invalid_callable_counts_as_finished_with_null_and_reports_an_error(
 	var results = await LFAwait.all([Callable(), func(): return 5])
 	assert_eq(results, [null, 5])
 	assert_push_error("not valid")
+
+
+class Counter:
+	extends RefCounted
+	var calls := 0
+	var succeed_on := 0 # the call number that returns "ok"; 0 never succeeds
+
+	func attempt() -> Variant:
+		calls += 1
+		return "ok" if calls == succeed_on else null
+
+
+func test_retry_returns_the_first_non_null_result_and_stops():
+	var counter := Counter.new()
+	counter.succeed_on = 2
+	var result = await LFAwait.retry(counter.attempt, 5, 0.0)
+	assert_eq(result, "ok")
+	assert_eq(counter.calls, 2)
+
+
+func test_retry_gives_null_after_the_last_attempt_and_makes_exactly_that_many_calls():
+	var counter := Counter.new()
+	var result = await LFAwait.retry(counter.attempt, 3, 0.0)
+	assert_null(result)
+	assert_eq(counter.calls, 3)
+
+
+func test_retry_waits_between_attempts_but_not_after_the_last():
+	var stamps: Array[int] = []
+	var fn := func():
+		stamps.append(Time.get_ticks_msec())
+		return null
+	await LFAwait.retry(fn, 3, 200.0)
+	var done := Time.get_ticks_msec()
+	assert_eq(stamps.size(), 3)
+	# Lower bounds only (minus one-frame timer slack): a gap can stretch under load, never shrink.
+	assert_gte(stamps[1] - stamps[0], 175, 'wait between attempts 1 and 2')
+	assert_gte(stamps[2] - stamps[1], 175, 'wait between attempts 2 and 3')
+	# A wait after the last attempt would take at least 200 ms more.
+	assert_lt(done - stamps[2], 200, 'no wait after the last attempt')
+
+
+func test_retry_backoff_multiplies_each_later_wait():
+	var stamps: Array[int] = []
+	var fn := func():
+		stamps.append(Time.get_ticks_msec())
+		return null
+	await LFAwait.retry(fn, 3, 40.0, 3.0) # waits 40 + 120
+	assert_eq(stamps.size(), 3)
+	assert_gte(stamps[1] - stamps[0], 15)
+	assert_gte(stamps[2] - stamps[1], 95, 'second wait is 3x the first')
+
+
+func test_retry_waits_for_an_async_fn():
+	var counter := [0]
+	var fn := func():
+		await get_tree().process_frame
+		counter[0] += 1
+		return counter[0] if counter[0] == 2 else null
+	assert_eq(await LFAwait.retry(fn, 4, 0.0), 2)
+
+
+func test_retry_accept_decides_what_counts_as_success():
+	var counter := [0]
+	var fn := func():
+		counter[0] += 1
+		return counter[0]
+	var result = await LFAwait.retry(fn, 10, 0.0, 1.0, func(value): return value >= 3)
+	assert_eq(result, 3)
+
+
+func test_retry_treats_false_as_a_result_unless_accept_refuses_it():
+	var fn := func(): return false
+	assert_eq(await LFAwait.retry(fn, 3, 0.0), false)
+
+
+func test_retry_with_zero_attempts_has_no_limit():
+	var counter := Counter.new()
+	counter.succeed_on = 7
+	assert_eq(await LFAwait.retry(counter.attempt, 0, 0.0), "ok")
+	assert_eq(counter.calls, 7)
+
+
+func test_retry_with_an_invalid_callable_reports_and_returns_null():
+	assert_null(await LFAwait.retry(Callable(), 3, 0.0))
+	assert_push_error("not valid")
+
+
+func test_retry_reports_a_nan_delay_and_backoff_and_carries_on():
+	var counter := Counter.new()
+	counter.succeed_on = 2
+	assert_eq(await LFAwait.retry(counter.attempt, 3, NAN, NAN), "ok")
+	assert_push_error_count(2)
+
+
+func test_retry_treats_negative_delay_and_backoff_as_zero():
+	var counter := Counter.new()
+	var start := Time.get_ticks_msec()
+	await LFAwait.retry(counter.attempt, 3, -500.0, -2.0)
+	assert_lt(Time.get_ticks_msec() - start, 450, 'a 500 ms wait would exceed this')
+	assert_eq(counter.calls, 3)
+
+
+func test_retry_with_an_invalid_accept_reports_once_and_calls_nothing():
+	var counter := Counter.new()
+	var dead := Node.new()
+	var accept := dead.queue_free
+	dead.free()
+	assert_null(await LFAwait.retry(counter.attempt, 2, 0.0, 1.0, accept))
+	assert_push_error_count(1)
+	assert_eq(counter.calls, 0)

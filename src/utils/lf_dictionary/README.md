@@ -65,6 +65,7 @@ Everything the class offers; you only need the rows used above to get started.
 | `KEY_CHANGED` | `const KEY_CHANGED := 'changed'` | The key of a `diff` result holding `{key: new value}`; `apply_diff` reads it. |
 | `KEY_REMOVED` | `const KEY_REMOVED := 'removed'` | The key of a `diff` result holding the removed keys; `apply_diff` reads it. |
 | `invert` | `static invert(d: Dictionary) -> Dictionary` | `{value: key}`; when values repeat, the later key wins. `d` is not modified. Values become keys: Godot hashes them, and prints "Max recursion reached" for a value nested about 100 levels deep or more. |
+| `lower_median_by_key` | `static lower_median_by_key(dicts: Array) -> Dictionary` | Per key, the lower median of its values across `dicts` (missing counts as 0, values cut to int); keys with a median of 0 or less are left out. |
 
 ## Usage
 

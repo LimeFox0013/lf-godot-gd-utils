@@ -144,6 +144,27 @@ func test_with_a_mount_zoom_and_frame_move_the_mount_not_the_camera():
 	assert_eq(mounted_orbit.get_mount(), mount)
 
 
+func test_frame_points_centres_on_the_average_and_backs_off_by_the_spread():
+	orbit.frame_points(PackedVector3Array([Vector3(0, 0, 0), Vector3(10, 0, 0), Vector3(2, 0, 4)]), 30.0, 1.4)
+	var center := Vector3(4, 0, 4.0 / 3.0)
+	assert_almost_eq(rig.position, center, Vector3.ONE * 0.0001)
+	var spread := maxf(maxf(center.length(), center.distance_to(Vector3(10, 0, 0))), center.distance_to(Vector3(2, 0, 4)))
+	assert_almost_eq(orbit.distance(), 30.0 + spread * 1.4, 0.0001)
+
+
+func test_frame_points_of_one_point_uses_the_base_distance():
+	orbit.frame_points(PackedVector3Array([Vector3(3, 5, -2)]), 30.0, 1.4)
+	assert_eq(rig.position, Vector3(3, 0, -2))
+	assert_almost_eq(orbit.distance(), 30.0, 0.0001)
+
+
+func test_frame_points_of_nothing_changes_nothing():
+	var before := orbit.distance()
+	orbit.frame_points(PackedVector3Array(), 30.0, 1.4)
+	assert_eq(rig.position, Vector3.ZERO)
+	assert_almost_eq(orbit.distance(), before, 0.0001)
+
+
 func test_a_pan_step_is_pixels_times_units_per_pixel_times_distance():
 	orbit.pan_units_per_pixel = 0.01
 	orbit.pan(Vector2(10, 20))

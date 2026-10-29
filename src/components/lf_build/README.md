@@ -1,6 +1,6 @@
 # LFBuild
 
-> One-line helpers for building UI in code: labels, buttons wired to a callback, text fields, spacers, full-screen anchoring, a centred box that scrolls only when needed, and a titled panel.
+> One-line helpers for building UI in code: labels, buttons wired to a callback, text fields (and their commit), margins, spin boxes, spacers, full-screen anchoring, a centred box that scrolls only when needed, and a titled panel.
 
 | | |
 |---|---|
@@ -56,6 +56,9 @@ Everything the class offers; you only need the rows used above to get started. (
 | `outline` | `static outline(target: Label, color: Color, size: int) -> Label` | A `size` px text outline in `color`. Returns `target`. |
 | `button` | `static button(parent: Node, text: String, on_pressed := Callable(), tooltip := '') -> Button` | A Button connected to `on_pressed` (when valid); added to `parent` unless it is null. |
 | `line_edit` | `static line_edit(parent: Node, placeholder := '', tooltip := '', secret := false) -> LineEdit` | A LineEdit; `secret` masks its text. |
+| `on_commit` | `static on_commit(edit: LineEdit, callback: Callable) -> LineEdit` | Calls `callback` (no arguments) when the text is committed: Enter or losing focus. Returns `edit`. |
+| `margin` | `static margin(parent: Node, px: int) -> MarginContainer` | A MarginContainer with `px` on all four sides; added to `parent` unless it is null. |
+| `spin_box` | `static spin_box(parent: Node, min_value: float, max_value: float, step: float, value: float) -> SpinBox` | A SpinBox set in that order (so `value` is clamped); added to `parent` unless it is null. |
 | `spacer` | `static spacer(parent: Node = null) -> Control` | An empty, mouse-transparent Control that expands both ways, pushing its Box-container siblings apart. |
 | `fill_parent` | `static fill_parent(control: Control, left := 0.0, top := 0.0, right := 0.0, bottom := 0.0) -> Control` | Full-rect anchors, inset by the given pixels on each side. Returns `control`. |
 | `centered_box` | `static centered_box(parent: Control, min_width := 0, separation := -1, panel_style: StyleBox = null, on_panel := true, scrolls := false) -> VBoxContainer` | A VBox centred in `parent` (the frame fills it). `on_panel` puts it on a PanelContainer (`box.get_parent()`), styled by `panel_style`. `scrolls` makes the frame scroll vertically once the content is taller than `parent`, while it stays centred when it fits. |
@@ -98,5 +101,5 @@ func _join(address: String) -> void:
 - `fill_parent` sets anchors and offsets; inside a Container those are ignored, as the container places its children.
 - `centered_box(..., scrolls = true)` is the arrangement that is easy to get wrong by hand: the CenterContainer must expand inside the ScrollContainer, and horizontal scrolling must be off, or the content either never scrolls or never centres.
 - Colours and sizes are overrides on the control, so they win over any theme. Leave them null/0 to follow the theme.
-- Every builder that makes a new control takes the parent as its first argument (`label`, `button`, `line_edit`, `spacer`, `centered_box`, `titled_panel`); pass `null` to `label`, `button`, `line_edit`, `spacer` or `titled_panel` to get an unparented control. `wrap`, `outline` and `fill_parent` take the control they change first.
+- Every builder that makes a new control takes the parent as its first argument (`label`, `button`, `line_edit`, `margin`, `spin_box`, `spacer`, `centered_box`, `titled_panel`); pass `null` to `label`, `button`, `line_edit`, `margin`, `spin_box`, `spacer` or `titled_panel` to get an unparented control. `wrap`, `outline`, `on_commit` and `fill_parent` take the control they change first.
 - None of the factories set a `name`; set one if you look children up by name.

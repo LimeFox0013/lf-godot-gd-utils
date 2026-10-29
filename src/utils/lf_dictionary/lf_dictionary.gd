@@ -146,3 +146,22 @@ static func invert(d: Dictionary) -> Dictionary:
 	for key: Variant in d:
 		inverted[d[key]] = key
 	return inverted
+
+
+## Per key, the lower median of that key's values across `dicts` (an array of dictionaries
+## of numbers): a dictionary without the key counts as 0, values are cut to int, and keys
+## whose median is 0 or less are left out. Keys appear in the order first seen. `dicts` is
+## not modified; an empty array gives `{}`.
+static func lower_median_by_key(dicts: Array) -> Dictionary:
+	var result := {}
+	if dicts.is_empty():
+		return result
+	var keys := {}
+	for values: Dictionary in dicts:
+		for key: Variant in values:
+			keys[key] = true
+	for key: Variant in keys:
+		var median: int = LFUtils.lower_median(dicts.map(func(values: Dictionary) -> int: return int(values.get(key, 0))))
+		if median > 0:
+			result[key] = median
+	return result

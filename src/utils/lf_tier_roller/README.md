@@ -60,6 +60,7 @@ Everything the class offers; you only need the rows used above to get started. `
 | `pick_from_buckets` | `static pick_from_buckets(buckets: Array, weights: Array, tier_roll: float, item_roll: float, floor_tier: int = 0, fallback: Fallback = Fallback.LOWER_FIRST) -> Variant` | Pure, on rolls you pass in (each 0–1); null when every bucket is empty. A negative `floor_tier` counts as 0; a roll landing on a weight past the last bucket counts as the last bucket. |
 | `pick` | `static pick(items: Array, tier_of: Callable, weights: Array, rng: RandomNumberGenerator, floor_tier: int = 0, fallback: Fallback = Fallback.LOWER_FIRST) -> Variant` | Two draws from `rng` (tier, then item); none when `items` is empty (returns null). A null `rng` is reported and picks nothing. |
 | `resolve_tier` | `static resolve_tier(buckets: Array, rolled: int, floor_tier: int, fallback: Fallback = Fallback.LOWER_FIRST) -> int` | The tier with items that a rolled tier ends up on (`rolled` clamped into the buckets); -1 when all are empty. |
+| `tilt_weights` | `static tilt_weights(base: Array, shift: float, floor_of_first: float) -> Array[float]` | A new weight array with `shift` moved out of the first tier (never below `floor_of_first`) into the others in proportion to their base weights. A negative `shift` counts as 0. |
 
 ## Usage
 
@@ -100,7 +101,7 @@ func _ready() -> void:
   the floor is dropped so a guaranteed pick still yields something.
 - A rolled tier with no items falls to the nearest stocked tier in the fallback
   direction (never below the floor), then the other way.
-- Weights are per call, so a tilt (luck, difficulty) stays the caller's policy.
+- Weights are per call, so a tilt (luck, difficulty) stays the caller's policy; `tilt_weights` does the arithmetic of one common tilt (luck moves weight out of the first tier).
 - In `pick`, `weights.size()` sets how many tiers there are; an item whose tier is past
   it is reported and skipped.
 - `pick` sorts `items` into tiers again on every call: one pass over the whole pool, plus

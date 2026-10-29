@@ -9,6 +9,13 @@ see [`SECURITY.md`](SECURITY.md).
 Open an issue with your Godot version (*Help → About Godot*), the module, a few lines
 of GDScript that show the problem, what you expected and what happened instead.
 
+## Branches
+
+Work happens on `develop`, the default branch. `main` is the released state: it changes
+only by a pull request from `develop` (or from a topic branch off `develop` into `develop`
+first), and release tags are made on `main`. Open pull requests against `develop`
+unless you are releasing.
+
 ## Changing code
 
 A pull request needs:

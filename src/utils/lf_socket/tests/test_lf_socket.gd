@@ -15,6 +15,23 @@ func _refusal_unreported() -> bool:
 	return OS.get_name() == "Windows"
 
 
+## What Godot on macOS 26 logs when a connection is refused: it fails to set TCP_NODELAY on the
+## refused socket. It comes from the engine, not from the library, and GUT would count it as a
+## failure of every test that dials a closed port.
+const _MACOS_REFUSAL_NOISE := "Unable to set TCP no delay option"
+
+
+## Marks that message as expected on macOS. A test that dials a closed port calls it as its last
+## line (GUT counts engine errors before `after_each` runs); on other platforms, or for any other
+## message, nothing is excused.
+func _tolerate_macos_refusal_noise() -> void:
+	if OS.get_name() != "macOS":
+		return
+	for error in get_errors():
+		if error.contains_text(_MACOS_REFUSAL_NOISE):
+			error.handled = true
+
+
 func before_each():
 	sock = LFSocket.new()
 	sock._options = LFSocketOptions.new()
@@ -233,6 +250,7 @@ func test_reconnect_stops_once_the_attempt_limit_is_reached():
 ## listening. A refused connection is already STATE_CLOSED on the very first poll;
 ## that first failed attempt must still schedule a reconnect, or the loop polls a
 ## dead socket forever.
+	_tolerate_macos_refusal_noise()
 func test_a_refused_first_attempt_schedules_a_reconnect():
 	if _refusal_unreported():
 		pending(_REFUSAL_REASON)
@@ -247,6 +265,7 @@ func test_a_refused_first_attempt_schedules_a_reconnect():
 
 	assert_eq(sock._reconnect_attempts, 1)
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 ## A bare WebSocket server that accepts connections but never answers pings
@@ -282,6 +301,7 @@ func test_a_heartbeat_timeout_drops_the_connection_and_reconnects():
 	assert_signal_emitted(sock, "disconnected")
 	sock.disconnect_from_server()
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_disconnecting_an_open_connection_emits_disconnected():
@@ -329,6 +349,7 @@ func test_disconnect_without_disabling_reconnect_reconnects():
 			peer.poll()
 		await get_tree().process_frame
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_connecting_again_after_a_plain_disconnect_rearms_auto_reconnect():
@@ -337,6 +358,7 @@ func test_connecting_again_after_a_plain_disconnect_rearms_auto_reconnect():
 	sock.connect_to_server('ws://127.0.0.1:1', LFSocketOptions.new())
 	assert_true(sock._should_reconnect, "a new connect_to_server must re-arm auto-reconnect")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_disconnect_with_the_default_does_not_schedule_a_reconnect():
@@ -394,6 +416,7 @@ func test_force_reconnect_during_a_dial_that_then_fails_reports_one_error_and_on
 	assert_eq(attempts, [1], "one failed dial schedules one reconnect")
 	sock.disconnect_from_server()
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_force_reconnect_dials_on_a_fresh_peer_not_the_closing_one():
@@ -406,6 +429,7 @@ func test_force_reconnect_dials_on_a_fresh_peer_not_the_closing_one():
 
 	assert_ne(sock._socket, closing, "a peer that was just closed cannot be redialled")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_heartbeat_answered_by_lf_socket_server_keeps_one_connection_alive():
@@ -429,6 +453,7 @@ func test_a_heartbeat_answered_by_lf_socket_server_keeps_one_connection_alive():
 	assert_true(sock.is_connected_to_server())
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_sending_before_any_connect_queues_with_default_options():
@@ -437,6 +462,7 @@ func test_sending_before_any_connect_queues_with_default_options():
 	fresh.send_message({"early": true})
 
 	assert_eq(fresh.get_queue_size(), 1, "a message sent before connect_to_server() is queued, not a crash")
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_non_object_json_frame_is_ignored():
@@ -509,6 +535,7 @@ func test_emit_binary_sends_a_length_prefixed_frame_and_a_binary_reply_reaches_i
 	assert_eq(received, [PackedByteArray([4, 5])], "a binary frame from the server reaches the listener for its decoded event")
 	sock.disconnect_from_server()
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_emit_binary_while_offline_is_dropped_not_queued():
@@ -532,6 +559,7 @@ func test_connected_and_disconnected_fire_on_connect_and_disconnect():
 	sock.disconnect_from_server()
 	assert_eq(events, ["open", "close"], "disconnected fires once, when the open connection is closed")
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_reconnecting_carries_the_attempt_number_after_a_refused_connection():
@@ -548,6 +576,7 @@ func test_reconnecting_carries_the_attempt_number_after_a_refused_connection():
 
 	assert_eq(attempts, [1])
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_disconnecting_a_socket_that_never_opened_emits_nothing():
@@ -613,6 +642,7 @@ func test_a_stale_reconnect_timer_never_replaces_a_live_socket():
 	assert_same(sock._socket, live, "the stale timer must not swap the socket")
 	sock.disconnect_from_server()
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_pending_requests_resolve_null_when_the_connection_closes():
@@ -669,6 +699,7 @@ func test_a_refused_connection_with_reconnecting_off_emits_error():
 
 	assert_eq(errors.size(), 1, 'an attempt that never opens is reported')
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_connecting_again_after_the_attempt_limit_starts_a_fresh_budget():
@@ -693,6 +724,7 @@ func test_connecting_again_after_the_attempt_limit_starts_a_fresh_budget():
 	assert_eq(attempts, [1], 'a new connect may reconnect again')
 	sock.disconnect_from_server()
 	assert_push_error('Max reconnection attempts reached')
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_listener_removing_itself_does_not_make_the_next_one_miss_the_event():
@@ -737,6 +769,7 @@ func test_a_socket_dropped_by_its_owner_stops_redialling():
 	await _wait_ms(func(): return false, 300)
 	assert_false(tcp.is_connection_available(), 'it no longer dials')
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_socket_dropped_while_open_closes_its_connection():
@@ -754,6 +787,7 @@ func test_a_socket_dropped_while_open_closes_its_connection():
 
 	assert_true(closed, 'the server sees the dropped socket leave')
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_message_sent_just_before_the_server_disconnects_reaches_its_listener():
@@ -777,6 +811,7 @@ func test_a_message_sent_just_before_the_server_disconnects_reaches_its_listener
 
 
 # ---- routing details
+	_tolerate_macos_refusal_noise()
 
 func test_the_event_name_falls_back_to_type_and_the_data_to_the_whole_message():
 	var received := []
@@ -903,6 +938,7 @@ func test_reconnect_scheduling_uses_the_options_generator():
 
 	assert_ne(options.rng.state, state_before, "the jitter came from the given generator")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 # ---- status and oversized frames (real server)
@@ -939,6 +975,7 @@ func test_get_status_reports_every_key():
 ## handshake answer and the oversized frame arrive in the same poll: the connection did
 ## open, so it reports as one that opened and closed with 1009 — not a refused attempt —
 ## and keeps what was queued for the next connection.
+	_tolerate_macos_refusal_noise()
 func test_an_oversized_frame_with_the_handshake_reports_an_open_then_a_1009_close():
 	var server := LFSocketServer.new()
 	assert_eq(server.listen(0, '127.0.0.1'), OK)
@@ -971,6 +1008,7 @@ func test_an_oversized_frame_with_the_handshake_reports_an_open_then_a_1009_clos
 	assert_eq(received, [{'queued': true}], 'the queued message waited for the connection that stayed open')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_frame_larger_than_the_buffer_closes_with_1009_and_reconnects():
@@ -1002,6 +1040,7 @@ func test_a_frame_larger_than_the_buffer_closes_with_1009_and_reconnects():
 
 
 # ---- reconnecting the same socket
+	_tolerate_macos_refusal_noise()
 
 func test_connecting_again_after_a_disconnect_reaches_open():
 	var server := LFSocketServer.new()
@@ -1018,6 +1057,7 @@ func test_connecting_again_after_a_disconnect_reaches_open():
 	assert_true(opened, 'the second connect opens')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_connecting_while_open_closes_the_old_connection_first():
@@ -1039,6 +1079,7 @@ func test_connecting_while_open_closes_the_old_connection_first():
 	assert_eq(server.connected_peer_ids().size(), 1, 'the old connection is gone')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_url_that_cannot_be_dialled_returns_false_and_reports_an_error():
@@ -1052,6 +1093,7 @@ func test_a_url_that_cannot_be_dialled_returns_false_and_reports_an_error():
 	assert_signal_emitted(sock, 'error_occurred')
 	assert_engine_error('scheme')
 	assert_push_error('Failed to initiate connection')
+	_tolerate_macos_refusal_noise()
 
 
 func test_with_offline_queueing_off_a_message_sent_offline_is_dropped():
@@ -1093,6 +1135,7 @@ func test_a_disconnected_handler_that_connects_elsewhere_after_a_heartbeat_timeo
 	sock.disconnect_from_server()
 	server.stop()
 	tcp.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_log_traffic_logs_messages_without_changing_delivery():
@@ -1120,6 +1163,7 @@ func test_log_traffic_logs_messages_without_changing_delivery():
 	assert_eq(echoed, [{'n': 1.0}])
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_the_heartbeat_types_are_the_wire_strings_servers_rely_on():
@@ -1203,6 +1247,7 @@ func test_force_reconnect_after_a_plain_disconnect_turns_reconnecting_back_on():
 
 	assert_eq(attempts, [1], "the refused attempt schedules a reconnect")
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_queue_size_of_zero_queues_nothing():
@@ -1227,6 +1272,7 @@ func test_null_options_connect_with_the_defaults():
 	assert_true(dialled)
 	assert_eq(sock.get_status().auto_reconnect, true)
 	sock.disconnect_from_server()
+	_tolerate_macos_refusal_noise()
 
 
 class _Listener extends RefCounted:
@@ -1285,6 +1331,7 @@ func test_a_client_the_server_disconnects_on_purpose_does_not_reconnect():
 	assert_eq(reconnects, [], 'no reconnect was scheduled')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_server_that_stops_is_still_redialled():
@@ -1304,6 +1351,7 @@ func test_a_server_that_stops_is_still_redialled():
 	assert_true(back, 'a stop is not a kick, so the client comes back')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_get_close_code_is_unknown_until_a_connection_closes():
@@ -1335,6 +1383,7 @@ func test_a_tls_server_talks_to_a_wss_client():
 	assert_eq(server.peer_address(server.connected_peer_ids()[0]), '127.0.0.1')
 	sock.disconnect_from_server()
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_a_plain_ws_client_cannot_connect_to_a_tls_server():
@@ -1364,6 +1413,7 @@ func test_a_plain_ws_client_cannot_connect_to_a_tls_server():
 	if logged.call():
 		assert_engine_error('TLS handshake', 'the engine reports the failed handshake too')
 	server.stop()
+	_tolerate_macos_refusal_noise()
 
 
 func test_listen_refuses_client_tls_options():
@@ -1445,6 +1495,7 @@ func test_a_heartbeat_interval_of_zero_sends_no_pings():
 
 ## Before any connect_to_server() there is nothing to redial: the call is reported and
 ## neither dials, nor emits error, nor schedules a reconnect.
+	_tolerate_macos_refusal_noise()
 func test_force_reconnect_before_any_connect_is_reported_and_does_nothing():
 	var fresh := LFSocket.new()
 	var errors := []
@@ -1487,3 +1538,4 @@ func test_the_error_for_an_undialable_url_does_not_carry_its_secrets():
 	assert_engine_error('scheme')
 	assert_push_error('http://127.0.0.1:1/p?...')
 	assert_push_error_count(1, 'only the redacted report')
+	_tolerate_macos_refusal_noise()

@@ -727,6 +727,8 @@ func test_a_fresh_acquire_while_the_container_sets_up_children_is_refused_by_god
 	assert_engine_error('busy setting up children')
 	assert_eq(child.got.size(), 2)
 	assert_eq(child.got[1].get_parent(), screen, 'acquire_async parented its entity')
+	if is_instance_valid(child.got[0]) and child.got[0].get_parent() == null:
+		child.got[0].free() # the refused acquire left an unparented node
 
 
 func test_a_fresh_entity_acquired_in_a_state_machine_hook_or_a_tick_callback_is_in_the_container():
@@ -789,3 +791,156 @@ func test_an_on_release_hook_that_queues_the_entity_for_deletion_is_not_handed_o
 	var next := factory.acquire('q')
 	assert_ne(next, entity)
 	assert_false(next.is_queued_for_deletion())
+
+
+func _dormant_pool() -> Dictionary:
+	var hooks := LFFactory.dormant_hooks()
+	factory.register('body', func(): return Area2D.new(), hooks.on_acquire, hooks.on_release)
+	return hooks
+
+
+func test_dormant_hooks_name_both_hooks():
+	var hooks := LFFactory.dormant_hooks()
+	assert_true(hooks[LFFactory.DORMANT_ON_ACQUIRE].is_valid())
+	assert_true(hooks[LFFactory.DORMANT_ON_RELEASE].is_valid())
+
+
+func test_a_released_entity_with_dormant_hooks_is_hidden_idle_and_collisionless():
+	_dormant_pool()
+	var area: Area2D = factory.acquire('body')
+	area.collision_layer = 5
+	area.collision_mask = 6
+	factory.release(area)
+	await get_tree().process_frame
+	assert_false(area.visible)
+	assert_eq(area.process_mode, Node.PROCESS_MODE_DISABLED)
+	assert_eq(area.collision_layer, 0)
+	assert_eq(area.collision_mask, 0)
+	assert_false(area.monitoring)
+
+
+func test_acquiring_again_restores_the_original_values_not_defaults():
+	_dormant_pool()
+	var area: Area2D = factory.acquire('body')
+	area.collision_layer = 5
+	area.collision_mask = 6
+	area.process_mode = Node.PROCESS_MODE_PAUSABLE
+	area.monitoring = false
+	factory.release(area)
+	assert_same(factory.acquire('body'), area)
+	await get_tree().process_frame
+	assert_true(area.visible)
+	assert_eq(area.process_mode, Node.PROCESS_MODE_PAUSABLE)
+	assert_eq(area.collision_layer, 5)
+	assert_eq(area.collision_mask, 6)
+	assert_false(area.monitoring, 'a node that started with monitoring off stays off')
+
+
+func test_monitoring_comes_back_after_a_release_and_acquire_in_one_frame():
+	_dormant_pool()
+	var area: Area2D = factory.acquire('body')
+	factory.release(area)
+	factory.acquire('body')
+	await get_tree().process_frame
+	assert_true(area.monitoring)
+
+
+func test_a_node_without_physics_properties_only_loses_visibility_and_processing():
+	var hooks := LFFactory.dormant_hooks()
+	factory.register('plain', func(): return Node2D.new(), hooks.on_acquire, hooks.on_release)
+	var node: Node2D = factory.acquire('plain')
+	factory.release(node)
+	assert_false(node.visible)
+	assert_eq(node.process_mode, Node.PROCESS_MODE_DISABLED)
+	factory.acquire('plain')
+	assert_true(node.visible)
+	assert_eq(node.process_mode, Node.PROCESS_MODE_INHERIT)
+
+
+func test_a_plain_node_is_made_idle_and_restored():
+	var hooks := LFFactory.dormant_hooks()
+	factory.register('n', _node, hooks.on_acquire, hooks.on_release)
+	var node := factory.acquire('n')
+	factory.release(node)
+	assert_eq(node.process_mode, Node.PROCESS_MODE_DISABLED)
+	factory.acquire('n')
+	assert_eq(node.process_mode, Node.PROCESS_MODE_INHERIT)
+
+
+func test_sleeping_twice_keeps_the_first_originals():
+	var node := Node2D.new()
+	add_child_autofree(node)
+	LFFactory.sleep(node)
+	LFFactory.sleep(node)
+	LFFactory.wake(node)
+	assert_eq(node.process_mode, Node.PROCESS_MODE_INHERIT)
+	assert_true(node.visible)
+
+
+func test_wake_on_a_node_that_is_not_asleep_changes_nothing():
+	var node := Node2D.new()
+	add_child_autofree(node)
+	node.process_mode = Node.PROCESS_MODE_ALWAYS
+	LFFactory.wake(node)
+	assert_eq(node.process_mode, Node.PROCESS_MODE_ALWAYS)
+
+
+func test_sleep_and_wake_ignore_null_and_freed_nodes():
+	var node := Node.new()
+	node.free()
+	LFFactory.sleep(null)
+	LFFactory.sleep(node)
+	LFFactory.wake(null)
+	LFFactory.wake(node)
+	assert_true(true, 'no error')
+
+
+class _Emitter:
+	extends Node
+	signal done
+
+
+func test_release_on_signal_releases_the_entity_when_it_emits():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	entity.done.emit()
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_connects_once_per_hand_out():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	entity.done.emit()
+	assert_eq(entity.done.get_connections().size(), 0)
+	assert_eq(factory.acquire('a'), entity)
+	assert_eq(entity.done.get_connections().size(), 1)
+	entity.done.emit()
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_with_an_unknown_signal_reports_and_connects_nothing():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'nope'))
+	var entity := factory.acquire('a')
+	assert_push_error('no signal')
+	assert_not_null(entity)
+	assert_false(factory.is_pooled(entity))
+
+
+class _ArgEmitter:
+	extends Node
+	signal hit(amount: int, who: String)
+
+
+func test_release_on_signal_works_with_a_signal_that_carries_arguments():
+	factory.register('a', _ArgEmitter.new, factory.release_on_signal(&'hit'))
+	var entity := factory.acquire('a') as _ArgEmitter
+	entity.hit.emit(3, 'x')
+	assert_true(factory.is_pooled(entity))
+
+
+func test_release_on_signal_after_a_manual_release_does_not_connect_twice():
+	factory.register('a', _Emitter.new, factory.release_on_signal(&'done'))
+	var entity := factory.acquire('a') as _Emitter
+	factory.release(entity)
+	factory.acquire('a')
+	assert_eq(entity.done.get_connections().size(), 1)

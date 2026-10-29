@@ -3,10 +3,15 @@
 ## While it is in the scene tree, the control is listed in one shared registry under its
 ## `registry_id`; `LFControl.by_id("that_id")` returns it from anywhere, with no node path and
 ## no SceneTree reference. It also has static helpers for UI placement: a control's
-## centre, sorting controls into reading order, and placing a popup beside a rectangle.
+## centre, pinning to a screen edge, sorting controls into reading order, and placing a popup beside a rectangle.
 ## It is the base class of `LFLayoutControl`, `LFControl2D` and `LFControlOut`.
 class_name LFControl
 extends Control
+
+const _RIGHT_PRESETS := [Control.PRESET_TOP_RIGHT, Control.PRESET_CENTER_RIGHT, Control.PRESET_BOTTOM_RIGHT]
+const _BOTTOM_PRESETS := [Control.PRESET_BOTTOM_LEFT, Control.PRESET_CENTER_BOTTOM, Control.PRESET_BOTTOM_RIGHT]
+const _CENTER_COLUMN_PRESETS := [Control.PRESET_CENTER_TOP, Control.PRESET_CENTER, Control.PRESET_CENTER_BOTTOM]
+const _CENTER_ROW_PRESETS := [Control.PRESET_CENTER_LEFT, Control.PRESET_CENTER, Control.PRESET_CENTER_RIGHT]
 
 ## Key this control is registered under while in the tree, so it can be fetched with
 ## `LFControl.by_id(registry_id)`. Empty means it is never registered. Changing it while
@@ -145,3 +150,22 @@ static func place_beside(anchor: Rect2, box_size: Vector2, bounds: Vector2, gap 
 		x = anchor.position.x - gap - box_size.x
 	var y := clampf(anchor.position.y, 0.0, maxf(bounds.y - box_size.y, 0.0))
 	return Vector2(maxf(x, 0.0), y)
+
+
+## Pins `control` (already in the tree) to a screen edge, corner or centre: `preset` is a
+## `Control.PRESET_*` (not a full-rect one), `margin` the gap in px to the edge, `offset` a
+## final nudge. It grows inward from the edge (centred presets grow both ways), so a
+## right or bottom control stays on screen as it gets bigger.
+static func pin(control: Control, preset: Control.LayoutPreset, margin := 0, offset := Vector2.ZERO) -> void:
+	control.set_anchors_and_offsets_preset(preset, Control.PRESET_MODE_MINSIZE, margin)
+	control.grow_horizontal = _grow_toward_inside(preset, _RIGHT_PRESETS, _CENTER_COLUMN_PRESETS)
+	control.grow_vertical = _grow_toward_inside(preset, _BOTTOM_PRESETS, _CENTER_ROW_PRESETS)
+	control.position += offset
+
+
+static func _grow_toward_inside(preset: int, far_edge: Array, middle: Array) -> Control.GrowDirection:
+	if preset in far_edge:
+		return Control.GROW_DIRECTION_BEGIN
+	if preset in middle:
+		return Control.GROW_DIRECTION_BOTH
+	return Control.GROW_DIRECTION_END

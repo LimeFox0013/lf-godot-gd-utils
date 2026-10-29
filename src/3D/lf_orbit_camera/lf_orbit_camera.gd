@@ -126,6 +126,23 @@ func frame(center: Vector3, new_distance: float) -> void:
 	_set_distance(new_distance)
 
 
+## Frames a group of world points: `frame` over their average (kept height as in `frame`),
+## at `base + spread * per_spread`, where `spread` is the largest distance from that average
+## to a point, so the farthest point stays in view. Does nothing for no points. The points
+## must be finite.
+func frame_points(points: PackedVector3Array, base: float, per_spread: float) -> void:
+	if points.is_empty():
+		return
+	var center := Vector3.ZERO
+	for point in points:
+		center += point
+	center /= points.size()
+	var spread := 0.0
+	for point in points:
+		spread = maxf(spread, center.distance_to(point))
+	frame(center, base + spread * per_spread)
+
+
 func _set_distance(value: float) -> void:
 	if is_nan(value):
 		return

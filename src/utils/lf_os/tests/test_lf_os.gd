@@ -282,6 +282,15 @@ func test_parse_user_args_of_nothing_is_empty():
 	assert_eq(LFOS.parse_user_args(PackedStringArray()), {})
 
 
+func test_int_arg_reads_a_number_and_falls_back_for_a_missing_key_or_a_flag():
+	var parsed := LFOS.parse_user_args(PackedStringArray(['--port=7777', '--verbose', '--bad=abc']))
+
+	assert_eq(LFOS.int_arg(parsed, 'port', 1), 7777)
+	assert_eq(LFOS.int_arg(parsed, 'missing', 42), 42)
+	assert_eq(LFOS.int_arg(parsed, 'verbose', 42), 42)
+	assert_eq(LFOS.int_arg(parsed, 'bad', 42), 0)
+
+
 func test_self_launch_args_read_back_through_parse_user_args():
 	var args := LFOS.self_launch_args(['--port=7777', '--server'])
 	var user_args := args.slice(args.find('--') + 1)

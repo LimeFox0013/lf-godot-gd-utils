@@ -122,6 +122,33 @@ func test_atlas_shows_a_region_of_the_texture():
 	assert_eq(region.region, Rect2(4, 8, 4, 4))
 
 
+func test_frame_region_is_the_frames_rect_in_the_atlas():
+	assert_eq(LFSpriteAtlasFrames.frame_region(MANIFEST, "idle", "right"), Rect2(0, 4, 4, 4))
+	assert_eq(LFSpriteAtlasFrames.frame_region(MANIFEST, "action_a", "up", 2), Rect2(8, 24, 4, 4))
+
+
+func test_frame_region_is_null_for_a_missing_animation_direction_or_frame_size():
+	assert_null(LFSpriteAtlasFrames.frame_region(MANIFEST, "nope", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region(MANIFEST, "idle", "diagonal"))
+	assert_null(LFSpriteAtlasFrames.frame_region({}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"animations": {"idle": {"rows": {"down": 0}}}}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": {"rows": 3}}}, "idle", "down"))
+
+
+func test_frame_region_is_null_for_a_manifest_of_the_wrong_shape():
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": 5}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": 7}}, "idle", "down"))
+	assert_null(LFSpriteAtlasFrames.frame_region({"frameWidth": 4, "frameHeight": 4, "animations": {"idle": {"rows": {"down": "x"}}}}, "idle", "down"))
+
+
+func test_frame_region_with_a_texture_is_cropped_to_opaque_pixels():
+	var image := Image.create(12, 32, false, Image.FORMAT_RGBA8)
+	image.fill_rect(Rect2i(1, 5, 2, 1), Color.WHITE)
+	var texture := ImageTexture.create_from_image(image)
+
+	assert_eq(LFSpriteAtlasFrames.frame_region(MANIFEST, "idle", "right", 0, texture), Rect2(1, 5, 2, 1))
+
+
 func test_opaque_region_crops_a_frame_to_its_opaque_pixels():
 	var image := Image.create(16, 8, false, Image.FORMAT_RGBA8)
 	image.fill_rect(Rect2i(10, 2, 3, 4), Color.WHITE)

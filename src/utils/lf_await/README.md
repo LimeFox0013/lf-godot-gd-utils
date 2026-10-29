@@ -7,7 +7,7 @@
 | **Kind** | [Object](../../../README.md#how-lf-classes-work): create it with `.new()` |
 | **Files** | `lf_await.gd` |
 | **Tests** | `tests/test_lf_await.gd` (in the repository; the release zip leaves tests out) |
-| **Depends on** | `LFUtils` (for `next_tick`) |
+| **Depends on** | `LFUtils` (for `next_tick`, `retry`), `LFLogger` |
 
 ## When to use it
 
@@ -79,6 +79,9 @@ Everything the class offers; you only need the rows used above to get started.
 | `is_complete` | `is_complete() -> bool` | Whether the current run has completed. |
 | `all` | `static all(fns: Array) -> Array` | Coroutine. Results in input order once every callable finished. |
 | `any` | `static any(fns: Array) -> Variant` | Coroutine. The first finished callable's result; the rest keep running. `null` for an empty batch. |
+| `retry` | `static retry(fn: Callable, attempts: int, delay_ms: float, backoff := 1.0, accept := Callable()) -> Variant` | Coroutine. Calls `fn` (may `await`) up to `attempts` times; resolves with the first result that is not `null` (or that `accept.call(result)` approves with `true`), waiting `delay_ms` game-time milliseconds between tries, times `backoff` more on each later one; `null` after the last failure. `attempts <= 0` means no limit. NaN `delay_ms`/`backoff` is reported and replaced by 0 / 1.0; negatives count as 0; an invalid `fn` or `accept` is reported and gives `null` without a call. |
+| `DEFAULT_RETRY_BACKOFF` | `const DEFAULT_RETRY_BACKOFF := 1.0` | The `backoff` of `retry` when none is given. |
+| `FALLBACK_RETRY_DELAY_MS` | `const FALLBACK_RETRY_DELAY_MS := 0.0` | What `retry` uses in place of a NaN `delay_ms` (after reporting it). |
 | `next_tick` | `static var next_tick: Signal` | `LFUtils.tree_root.process_frame`: `await LFAwait.next_tick` waits one frame. |
 
 ## Usage
@@ -110,6 +113,14 @@ func wait_for_click_or_timeout() -> String:
 		await LFUtils.timeout(10000)
 		return "timeout"
 	return await LFAwait.any([clicked, timed_out])
+
+func connect_with_retries() -> Variant:
+	# Up to 5 tries, 1 s then 2 s then 4 s apart; the first non-null answer wins.
+	return await LFAwait.retry(_try_connect, 5, 1000.0, 2.0)
+
+func _try_connect() -> Variant:
+	await LFUtils.timeout(100)
+	return null   # null = failed this time (return a value when it worked)
 ```
 
 ## Notes
@@ -120,5 +131,6 @@ func wait_for_click_or_timeout() -> String:
 - `any()` leaves the losers running; their results still land in the abandoned awaiter.
 - Each position in `fns` owns its result slot, so the same Callable may appear more than once (sync or async).
 - There is no timeout: a job that never returns keeps `all()` waiting forever. To add one, put `LFAwait.any` around the job and a timer.
+- `retry` is for "try again until it works": `attempts <= 0` retries until one attempt succeeds, so pair it with a cap or a way to stop. It waits with `LFUtils.timeout` (game time: follows `Engine.time_scale`, needs a running SceneTree), never after the last attempt. A result that is `false`, `0` or `""` counts as success unless you pass `accept`; only `null` means failure by default. It cannot tell a failed result from a legitimate `null` answer.
 - `any([])` returns `null`; `all([])` returns `[]`.
 - `next_tick` needs a running SceneTree.

@@ -1,6 +1,6 @@
 # LFStyle
 
-> StyleBox helpers: a flat box (fill, border, rounded corners) in one call, an outline-only frame, one style on every button state, and a project-theme lookup with a fallback.
+> StyleBox helpers: a flat box (fill, border, rounded corners) in one call, an outline-only frame, a solid colour chip, one style on every button state, and a project-theme lookup with a fallback.
 
 | | |
 |---|---|
@@ -55,8 +55,9 @@ Everything the class offers; you only need the rows used above to get started. (
 | `BUTTON_STATES` | `const Array[StringName]` | `normal`, `hover`, `pressed`, `disabled`, `focus`: the boxes the default theme gives a Button. |
 | `DEFAULT_OUTLINE_WIDTH` | `const int` (2) | Default `width` of `outline`, in pixels. |
 | `flat` | `static flat(bg: Color, border := Color.TRANSPARENT, border_width := 0, corner_radius := 0, content_margin := -1.0, draw_center := true, anti_aliasing := true) -> StyleBoxFlat` | A filled box with an optional border and rounded corners. `content_margin` ≥ 0 sets it on all four sides; below 0 keeps the default. |
-| `outline` | `static outline(color: Color, width := DEFAULT_OUTLINE_WIDTH, corner_radius := 0) -> StyleBoxFlat` (2) | Border only, no fill: a highlight frame. |
+| `outline` | `static outline(color: Color, width := DEFAULT_OUTLINE_WIDTH, corner_radius := 0) -> StyleBoxFlat` | Border only, no fill: a highlight frame. |
 | `set_button_styles` | `static set_button_styles(control: Control, style: StyleBox, states: Array = BUTTON_STATES) -> void` | Overrides every listed stylebox of `control` with the same `style` (shared, not copied). `states` holds Strings or StringNames. |
+| `swatch` | `static swatch(color: Color, size: int) -> ImageTexture` | A `size` x `size` px texture filled with `color` (`size` must be 1 or more; Godot reports an error for 0 or less), e.g. for `LFOptionPicker.fill`'s icons. |
 | `project_stylebox` | `static project_stylebox(name: StringName, theme_type: StringName, fallback: StyleBox = null) -> StyleBox` | The project theme's box (e.g. `&"panel"`, `&"TooltipPanel"`), or `fallback` when there is no project theme or it lacks the box. |
 
 ## Usage

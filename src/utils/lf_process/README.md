@@ -26,7 +26,7 @@ is fine. To relaunch this same project headless (without a window), build the ar
 ## Step by step
 
 **Before you start:** this is for desktop games and editor tools. The tests run on Linux
-and macOS; on Windows only a few `cmd.exe` tests run (start, output, exit code, stop, refusing `.bat`); restarts, `terminate` and stdin are tested on Linux and macOS only. The
+and macOS; the Windows-only branches (refusing `.bat`/`.cmd`, choosing `cmd.exe` as the shell) are tested on every platform with an internal switch, but no test starts a real `cmd.exe`, and the file that spawns children is skipped on Windows. The
 web has no processes to start, and Android and iOS are untested. The
 program you run must exist on the player's computer. The example below runs Godot itself
 with `--version`, so it works anywhere you can run the editor. A few words you will meet:

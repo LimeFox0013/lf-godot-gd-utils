@@ -127,3 +127,15 @@ func fire(rng: RandomNumberGenerator, context: Variant = null) -> bool:
 		return false
 	action.call(context)
 	return true
+
+
+## Like `fire`, and also hands the action's return value to the caller: when the proc
+## fires, the value is appended to `results` and true is returned; when it does not, nothing
+## is appended and false is returned (so a fired action that returned null still leaves a
+## null entry, unlike a proc that did not fire). `results` is not cleared first.
+func fire_collect(rng: RandomNumberGenerator, results: Array, context: Variant = null) -> bool:
+	if !action.is_valid() or !check(rng, context):
+		return false
+	results.append(action.call(context))
+	return true
+

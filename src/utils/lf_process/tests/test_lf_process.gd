@@ -19,8 +19,9 @@ var lf_process: LFProcess
 var _temp_files: Array[String] = []
 
 
-## The children are /bin/sh scripts, so the file is skipped on Windows (see
-## test_lf_process_windows.gd for the cmd.exe equivalents).
+## The children are /bin/sh scripts, so the file is skipped on Windows. The Windows branches
+## of the code (refusing .bat/.cmd, cmd.exe as the shell) are covered here on every platform
+## through the `_windows` switch; spawning a real cmd.exe is not tested.
 func should_skip_script() -> bool:
 	return OS.get_name() == "Windows"
 
@@ -191,6 +192,33 @@ func test_a_refused_start_leaves_no_earlier_command_for_restart_now():
 
 	assert_false(lf_process.restart_now(), "the refused start replaced the saved command")
 	assert_false(lf_process.is_running())
+
+
+func test_on_windows_a_batch_file_is_refused_by_start():
+	lf_process._windows = true
+	var path := _temp_script("exit 0").replace(".sh", ".cmd")
+	DirAccess.rename_absolute(path.replace(".cmd", ".sh"), path)
+	_temp_files.append(path)
+
+	assert_false(lf_process.start(path))
+	assert_push_error("use run_shell")
+
+
+func test_on_windows_a_batch_file_extension_is_refused_in_any_case():
+	lf_process._windows = true
+	var path := _temp_script("exit 0").replace(".sh", ".BAT")
+	DirAccess.rename_absolute(path.replace(".BAT", ".sh"), path)
+	_temp_files.append(path)
+
+	assert_false(lf_process.start(path))
+	assert_push_error("use run_shell")
+
+
+func test_on_windows_run_shell_goes_through_cmd_exe():
+	lf_process._windows = true
+
+	assert_false(lf_process.run_shell("echo hello")) # there is no cmd.exe here: nothing starts
+	assert_push_error("not an executable: cmd.exe")
 
 
 func test_a_file_without_execute_permission_does_not_start():

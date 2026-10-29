@@ -568,7 +568,7 @@ func test_rounds_set_below_one_still_make_accounts_that_can_sign_in():
 		fresh.rounds = low
 		var name := 'Hal%d' % absi(low)
 		assert_false(fresh.sign_up(name, 'open the pod bay').has('error'))
-		assert_eq(_stored()['accounts'].values().filter(func(a): return a['name'] == name)[0]['rounds'], 1, 'stored within the accepted range')
+		assert_eq(_stored()['accounts'].values().filter(func(a): return a['name'] == name)[0]['rounds'] as int, 1, 'stored within the accepted range')
 		assert_false(fresh.sign_in(name, 'open the pod bay').has('error'), 'rounds %d' % low)
 
 

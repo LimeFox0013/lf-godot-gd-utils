@@ -71,6 +71,7 @@ Everything the class offers; you only need the rows used above to get started.
 | `on` | `static on(event: String, cb: Callable) -> void` | Registers `cb` (twice registered, twice called). |
 | `once` | `static once(event: String, cb: Callable) -> void` | Runs `cb` on the next emit only. |
 | `off` | `static off(event: String, cb: Callable) -> void` | Removes the first registration of `cb`; an empty `Callable()` removes nothing and is reported as an error; use `clear_event`. |
+| `off_owner` | `static off_owner(owner: Object) -> int` | Removes every handler `owner` registered through `on`/`once` (a method of it, or a lambda in one of its methods that uses `self`), on all events; returns how many it removed. See Notes. |
 | `clear_event` | `static clear_event(event: String) -> void` | Removes every handler of `event`. |
 | `clear` | `static clear() -> void` | Removes every handler of every event; reset between tests or scenes. |
 
@@ -110,4 +111,5 @@ func die() -> void:
   until you remove it with `off` or call `clear()`, so remove a node's handlers in
   `_exit_tree()`, as above. An inline `func(): ...` handler keeps the reference-counted
   values it captures (Resources, RefCounted objects) alive while it is registered.
+- `off_owner(owner)` is for handlers you cannot name again, such as `LFEventBus.on("x", func(): refresh())` written in a method (a lambda that uses `self` belongs to that `self`). One call in `_exit_tree()` removes everything the object registered, on every event. It finds handlers by the object their Callable is bound to (`Callable.get_object()`), and only among those registered through `LFEventBus.on`/`once`: a lambda written in a static function has no object, and `LFEventBus.emitter.on(...)` is not tracked. The bus keeps a small note per registration for this; `off`, `clear_event` and `clear` drop the matching notes, a one-shot's note stays until `off_owner` or `clear()` (it is not counted once fired), and notes of owners that were freed are swept as new owners register. Registrations themselves are unchanged: a freed owner's handlers still stay on the bus, inert, until removed or `clear()`; pass the owner to `off_owner` while it is alive (it cannot be passed once freed).
 - Pick event names once and reuse them (a `const` per name avoids typos: a misspelled name just has no listeners).

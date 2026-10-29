@@ -97,6 +97,29 @@ static func resolve_tier(buckets: Array, rolled: int, floor_tier: int, fallback:
 	return _stocked_above(buckets, rolled) if fallback == Fallback.LOWER_FIRST else _stocked_below(buckets, rolled, lowest)
 
 
+## `base` weights with `shift` points moved out of the first tier (never taking it below
+## `floor_of_first`) and spread over the others in proportion to their base weights, so a
+## bonus such as luck raises the rarer tiers. Returns a new array; `base` is not changed.
+## A negative `shift` counts as 0; with no other tier or no weight to spread, nothing moves.
+static func tilt_weights(base: Array, shift: float, floor_of_first: float) -> Array[float]:
+	var weights: Array[float] = []
+	for weight: Variant in base:
+		weights.append(float(weight))
+	if weights.size() < 2:
+		return weights
+	var max_shift := maxf(float(base[0]) - floor_of_first, 0.0)
+	var moved := clampf(shift, 0.0, max_shift)
+	var higher_total := 0.0
+	for tier in range(1, base.size()):
+		higher_total += float(base[tier])
+	if higher_total <= 0.0:
+		return weights
+	weights[0] -= moved
+	for tier in range(1, base.size()):
+		weights[tier] += moved * float(base[tier]) / higher_total
+	return weights
+
+
 static func _stocked_below(buckets: Array, rolled: int, lowest: int) -> int:
 	for tier in range(rolled - 1, lowest - 1, -1):
 		if !buckets[tier].is_empty():

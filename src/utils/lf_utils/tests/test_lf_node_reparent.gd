@@ -130,3 +130,79 @@ func test_a_node_cannot_be_moved_under_itself_or_its_own_descendant_and_stays_wh
 	await LFUtils.move_node(node, descendant)
 	assert_eq(node.get_parent(), root_node, "moving a node under its own descendant leaves it in place")
 	assert_push_error("LFUtils.move_node")
+
+
+func test_a_global_position_survives_a_transformed_new_parent():
+	var old_parent = add_child_autofree(Node2D.new())
+	var new_parent := Node2D.new()
+	new_parent.position = Vector2(100, 50)
+	new_parent.rotation = PI / 2.0
+	new_parent.scale = Vector2(2, 2)
+	add_child_autofree(new_parent)
+	var child := Node2D.new()
+	old_parent.add_child(child)
+
+	await LFUtils.move_node(child, new_parent, true, Vector2(300, 400))
+
+	assert_eq(child.get_parent(), new_parent)
+	assert_almost_eq(child.global_position, Vector2(300, 400), Vector2(0.01, 0.01))
+
+
+func test_without_a_position_the_local_position_is_kept_as_before():
+	var old_parent = add_child_autofree(Node2D.new())
+	var new_parent := Node2D.new()
+	new_parent.position = Vector2(100, 50)
+	add_child_autofree(new_parent)
+	var child := Node2D.new()
+	child.position = Vector2(1, 2)
+	old_parent.add_child(child)
+
+	await LFUtils.move_node(child, new_parent)
+
+	assert_eq(child.position, Vector2(1, 2))
+
+
+func test_a_global_position_is_applied_even_when_the_parent_does_not_change():
+	var parent := Node2D.new()
+	parent.position = Vector2(10, 10)
+	add_child_autofree(parent)
+	var child := Node2D.new()
+	parent.add_child(child)
+
+	await LFUtils.move_node(child, parent, true, Vector2(50, 60))
+
+	assert_eq(child.global_position, Vector2(50, 60))
+
+
+func test_a_global_position_works_for_node3d_and_control():
+	var new_parent := Node3D.new()
+	new_parent.position = Vector3(5, 0, 0)
+	add_child_autofree(new_parent)
+	var body := Node3D.new()
+	await LFUtils.move_node(body, new_parent, true, Vector3(1, 2, 3))
+	assert_eq(body.global_position, Vector3(1, 2, 3))
+
+	var control_parent := Control.new()
+	control_parent.position = Vector2(20, 20)
+	add_child_autofree(control_parent)
+	var control := Control.new()
+	await LFUtils.move_node(control, control_parent, true, Vector2(70, 80))
+	assert_eq(control.global_position, Vector2(70, 80))
+
+
+func test_a_position_of_the_wrong_kind_is_reported_and_the_move_still_happens():
+	var new_parent: Node = add_child_autofree(Node.new())
+	var child := Node2D.new()
+	await LFUtils.move_node(child, new_parent, true, Vector3(1, 2, 3))
+	assert_push_error("global_position")
+	assert_eq(child.get_parent(), new_parent)
+	assert_eq(child.position, Vector2.ZERO)
+
+
+func test_a_refused_move_applies_no_position():
+	var root_node: Node2D = add_child_autofree(Node2D.new())
+	var node := Node2D.new()
+	root_node.add_child(node)
+	await LFUtils.move_node(node, node, true, Vector2(9, 9))
+	assert_push_error("LFUtils.move_node")
+	assert_eq(node.position, Vector2.ZERO)

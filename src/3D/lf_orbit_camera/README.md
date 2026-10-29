@@ -116,6 +116,7 @@ Everything the class offers; you only need the rows used above to get started.
 | `zoom` | `zoom(amount: float) -> void` | Multiplies the distance by `(1 - zoom_step_fraction) ^ amount`, clamped: `amount` > 0 zooms in, < 0 out, and `zoom(-n)` undoes `zoom(n)`. Never moves the rig. |
 | `rotate` | `rotate(screen_delta: Vector2) -> void` | Turns the rig's yaw by `-screen_delta.x * rotate_radians_per_pixel`. Never moves the rig. |
 | `frame` | `frame(center: Vector3, new_distance: float) -> void` | Puts the rig over `center`, a world (global) point, keeping its world height, and sets the distance to `new_distance`, clamped. Works under a moved, turned or scaled parent; a rig outside the tree takes `center` as its local position. |
+| `frame_points` | `frame_points(points: PackedVector3Array, base: float, per_spread: float) -> void` | `frame` over the average of `points`, at `base + spread * per_spread` (`spread`: the largest distance from the average to a point). Does nothing for no points. The 3D counterpart of `LFGroupCamera2D`. |
 
 ## Usage
 

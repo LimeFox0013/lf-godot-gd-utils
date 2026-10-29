@@ -229,6 +229,13 @@ static func parse_user_args(args: PackedStringArray) -> Dictionary:
 	return parsed
 
 
+## `parsed[key]` (from [method parse_user_args]) as an int, or `fallback` when the key is
+## missing or a bare flag. Text that is not a number reads as 0, like `String.to_int`.
+static func int_arg(parsed: Dictionary, key: String, fallback: int) -> int:
+	var value: Variant = parsed.get(key)
+	return int(value) if value is String else fallback
+
+
 ## `value` as one command-line word: its JSON, base64-encoded (only letters, digits, `+`,
 ## `/` and `=`, none of which a POSIX shell treats specially), so any JSON value (a
 ## Dictionary, an Array, text with spaces or quotes) passes through argv unchanged. Read it

@@ -355,6 +355,19 @@ static func is_port_free(port: int) -> bool:
 	return true
 
 
+## The first port from `first` to `last` (both included) that `taken.call(port)` does not
+## claim and `is_free.call(port)` accepts, or -1 when there is none. `taken` is for ports you
+## handed out yourself; an empty `is_free` means [method is_port_free]. Both are called in
+## port order, `is_free` only for ports `taken` let through.
+static func free_port_in_range(first: int, last: int, taken := Callable(), is_free := Callable()) -> int:
+	if not is_free.is_valid():
+		is_free = is_port_free
+	for port in range(first, last + 1):
+		if not (taken.is_valid() and taken.call(port)) and is_free.call(port):
+			return port
+	return -1
+
+
 ## Starts accepting clients on `port` and starts the per-frame poll loop. Returns `OK`, or
 ## the error from binding the port (e.g. `ERR_ALREADY_IN_USE` when another program holds
 ## it) or `ERR_INVALID_PARAMETER` for a port outside 0-65535 (0 picks a free one), in

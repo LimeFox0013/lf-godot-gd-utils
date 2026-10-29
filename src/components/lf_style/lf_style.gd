@@ -45,6 +45,14 @@ static func outline(color: Color, width := DEFAULT_OUTLINE_WIDTH, corner_radius 
 	return flat(Color.TRANSPARENT, color, width, corner_radius, -1.0, false)
 
 
+## Returns a `size` x `size` px texture filled with `color`, e.g. a colour chip beside an
+## option's text.
+static func swatch(color: Color, size: int) -> ImageTexture:
+	var image := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	image.fill(color)
+	return ImageTexture.create_from_image(image)
+
+
 ## Puts `style` on every state in `states` of `control` (a Button, or any Control whose
 ## theme draws those stylebox names), so it looks the same hovered, pressed, disabled and
 ## focused. `states` holds Strings or StringNames. The one box is shared, not copied.
