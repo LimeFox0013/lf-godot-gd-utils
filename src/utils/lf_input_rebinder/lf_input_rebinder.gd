@@ -87,16 +87,19 @@ static func describe(event: InputEvent, style: LFInputKeys.PadStyle = LFInputKey
 	return "?"
 
 
-## The bindings of `action` of one kind.
+## The bindings of `action` of one kind; empty (and a warning is logged) when `action` is not in the `InputMap`.
 func events_of(action: StringName, kind: Kind) -> Array:
 	var found := []
+	if not InputMap.has_action(action):
+		_log.warning("no such action: %s" % action)
+		return found
 	for event in InputMap.action_get_events(action):
 		if kind_of(event) == kind:
 			found.append(event)
 	return found
 
 
-## The names of the bindings of `action` of one kind, joined ("A / D-pad Up"); "-" when it has none.
+## The names of the bindings of `action` of one kind, joined ("A / D-pad Up"); "-" when it has none (also for an action that is not in the `InputMap`, which logs a warning).
 func label_of(action: StringName, kind: Kind, style: LFInputKeys.PadStyle = LFInputKeys.PadStyle.XBOX) -> String:
 	var names := []
 	for event in events_of(action, kind):
@@ -136,10 +139,14 @@ func rebind(action: StringName, event: InputEvent) -> Array[StringName]:
 ## Returns `action` (every tracked action when empty) to the bindings the project started with.
 func reset(action: StringName = &"") -> void:
 	for each in actions:
-		if action == &"" or action == each:
-			InputMap.action_erase_events(each)
-			for event in _defaults[each]:
-				InputMap.action_add_event(each, event.duplicate())
+		if action != &"" and action != each:
+			continue
+		if not InputMap.has_action(each):
+			_log.warning("no such action: %s" % each)
+			continue
+		InputMap.action_erase_events(each)
+		for event in _defaults[each]:
+			InputMap.action_add_event(each, event.duplicate())
 
 
 ## Writes the bindings of every tracked action to `path`. False (and a logged error) when the file
@@ -147,6 +154,9 @@ func reset(action: StringName = &"") -> void:
 func save() -> bool:
 	var data := {}
 	for action in actions:
+		if not InputMap.has_action(action):
+			_log.warning("no such action: %s" % action)
+			continue
 		data[str(action)] = []
 		for event in InputMap.action_get_events(action):
 			var entry := _to_entry(event)
@@ -171,6 +181,9 @@ func load_saved() -> bool:
 		_log.warning("unreadable bindings in %s" % path)
 		return false
 	for action in actions:
+		if not InputMap.has_action(action):
+			_log.warning("no such action: %s" % action)
+			continue
 		var entries = parsed.bindings.get(str(action))
 		if not (entries is Array):
 			continue
