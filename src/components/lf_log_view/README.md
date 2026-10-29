@@ -6,7 +6,7 @@
 |---|---|
 | **Files** | `lf_log_view.gd`, `lf_chat_box.gd` |
 | **Tests** | `tests/test_lf_log_view.gd`, `tests/test_lf_chat_box.gd` (in the repository; the release zip leaves tests out) |
-| **Depends on** | `LFText` (`bbcode_escape`) |
+| **Depends on** | `LFText` (`bbcode_escape`), `LFLogger` (reports a bad `line_factory` or `line_scene`) |
 
 **Classes** ([how LF classes work](../../../README.md#how-lf-classes-work)):
 
