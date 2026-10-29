@@ -316,20 +316,29 @@ func test_retry_gives_null_after_the_last_attempt_and_makes_exactly_that_many_ca
 
 
 func test_retry_waits_between_attempts_but_not_after_the_last():
-	var counter := Counter.new()
-	var start := Time.get_ticks_msec()
-	await LFAwait.retry(counter.attempt, 3, 60.0)
-	var elapsed := Time.get_ticks_msec() - start
-	assert_gte(elapsed, 100, 'two waits of 60 ms')
-	assert_lt(elapsed, 170, 'no third wait')
+	var stamps: Array[int] = []
+	var fn := func():
+		stamps.append(Time.get_ticks_msec())
+		return null
+	await LFAwait.retry(fn, 3, 200.0)
+	var done := Time.get_ticks_msec()
+	assert_eq(stamps.size(), 3)
+	# Lower bounds only (minus one-frame timer slack): a gap can stretch under load, never shrink.
+	assert_gte(stamps[1] - stamps[0], 175, 'wait between attempts 1 and 2')
+	assert_gte(stamps[2] - stamps[1], 175, 'wait between attempts 2 and 3')
+	# A wait after the last attempt would take at least 200 ms more.
+	assert_lt(done - stamps[2], 200, 'no wait after the last attempt')
 
 
 func test_retry_backoff_multiplies_each_later_wait():
-	var counter := Counter.new()
-	var start := Time.get_ticks_msec()
-	await LFAwait.retry(counter.attempt, 3, 40.0, 3.0) # waits 40 + 120
-	var elapsed := Time.get_ticks_msec() - start
-	assert_gte(elapsed, 150)
+	var stamps: Array[int] = []
+	var fn := func():
+		stamps.append(Time.get_ticks_msec())
+		return null
+	await LFAwait.retry(fn, 3, 40.0, 3.0) # waits 40 + 120
+	assert_eq(stamps.size(), 3)
+	assert_gte(stamps[1] - stamps[0], 15)
+	assert_gte(stamps[2] - stamps[1], 95, 'second wait is 3x the first')
 
 
 func test_retry_waits_for_an_async_fn():
@@ -378,7 +387,7 @@ func test_retry_treats_negative_delay_and_backoff_as_zero():
 	var counter := Counter.new()
 	var start := Time.get_ticks_msec()
 	await LFAwait.retry(counter.attempt, 3, -500.0, -2.0)
-	assert_lt(Time.get_ticks_msec() - start, 200)
+	assert_lt(Time.get_ticks_msec() - start, 450, 'a 500 ms wait would exceed this')
 	assert_eq(counter.calls, 3)
 
 
